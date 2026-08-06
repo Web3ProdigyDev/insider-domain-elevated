@@ -8,9 +8,9 @@ export function TopBar({
   className,
 }: {
   title: string;
-  eyebrow?: string;
-  action?: ReactNode;
-  className?: string;
+  eyebrow?: string | undefined;
+  action?: ReactNode | undefined;
+  className?: string | undefined;
 }) {
   return (
     <header

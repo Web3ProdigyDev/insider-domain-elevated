@@ -12,10 +12,10 @@ export function AppShell({
   className,
 }: {
   title: string;
-  eyebrow?: string;
-  action?: ReactNode;
+  eyebrow?: string | undefined;
+  action?: ReactNode | undefined;
   children: ReactNode;
-  className?: string;
+  className?: string | undefined;
 }) {
   return (
     <div className="flex min-h-screen w-full bg-background">

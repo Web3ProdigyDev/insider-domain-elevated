@@ -18,7 +18,13 @@ const buttonVariants = cva(
         ghost: "bg-transparent text-muted-foreground hover:text-foreground hover:bg-surface",
         // Restrained accent, used once per screen at most
         gold: "bg-gold-muted text-gold border border-gold/25 hover:bg-gold/20",
-        destructive: "bg-transparent border border-destructive/40 text-destructive hover:bg-destructive/10",
+        destructive:
+          "bg-transparent border border-destructive/40 text-destructive hover:bg-destructive/10",
+        // shadcn compatibility aliases
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        outline:
+          "border border-border-strong bg-transparent text-foreground hover:bg-surface-raised",
+        link: "bg-transparent text-foreground underline-offset-4 hover:underline",
       },
       size: {
         sm: "h-8 px-3.5 text-[0.8125rem]",
@@ -51,5 +57,8 @@ function Button({
     />
   );
 }
+
+export type ButtonProps = React.ComponentProps<"button"> &
+  VariantProps<typeof buttonVariants> & { asChild?: boolean };
 
 export { Button, buttonVariants };

@@ -90,25 +90,21 @@ export function TradeSheet({
         </div>
       ) : (
         <div className="space-y-4">
-          <label className="block">
-            <span className="text-eyebrow mb-2 block">Amount ({symbol})</span>
-            <Input
-              inputMode="decimal"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
-            />
-          </label>
+          <Input
+            label={`Amount (${symbol})`}
+            inputMode="decimal"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="0.00"
+          />
 
           {mode === "send" ? (
-            <label className="block">
-              <span className="text-eyebrow mb-2 block">Destination</span>
-              <Input
-                value={destination}
-                onChange={(e) => setDestination(e.target.value)}
-                placeholder="Paste address"
-              />
-            </label>
+            <Input
+              label="Destination"
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+              placeholder="Paste address"
+            />
           ) : null}
 
           <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-4">

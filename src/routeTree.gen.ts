@@ -10,20 +10,20 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as CircleRouteImport } from './routes/circle'
+import { Route as DepositRouteImport } from './routes/deposit'
 import { Route as MarketsRouteImport } from './routes/markets'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
+import { Route as ReceiveRouteImport } from './routes/receive'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as TradingRouteImport } from './routes/trading'
+import { Route as TransferRouteImport } from './routes/transfer'
+import { Route as AssetIdRouteImport } from './routes/asset.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AlertsRoute = AlertsRouteImport.update({
-  id: '/alerts',
-  path: '/alerts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CircleRoute = CircleRouteImport.update({
@@ -31,9 +31,19 @@ const CircleRoute = CircleRouteImport.update({
   path: '/circle',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DepositRoute = DepositRouteImport.update({
+  id: '/deposit',
+  path: '/deposit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MarketsRoute = MarketsRouteImport.update({
   id: '/markets',
   path: '/markets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PortfolioRoute = PortfolioRouteImport.update({
@@ -41,60 +51,126 @@ const PortfolioRoute = PortfolioRouteImport.update({
   path: '/portfolio',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReceiveRoute = ReceiveRouteImport.update({
+  id: '/receive',
+  path: '/receive',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TradingRoute = TradingRouteImport.update({
+  id: '/trading',
+  path: '/trading',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransferRoute = TransferRouteImport.update({
+  id: '/transfer',
+  path: '/transfer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssetIdRoute = AssetIdRouteImport.update({
+  id: '/asset/$id',
+  path: '/asset/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/alerts': typeof AlertsRoute
   '/circle': typeof CircleRoute
+  '/deposit': typeof DepositRoute
   '/markets': typeof MarketsRoute
+  '/notifications': typeof NotificationsRoute
   '/portfolio': typeof PortfolioRoute
+  '/receive': typeof ReceiveRoute
   '/settings': typeof SettingsRoute
+  '/trading': typeof TradingRoute
+  '/transfer': typeof TransferRoute
+  '/asset/$id': typeof AssetIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/alerts': typeof AlertsRoute
   '/circle': typeof CircleRoute
+  '/deposit': typeof DepositRoute
   '/markets': typeof MarketsRoute
+  '/notifications': typeof NotificationsRoute
   '/portfolio': typeof PortfolioRoute
+  '/receive': typeof ReceiveRoute
   '/settings': typeof SettingsRoute
+  '/trading': typeof TradingRoute
+  '/transfer': typeof TransferRoute
+  '/asset/$id': typeof AssetIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/alerts': typeof AlertsRoute
   '/circle': typeof CircleRoute
+  '/deposit': typeof DepositRoute
   '/markets': typeof MarketsRoute
+  '/notifications': typeof NotificationsRoute
   '/portfolio': typeof PortfolioRoute
+  '/receive': typeof ReceiveRoute
   '/settings': typeof SettingsRoute
+  '/trading': typeof TradingRoute
+  '/transfer': typeof TransferRoute
+  '/asset/$id': typeof AssetIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/alerts' | '/circle' | '/markets' | '/portfolio' | '/settings'
+    | '/'
+    | '/circle'
+    | '/deposit'
+    | '/markets'
+    | '/notifications'
+    | '/portfolio'
+    | '/receive'
+    | '/settings'
+    | '/trading'
+    | '/transfer'
+    | '/asset/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/alerts' | '/circle' | '/markets' | '/portfolio' | '/settings'
+  to:
+    | '/'
+    | '/circle'
+    | '/deposit'
+    | '/markets'
+    | '/notifications'
+    | '/portfolio'
+    | '/receive'
+    | '/settings'
+    | '/trading'
+    | '/transfer'
+    | '/asset/$id'
   id:
     | '__root__'
     | '/'
-    | '/alerts'
     | '/circle'
+    | '/deposit'
     | '/markets'
+    | '/notifications'
     | '/portfolio'
+    | '/receive'
     | '/settings'
+    | '/trading'
+    | '/transfer'
+    | '/asset/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AlertsRoute: typeof AlertsRoute
   CircleRoute: typeof CircleRoute
+  DepositRoute: typeof DepositRoute
   MarketsRoute: typeof MarketsRoute
+  NotificationsRoute: typeof NotificationsRoute
   PortfolioRoute: typeof PortfolioRoute
+  ReceiveRoute: typeof ReceiveRoute
   SettingsRoute: typeof SettingsRoute
+  TradingRoute: typeof TradingRoute
+  TransferRoute: typeof TransferRoute
+  AssetIdRoute: typeof AssetIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -106,18 +182,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/alerts': {
-      id: '/alerts'
-      path: '/alerts'
-      fullPath: '/alerts'
-      preLoaderRoute: typeof AlertsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/circle': {
       id: '/circle'
       path: '/circle'
       fullPath: '/circle'
       preLoaderRoute: typeof CircleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/deposit': {
+      id: '/deposit'
+      path: '/deposit'
+      fullPath: '/deposit'
+      preLoaderRoute: typeof DepositRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/markets': {
@@ -127,11 +203,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/portfolio': {
       id: '/portfolio'
       path: '/portfolio'
       fullPath: '/portfolio'
       preLoaderRoute: typeof PortfolioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/receive': {
+      id: '/receive'
+      path: '/receive'
+      fullPath: '/receive'
+      preLoaderRoute: typeof ReceiveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -141,16 +231,42 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/trading': {
+      id: '/trading'
+      path: '/trading'
+      fullPath: '/trading'
+      preLoaderRoute: typeof TradingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transfer': {
+      id: '/transfer'
+      path: '/transfer'
+      fullPath: '/transfer'
+      preLoaderRoute: typeof TransferRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/asset/$id': {
+      id: '/asset/$id'
+      path: '/asset/$id'
+      fullPath: '/asset/$id'
+      preLoaderRoute: typeof AssetIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AlertsRoute: AlertsRoute,
   CircleRoute: CircleRoute,
+  DepositRoute: DepositRoute,
   MarketsRoute: MarketsRoute,
+  NotificationsRoute: NotificationsRoute,
   PortfolioRoute: PortfolioRoute,
+  ReceiveRoute: ReceiveRoute,
   SettingsRoute: SettingsRoute,
+  TradingRoute: TradingRoute,
+  TransferRoute: TransferRoute,
+  AssetIdRoute: AssetIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

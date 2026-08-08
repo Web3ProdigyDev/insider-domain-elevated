@@ -1,11 +1,10 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { SearchBar } from "@/components/common/search-bar";
-import { CoinCard, formatPrice, formatCompact } from "@/components/cards/coin-card";
+import { CoinCard } from "@/components/cards/coin-card";
 import { AssetCard } from "@/components/cards/asset-card";
 import { EmptyState } from "@/components/common/empty-state";
 import {
@@ -14,12 +13,8 @@ import {
   SegmentedTabsList,
   SegmentedTabsTrigger,
 } from "@/components/common/segmented-tabs";
-import { Sheet } from "@/components/common/sheet-panel";
 import { Button } from "@/components/ui/button";
-import { assets, formatSigned } from "@/lib/placeholder-data";
-import { getMarketCoins, type MarketCoin } from "@/lib/markets.functions";
-import { useLivePrices } from "@/lib/use-live-prices";
-import { cn } from "@/lib/utils";
+import { useMarkets, usePortfolio } from "@/lib/use-markets";
 
 const PER_PAGE = 25;
 
@@ -44,16 +39,9 @@ export const Route = createFileRoute("/markets")({
 function Markets() {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState<MarketCoin | null>(null);
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["market-coins"],
-    queryFn: () => getMarketCoins(),
-    refetchInterval: 20_000,
-    staleTime: 15_000,
-  });
-
-  const coins = useLivePrices(data);
+  const { coins, isLoading, isError } = useMarkets();
+  const { positions } = usePortfolio();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -64,10 +52,6 @@ function Markets() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const current = Math.min(page, totalPages);
   const visible = filtered.slice((current - 1) * PER_PAGE, current * PER_PAGE);
-
-  const selectedLive = selected
-    ? (coins.find((c) => c.id === selected.id) ?? selected)
-    : null;
 
   return (
     <AppShell eyebrow="Live" title="Markets">
@@ -84,14 +68,17 @@ function Markets() {
         <SegmentedTabsList>
           <SegmentedTabsTrigger value="all">All</SegmentedTabsTrigger>
           <SegmentedTabsTrigger value="held">Held</SegmentedTabsTrigger>
-          <SegmentedTabsTrigger value="watch">Watchlist</SegmentedTabsTrigger>
+          <SegmentedTabsTrigger value="gainers">Gainers</SegmentedTabsTrigger>
         </SegmentedTabsList>
 
         <SegmentedTabsContent value="all">
           {isLoading ? (
             <div className="space-y-3">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="h-[72px] animate-pulse rounded-2xl border border-border bg-card" />
+                <div
+                  key={i}
+                  className="h-[72px] animate-pulse rounded-2xl border border-border bg-card"
+                />
               ))}
             </div>
           ) : isError ? (
@@ -103,7 +90,7 @@ function Markets() {
             <>
               <div className="space-y-3">
                 {visible.map((coin) => (
-                  <CoinCard key={coin.id} coin={coin} onSelect={setSelected} />
+                  <CoinCard key={coin.id} coin={coin} />
                 ))}
               </div>
               <Pager
@@ -124,66 +111,24 @@ function Markets() {
 
         <SegmentedTabsContent value="held">
           <div className="space-y-3">
-            {assets
-              .filter((a) => a.holdings > 0)
-              .map((asset) => (
-                <AssetCard key={asset.id} asset={asset} />
-              ))}
+            {positions.map((position) => (
+              <AssetCard key={position.id} position={position} />
+            ))}
           </div>
         </SegmentedTabsContent>
 
-        <SegmentedTabsContent value="watch">
-          <EmptyState
-            title="Your watchlist is empty"
-            description="Instruments you follow will appear here."
-            action={<Button variant="secondary">Browse markets</Button>}
-          />
+        <SegmentedTabsContent value="gainers">
+          <div className="space-y-3">
+            {[...coins]
+              .sort((a, b) => b.change24h - a.change24h)
+              .slice(0, 20)
+              .map((coin) => (
+                <CoinCard key={coin.id} coin={coin} />
+              ))}
+          </div>
         </SegmentedTabsContent>
       </SegmentedTabs>
-
-      <Sheet
-        open={selectedLive !== null}
-        onOpenChange={(open) => !open && setSelected(null)}
-        title={selectedLive?.name ?? ""}
-        description={
-          selectedLive
-            ? `${selectedLive.symbol} · ${formatPrice(selectedLive.price)}`
-            : undefined
-        }
-        footer={
-          <>
-            <Button full>Buy</Button>
-            <Button variant="secondary" full>
-              Sell
-            </Button>
-          </>
-        }
-      >
-        <dl className="space-y-4">
-          <Row label="24h change">
-            <span
-              className={cn(
-                (selectedLive?.change24h ?? 0) >= 0 ? "text-positive" : "text-negative",
-              )}
-            >
-              {formatSigned(selectedLive?.change24h ?? 0)}
-            </span>
-          </Row>
-          <Row label="Market cap">{formatCompact(selectedLive?.marketCap ?? 0)}</Row>
-          <Row label="24h volume">{formatCompact(selectedLive?.volume24h ?? 0)}</Row>
-          <Row label="Rank">{`#${selectedLive?.rank ?? "—"}`}</Row>
-        </dl>
-      </Sheet>
     </AppShell>
-  );
-}
-
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between">
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="numeric text-sm">{children}</dd>
-    </div>
   );
 }
 

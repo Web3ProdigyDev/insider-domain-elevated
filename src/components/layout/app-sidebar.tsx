@@ -1,10 +1,11 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
-import { navItems } from "./nav-items";
+import { navItems, utilityNavItems } from "./nav-items";
 import { demoMember } from "@/lib/placeholder-data";
 
 export function AppSidebar({ className }: { className?: string }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isActive = (to: string) => (to === "/" ? pathname === "/" : pathname.startsWith(to));
 
   return (
     <aside
@@ -27,39 +28,57 @@ export function AppSidebar({ className }: { className?: string }) {
         </Link>
 
         <nav className="flex flex-col gap-0.5" aria-label="Primary">
-          {navItems.map((item) => {
-            const active = item.to === "/" ? pathname === "/" : pathname.startsWith(item.to);
-            return (
-              <Link
-                key={item.to}
-                to={item.to}
-                className={cn(
-                  "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors duration-300 ease-[var(--ease-luxe)]",
-                  active
-                    ? "bg-sidebar-accent text-foreground"
-                    : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
-                )}
-              >
-                <item.icon
-                  className={cn("size-4 shrink-0", active ? "text-gold" : "text-current")}
-                  strokeWidth={1.75}
-                />
-                <span className="truncate">{item.label}</span>
-              </Link>
-            );
-          })}
+          {navItems.map((item) => (
+            <SidebarLink key={item.to} item={item} active={isActive(item.to)} />
+          ))}
+        </nav>
+
+        <p className="text-eyebrow mb-2 mt-8 px-3">Account</p>
+        <nav className="flex flex-col gap-0.5" aria-label="Account">
+          {utilityNavItems.map((item) => (
+            <SidebarLink key={item.to} item={item} active={isActive(item.to)} />
+          ))}
         </nav>
       </div>
 
-      <div className="flex min-w-0 items-center gap-3 rounded-xl border border-border px-3 py-3">
-        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-surface-raised text-[0.7rem] text-muted-foreground">
+      <Link
+        to="/settings"
+        className="flex min-w-0 items-center gap-3 rounded-xl border border-border px-3 py-3 transition-colors duration-300 ease-[var(--ease-luxe)] hover:border-border-strong hover:bg-sidebar-accent/60"
+      >
+        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-gold-muted text-[0.7rem] text-gold">
           AM
         </span>
         <span className="min-w-0">
           <span className="block truncate text-sm text-foreground">{demoMember.name}</span>
           <span className="text-eyebrow">{demoMember.tier}</span>
         </span>
-      </div>
+      </Link>
     </aside>
+  );
+}
+
+function SidebarLink({
+  item,
+  active,
+}: {
+  item: { label: string; to: string; icon: React.ElementType };
+  active: boolean;
+}) {
+  return (
+    <Link
+      to={item.to}
+      className={cn(
+        "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors duration-300 ease-[var(--ease-luxe)]",
+        active
+          ? "bg-sidebar-accent text-foreground"
+          : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
+      )}
+    >
+      <item.icon
+        className={cn("size-4 shrink-0", active ? "text-gold" : "text-current")}
+        strokeWidth={1.75}
+      />
+      <span className="truncate">{item.label}</span>
+    </Link>
   );
 }

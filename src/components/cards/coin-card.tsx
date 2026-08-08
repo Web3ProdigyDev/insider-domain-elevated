@@ -1,5 +1,7 @@
+import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { formatSigned } from "@/lib/placeholder-data";
+import { CoinLogo } from "@/components/common/coin-logo";
 import type { MarketCoin } from "@/lib/markets.functions";
 
 export const formatPrice = (value: number) =>
@@ -18,21 +20,20 @@ export const formatCompact = (value: number) =>
     maximumFractionDigits: 1,
   }).format(value);
 
+/** Market row. Links to the asset desk. */
 export function CoinCard({
   coin,
-  onSelect,
   className,
 }: {
   coin: MarketCoin;
-  onSelect?: ((coin: MarketCoin) => void) | undefined;
   className?: string | undefined;
 }) {
   const positive = coin.change24h >= 0;
 
   return (
-    <button
-      type="button"
-      onClick={() => onSelect?.(coin)}
+    <Link
+      to="/asset/$id"
+      params={{ id: coin.id }}
       className={cn(
         "grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 rounded-2xl border border-border bg-card px-5 py-4 text-left transition-colors duration-300 ease-[var(--ease-luxe)] hover:border-border-strong hover:bg-surface-raised",
         className,
@@ -42,12 +43,7 @@ export function CoinCard({
         <span className="numeric w-6 text-right text-[0.6875rem] text-muted-foreground/70">
           {coin.rank}
         </span>
-        <img
-          src={coin.image}
-          alt=""
-          loading="lazy"
-          className="size-8 rounded-full border border-border object-cover"
-        />
+        <CoinLogo src={coin.image} symbol={coin.symbol} size={32} />
       </span>
       <span className="min-w-0">
         <span className="block truncate text-sm text-foreground">{coin.name}</span>
@@ -65,6 +61,6 @@ export function CoinCard({
           {formatSigned(coin.change24h)}
         </span>
       </span>
-    </button>
+    </Link>
   );
 }

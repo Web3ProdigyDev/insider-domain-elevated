@@ -9,19 +9,22 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // 1. Primary — solid light on obsidian
-        primary: "bg-primary text-primary-foreground hover:bg-primary/90",
+        // 1. Primary — solid gold on obsidian
+        primary:
+          "bg-gold text-background hover:bg-gold/90 shadow-[0_8px_24px_-14px_var(--gold)]",
         // 2. Secondary — hairline outline
         secondary:
           "border border-border-strong bg-transparent text-foreground hover:bg-surface-raised",
         // 3. Ghost — text only
         ghost: "bg-transparent text-muted-foreground hover:text-foreground hover:bg-surface",
-        // Restrained accent, used once per screen at most
+        // Quiet accent — gold tint, no fill
         gold: "bg-gold-muted text-gold border border-gold/25 hover:bg-gold/20",
+        // Neutral solid, used sparingly where gold would shout
+        light: "bg-primary text-primary-foreground hover:bg-primary/90",
         destructive:
           "bg-transparent border border-destructive/40 text-destructive hover:bg-destructive/10",
         // shadcn compatibility aliases
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        default: "bg-gold text-background hover:bg-gold/90",
         outline:
           "border border-border-strong bg-transparent text-foreground hover:bg-surface-raised",
         link: "bg-transparent text-foreground underline-offset-4 hover:underline",

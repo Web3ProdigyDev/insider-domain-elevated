@@ -43,7 +43,7 @@ export const Route = createFileRoute("/trading")({
       },
     ],
   }),
-  component: Trading;
+  component: Trading,
 });
 
 function Trading() {

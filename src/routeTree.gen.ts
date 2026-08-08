@@ -17,6 +17,7 @@ import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as ReceiveRouteImport } from './routes/receive'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as TradingRouteImport } from './routes/trading'
 import { Route as TransferRouteImport } from './routes/transfer'
 import { Route as AssetIdRouteImport } from './routes/asset.$id'
 
@@ -60,6 +61,11 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TradingRoute = TradingRouteImport.update({
+  id: '/trading',
+  path: '/trading',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TransferRoute = TransferRouteImport.update({
   id: '/transfer',
   path: '/transfer',
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/portfolio': typeof PortfolioRoute
   '/receive': typeof ReceiveRoute
   '/settings': typeof SettingsRoute
+  '/trading': typeof TradingRoute
   '/transfer': typeof TransferRoute
   '/asset/$id': typeof AssetIdRoute
 }
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/portfolio': typeof PortfolioRoute
   '/receive': typeof ReceiveRoute
   '/settings': typeof SettingsRoute
+  '/trading': typeof TradingRoute
   '/transfer': typeof TransferRoute
   '/asset/$id': typeof AssetIdRoute
 }
@@ -105,6 +113,7 @@ export interface FileRoutesById {
   '/portfolio': typeof PortfolioRoute
   '/receive': typeof ReceiveRoute
   '/settings': typeof SettingsRoute
+  '/trading': typeof TradingRoute
   '/transfer': typeof TransferRoute
   '/asset/$id': typeof AssetIdRoute
 }
@@ -119,6 +128,7 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/receive'
     | '/settings'
+    | '/trading'
     | '/transfer'
     | '/asset/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/receive'
     | '/settings'
+    | '/trading'
     | '/transfer'
     | '/asset/$id'
   id:
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/receive'
     | '/settings'
+    | '/trading'
     | '/transfer'
     | '/asset/$id'
   fileRoutesById: FileRoutesById
@@ -156,6 +168,7 @@ export interface RootRouteChildren {
   PortfolioRoute: typeof PortfolioRoute
   ReceiveRoute: typeof ReceiveRoute
   SettingsRoute: typeof SettingsRoute
+  TradingRoute: typeof TradingRoute
   TransferRoute: typeof TransferRoute
   AssetIdRoute: typeof AssetIdRoute
 }
@@ -218,6 +231,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/trading': {
+      id: '/trading'
+      path: '/trading'
+      fullPath: '/trading'
+      preLoaderRoute: typeof TradingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/transfer': {
       id: '/transfer'
       path: '/transfer'
@@ -244,6 +264,7 @@ const rootRouteChildren: RootRouteChildren = {
   PortfolioRoute: PortfolioRoute,
   ReceiveRoute: ReceiveRoute,
   SettingsRoute: SettingsRoute,
+  TradingRoute: TradingRoute,
   TransferRoute: TransferRoute,
   AssetIdRoute: AssetIdRoute,
 }

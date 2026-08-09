@@ -117,7 +117,7 @@ function Deposit() {
 
       {method === "crypto" ? (
         <section className="mt-10">
-          <SectionHeader title="Asset" description="Search the full list of supported instruments." />
+          <SectionHeader title="Asset" />
           <SearchBar
             value={query}
             onValueChange={setQuery}
@@ -172,7 +172,7 @@ function Deposit() {
         </section>
       ) : (
         <section className="mt-10">
-          <SectionHeader title="Redemption code" description="Enter a gift card code to credit your simulated balance." />
+          <SectionHeader title="Redemption code" />
           <Card padding="lg">
             <div className="mb-5 grid gap-2 sm:grid-cols-3">
               {GIFT_CARDS.map((g) => (

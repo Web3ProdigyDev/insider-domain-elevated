@@ -21,6 +21,7 @@ import { Route as TradingRouteImport } from './routes/trading'
 import { Route as TransferRouteImport } from './routes/transfer'
 import { Route as AssetIdRouteImport } from './routes/asset.$id'
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
+import { Route as AuthSignupRouteImport } from './routes/auth.signup'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -82,6 +83,11 @@ const AuthIndexRoute = AuthIndexRouteImport.update({
   path: '/auth/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthSignupRoute = AuthSignupRouteImport.update({
+  id: '/auth/signup',
+  path: '/auth/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/trading': typeof TradingRoute
   '/transfer': typeof TransferRoute
   '/asset/$id': typeof AssetIdRoute
+  '/auth/signup': typeof AuthSignupRoute
   '/auth/': typeof AuthIndexRoute
 }
 export interface FileRoutesByTo {
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/trading': typeof TradingRoute
   '/transfer': typeof TransferRoute
   '/asset/$id': typeof AssetIdRoute
+  '/auth/signup': typeof AuthSignupRoute
   '/auth': typeof AuthIndexRoute
 }
 export interface FileRoutesById {
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/trading': typeof TradingRoute
   '/transfer': typeof TransferRoute
   '/asset/$id': typeof AssetIdRoute
+  '/auth/signup': typeof AuthSignupRoute
   '/auth/': typeof AuthIndexRoute
 }
 export interface FileRouteTypes {
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
     | '/trading'
     | '/transfer'
     | '/asset/$id'
+    | '/auth/signup'
     | '/auth/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/trading'
     | '/transfer'
     | '/asset/$id'
+    | '/auth/signup'
     | '/auth'
   id:
     | '__root__'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/trading'
     | '/transfer'
     | '/asset/$id'
+    | '/auth/signup'
     | '/auth/'
   fileRoutesById: FileRoutesById
 }
@@ -183,6 +195,7 @@ export interface RootRouteChildren {
   TradingRoute: typeof TradingRoute
   TransferRoute: typeof TransferRoute
   AssetIdRoute: typeof AssetIdRoute
+  AuthSignupRoute: typeof AuthSignupRoute
   AuthIndexRoute: typeof AuthIndexRoute
 }
 
@@ -272,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/signup': {
+      id: '/auth/signup'
+      path: '/auth/signup'
+      fullPath: '/auth/signup'
+      preLoaderRoute: typeof AuthSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -287,6 +307,7 @@ const rootRouteChildren: RootRouteChildren = {
   TradingRoute: TradingRoute,
   TransferRoute: TransferRoute,
   AssetIdRoute: AssetIdRoute,
+  AuthSignupRoute: AuthSignupRoute,
   AuthIndexRoute: AuthIndexRoute,
 }
 export const routeTree = rootRouteImport

@@ -14,12 +14,17 @@ import { Route as CircleRouteImport } from './routes/circle'
 import { Route as DepositRouteImport } from './routes/deposit'
 import { Route as MarketsRouteImport } from './routes/markets'
 import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as ReceiveRouteImport } from './routes/receive'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TradingRouteImport } from './routes/trading'
 import { Route as TransferRouteImport } from './routes/transfer'
 import { Route as AssetIdRouteImport } from './routes/asset.$id'
+import { Route as AuthIndexRouteImport } from './routes/auth.index'
+import { Route as AuthRecoverRouteImport } from './routes/auth.recover'
+import { Route as AuthSignupRouteImport } from './routes/auth.signup'
+import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -44,6 +49,11 @@ const MarketsRoute = MarketsRouteImport.update({
 const NotificationsRoute = NotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PortfolioRoute = PortfolioRouteImport.update({
@@ -76,6 +86,26 @@ const AssetIdRoute = AssetIdRouteImport.update({
   path: '/asset/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthIndexRoute = AuthIndexRouteImport.update({
+  id: '/auth/',
+  path: '/auth/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRecoverRoute = AuthRecoverRouteImport.update({
+  id: '/auth/recover',
+  path: '/auth/recover',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthSignupRoute = AuthSignupRouteImport.update({
+  id: '/auth/signup',
+  path: '/auth/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthVerifyRoute = AuthVerifyRouteImport.update({
+  id: '/auth/verify',
+  path: '/auth/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -83,12 +113,17 @@ export interface FileRoutesByFullPath {
   '/deposit': typeof DepositRoute
   '/markets': typeof MarketsRoute
   '/notifications': typeof NotificationsRoute
+  '/onboarding': typeof OnboardingRoute
   '/portfolio': typeof PortfolioRoute
   '/receive': typeof ReceiveRoute
   '/settings': typeof SettingsRoute
   '/trading': typeof TradingRoute
   '/transfer': typeof TransferRoute
   '/asset/$id': typeof AssetIdRoute
+  '/auth/recover': typeof AuthRecoverRoute
+  '/auth/signup': typeof AuthSignupRoute
+  '/auth/verify': typeof AuthVerifyRoute
+  '/auth/': typeof AuthIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -96,12 +131,17 @@ export interface FileRoutesByTo {
   '/deposit': typeof DepositRoute
   '/markets': typeof MarketsRoute
   '/notifications': typeof NotificationsRoute
+  '/onboarding': typeof OnboardingRoute
   '/portfolio': typeof PortfolioRoute
   '/receive': typeof ReceiveRoute
   '/settings': typeof SettingsRoute
   '/trading': typeof TradingRoute
   '/transfer': typeof TransferRoute
   '/asset/$id': typeof AssetIdRoute
+  '/auth/recover': typeof AuthRecoverRoute
+  '/auth/signup': typeof AuthSignupRoute
+  '/auth/verify': typeof AuthVerifyRoute
+  '/auth': typeof AuthIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -110,12 +150,17 @@ export interface FileRoutesById {
   '/deposit': typeof DepositRoute
   '/markets': typeof MarketsRoute
   '/notifications': typeof NotificationsRoute
+  '/onboarding': typeof OnboardingRoute
   '/portfolio': typeof PortfolioRoute
   '/receive': typeof ReceiveRoute
   '/settings': typeof SettingsRoute
   '/trading': typeof TradingRoute
   '/transfer': typeof TransferRoute
   '/asset/$id': typeof AssetIdRoute
+  '/auth/recover': typeof AuthRecoverRoute
+  '/auth/signup': typeof AuthSignupRoute
+  '/auth/verify': typeof AuthVerifyRoute
+  '/auth/': typeof AuthIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -125,12 +170,17 @@ export interface FileRouteTypes {
     | '/deposit'
     | '/markets'
     | '/notifications'
+    | '/onboarding'
     | '/portfolio'
     | '/receive'
     | '/settings'
     | '/trading'
     | '/transfer'
     | '/asset/$id'
+    | '/auth/recover'
+    | '/auth/signup'
+    | '/auth/verify'
+    | '/auth/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -138,12 +188,17 @@ export interface FileRouteTypes {
     | '/deposit'
     | '/markets'
     | '/notifications'
+    | '/onboarding'
     | '/portfolio'
     | '/receive'
     | '/settings'
     | '/trading'
     | '/transfer'
     | '/asset/$id'
+    | '/auth/recover'
+    | '/auth/signup'
+    | '/auth/verify'
+    | '/auth'
   id:
     | '__root__'
     | '/'
@@ -151,12 +206,17 @@ export interface FileRouteTypes {
     | '/deposit'
     | '/markets'
     | '/notifications'
+    | '/onboarding'
     | '/portfolio'
     | '/receive'
     | '/settings'
     | '/trading'
     | '/transfer'
     | '/asset/$id'
+    | '/auth/recover'
+    | '/auth/signup'
+    | '/auth/verify'
+    | '/auth/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -165,12 +225,17 @@ export interface RootRouteChildren {
   DepositRoute: typeof DepositRoute
   MarketsRoute: typeof MarketsRoute
   NotificationsRoute: typeof NotificationsRoute
+  OnboardingRoute: typeof OnboardingRoute
   PortfolioRoute: typeof PortfolioRoute
   ReceiveRoute: typeof ReceiveRoute
   SettingsRoute: typeof SettingsRoute
   TradingRoute: typeof TradingRoute
   TransferRoute: typeof TransferRoute
   AssetIdRoute: typeof AssetIdRoute
+  AuthRecoverRoute: typeof AuthRecoverRoute
+  AuthSignupRoute: typeof AuthSignupRoute
+  AuthVerifyRoute: typeof AuthVerifyRoute
+  AuthIndexRoute: typeof AuthIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -208,6 +273,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/notifications'
       preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/portfolio': {
@@ -252,6 +324,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AssetIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/': {
+      id: '/auth/'
+      path: '/auth'
+      fullPath: '/auth/'
+      preLoaderRoute: typeof AuthIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/recover': {
+      id: '/auth/recover'
+      path: '/auth/recover'
+      fullPath: '/auth/recover'
+      preLoaderRoute: typeof AuthRecoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/signup': {
+      id: '/auth/signup'
+      path: '/auth/signup'
+      fullPath: '/auth/signup'
+      preLoaderRoute: typeof AuthSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/verify': {
+      id: '/auth/verify'
+      path: '/auth/verify'
+      fullPath: '/auth/verify'
+      preLoaderRoute: typeof AuthVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -261,23 +361,18 @@ const rootRouteChildren: RootRouteChildren = {
   DepositRoute: DepositRoute,
   MarketsRoute: MarketsRoute,
   NotificationsRoute: NotificationsRoute,
+  OnboardingRoute: OnboardingRoute,
   PortfolioRoute: PortfolioRoute,
   ReceiveRoute: ReceiveRoute,
   SettingsRoute: SettingsRoute,
   TradingRoute: TradingRoute,
   TransferRoute: TransferRoute,
   AssetIdRoute: AssetIdRoute,
+  AuthRecoverRoute: AuthRecoverRoute,
+  AuthSignupRoute: AuthSignupRoute,
+  AuthVerifyRoute: AuthVerifyRoute,
+  AuthIndexRoute: AuthIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

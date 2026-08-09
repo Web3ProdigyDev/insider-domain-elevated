@@ -1,6 +1,6 @@
-import { useState } from "react";
+import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Landmark, Bitcoin, CreditCard } from "lucide-react";
+import { ArrowLeft, Bitcoin, Gift, ChevronRight } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { Card } from "@/components/ui/card";
@@ -8,26 +8,35 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/common/section-header";
+import { SearchBar } from "@/components/common/search-bar";
 import { CopyField } from "@/components/common/copy-field";
+import { CoinLogo } from "@/components/common/coin-logo";
+import { EmptyState } from "@/components/common/empty-state";
 import { notify } from "@/lib/notify";
 import { holdings } from "@/lib/holdings";
+import { useMarkets } from "@/lib/use-markets";
+import { fundingEligibility } from "@/lib/age";
+import { useAuth } from "@/lib/use-auth";
 import { cn } from "@/lib/utils";
 
-const METHODS = [
-  { id: "wire", label: "Wire transfer", note: "1–2 business days · no fee", icon: Landmark },
-  { id: "crypto", label: "Crypto deposit", note: "Network confirmation · no fee", icon: Bitcoin },
-  { id: "card", label: "Card", note: "Instant · 1.4%", icon: CreditCard },
-] as const;
+const GIFT_CARDS = [
+  { id: "apple", label: "Apple Gift Card", note: "Redeemed as simulated balance" },
+  { id: "amazon", label: "Amazon Gift Card", note: "Redeemed as simulated balance" },
+  { id: "steam", label: "Steam Wallet Code", note: "Redeemed as simulated balance" },
+];
 
 export const Route = createFileRoute("/deposit")({
   head: () => ({
     meta: [
-      { title: "Add funds — Insider Domain" },
-      { name: "description", content: "Fund your simulated account by wire, crypto or card." },
-      { property: "og:title", content: "Add funds — Insider Domain" },
+      { title: "Deposit — Insider Domain" },
+      {
+        name: "description",
+        content: "Deposit into your Insider Domain environment by crypto or redemption code.",
+      },
+      { property: "og:title", content: "Deposit — Insider Domain" },
       {
         property: "og:description",
-        content: "Fund your simulated account by wire, crypto or card.",
+        content: "Deposit into your Insider Domain environment by crypto or redemption code.",
       },
     ],
   }),
@@ -35,12 +44,37 @@ export const Route = createFileRoute("/deposit")({
 });
 
 function Deposit() {
-  const [method, setMethod] = useState<(typeof METHODS)[number]["id"]>("wire");
-  const [amount, setAmount] = useState("");
-  const usdc = holdings.find((h) => h.symbol === "USDC");
+  const { user } = useAuth();
+  const { coins } = useMarkets();
+  const eligibility = fundingEligibility(user?.dob ?? "1990-01-01");
+  const [method, setMethod] = React.useState<"crypto" | "gift-card">("crypto");
+  const [query, setQuery] = React.useState("");
+  const [selected, setSelected] = React.useState("bitcoin");
+  const [card, setCard] = React.useState(GIFT_CARDS[0]!.id);
+  const [code, setCode] = React.useState("");
+
+  const options = React.useMemo(() => {
+    const base = coins.length ? coins : [];
+    const q = query.trim().toLowerCase();
+    const list = q
+      ? base.filter((c) => c.name.toLowerCase().includes(q) || c.symbol.toLowerCase().includes(q))
+      : base;
+    return list.slice(0, 40);
+  }, [coins, query]);
+
+  const coin = coins.find((c) => c.id === selected);
+  const held = holdings.find((h) => h.id === selected);
+  const address =
+    held?.address ?? `id1${selected.replace(/[^a-z0-9]/g, "").slice(0, 10)}9x4vqk2mzt7pd3`;
+  const network = held?.network ?? coin?.name ?? "Native network";
+
+  const methods = [
+    { id: "crypto" as const, label: "Crypto deposit", note: "Network confirmation · no fee", icon: Bitcoin },
+    { id: "gift-card" as const, label: "Redemption code", note: "Gift card · instant", icon: Gift },
+  ].filter((m) => eligibility.methods.includes(m.id));
 
   return (
-    <AppShell eyebrow="Funding" title="Add funds">
+    <AppShell eyebrow="Funding" title="Deposit">
       <Link
         to="/"
         className="mb-6 inline-flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
@@ -50,7 +84,7 @@ function Deposit() {
 
       <SectionHeader title="Method" />
       <div className="space-y-3">
-        {METHODS.map((m) => (
+        {methods.map((m) => (
           <button
             key={m.id}
             type="button"
@@ -76,67 +110,113 @@ function Deposit() {
               <span className="block truncate text-sm text-foreground">{m.label}</span>
               <span className="block truncate text-xs text-muted-foreground">{m.note}</span>
             </span>
-            {method === m.id ? (
-              <Badge variant="gold" className="ml-auto">
-                Selected
-              </Badge>
-            ) : null}
+            <ChevronRight className="ml-auto size-4 shrink-0 text-muted-foreground" strokeWidth={1.75} />
           </button>
         ))}
       </div>
 
-      <section className="mt-10">
-        <SectionHeader title="Amount" />
-        <Card padding="lg">
-          {method === "crypto" && usdc ? (
-            <div className="space-y-4">
-              <CopyField label="USDC address (Ethereum)" value={usdc.address} />
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                Send only USDC on Ethereum. Funds credit after twelve confirmations.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-5">
-              <Input
-                label="Amount (USD)"
-                inputMode="decimal"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-              />
-              <div className="flex flex-wrap gap-2">
-                {[5000, 25000, 100000].map((preset) => (
-                  <Button
-                    key={preset}
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setAmount(String(preset))}
-                  >
-                    ${preset.toLocaleString()}
-                  </Button>
-                ))}
+      {method === "crypto" ? (
+        <section className="mt-10">
+          <SectionHeader title="Asset" description="Search the full list of supported instruments." />
+          <SearchBar
+            value={query}
+            onValueChange={setQuery}
+            placeholder="Search asset or ticker"
+            className="mb-4"
+          />
+          <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
+            {options.length ? (
+              options.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setSelected(c.id)}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors duration-300 ease-[var(--ease-luxe)]",
+                    selected === c.id
+                      ? "border-gold/40 bg-surface-raised"
+                      : "border-border bg-card hover:border-border-strong",
+                  )}
+                >
+                  <CoinLogo src={c.image} symbol={c.symbol} size={28} />
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm text-foreground">{c.name}</span>
+                    <span className="block text-xs text-muted-foreground">{c.symbol}</span>
+                  </span>
+                </button>
+              ))
+            ) : (
+              <EmptyState title="No match" description="Try a different name or ticker." />
+            )}
+          </div>
+
+          <Card padding="lg" className="mt-6">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <CoinLogo src={coin?.image} symbol={coin?.symbol ?? "—"} size={36} />
+                <div className="min-w-0">
+                  <p className="truncate text-sm text-foreground">{coin?.name ?? "Select an asset"}</p>
+                  <p className="text-xs text-muted-foreground">{network}</p>
+                </div>
               </div>
-              <Button
-                full
-                onClick={() => {
-                  const value = Number(amount) || 0;
-                  if (value <= 0) {
-                    notify.error("Enter an amount", "Funding still needs a figure.");
-                    return;
-                  }
-                  notify.success(
-                    `Funding initiated`,
-                    `$${value.toLocaleString()} via ${METHODS.find((m) => m.id === method)?.label}. Simulated.`,
-                  );
-                  setAmount("");
-                }}
-              >
-                Continue
-              </Button>
+              <Badge variant="gold">Simulated</Badge>
             </div>
-          )}
-        </Card>
-      </section>
+            <div className="mt-6">
+              <CopyField label="Deposit address" value={address} />
+            </div>
+            <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
+              Send only {coin?.symbol ?? "the selected asset"} on {network}. This is a simulated
+              environment — no real assets can be received.
+            </p>
+          </Card>
+        </section>
+      ) : (
+        <section className="mt-10">
+          <SectionHeader title="Redemption code" description="Enter a gift card code to credit your simulated balance." />
+          <Card padding="lg">
+            <div className="mb-5 grid gap-2 sm:grid-cols-3">
+              {GIFT_CARDS.map((g) => (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => setCard(g.id)}
+                  className={cn(
+                    "rounded-2xl border px-4 py-3 text-left transition-colors duration-300 ease-[var(--ease-luxe)]",
+                    card === g.id
+                      ? "border-gold/40 bg-surface-raised"
+                      : "border-border bg-card hover:border-border-strong",
+                  )}
+                >
+                  <span className="block text-sm text-foreground">{g.label}</span>
+                  <span className="block text-xs text-muted-foreground">{g.note}</span>
+                </button>
+              ))}
+            </div>
+            <form
+              className="space-y-5"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (code.trim().length < 8) {
+                  notify.message("Code incomplete", "Enter the full code from the card.");
+                  return;
+                }
+                notify.success("Code submitted", "Redemption is under review.");
+                setCode("");
+              }}
+            >
+              <Input
+                label="Code"
+                value={code}
+                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                placeholder="XXXX-XXXX-XXXX"
+              />
+              <Button type="submit" full>
+                Submit for review
+              </Button>
+            </form>
+          </Card>
+        </section>
+      )}
     </AppShell>
   );
 }

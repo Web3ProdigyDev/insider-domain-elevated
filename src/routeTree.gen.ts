@@ -21,6 +21,7 @@ import { Route as TradingRouteImport } from './routes/trading'
 import { Route as TransferRouteImport } from './routes/transfer'
 import { Route as AssetIdRouteImport } from './routes/asset.$id'
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
+import { Route as AuthRecoverRouteImport } from './routes/auth.recover'
 import { Route as AuthSignupRouteImport } from './routes/auth.signup'
 import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
 
@@ -84,6 +85,11 @@ const AuthIndexRoute = AuthIndexRouteImport.update({
   path: '/auth/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRecoverRoute = AuthRecoverRouteImport.update({
+  id: '/auth/recover',
+  path: '/auth/recover',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/auth/signup',
   path: '/auth/signup',
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/trading': typeof TradingRoute
   '/transfer': typeof TransferRoute
   '/asset/$id': typeof AssetIdRoute
+  '/auth/recover': typeof AuthRecoverRoute
   '/auth/signup': typeof AuthSignupRoute
   '/auth/verify': typeof AuthVerifyRoute
   '/auth/': typeof AuthIndexRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/trading': typeof TradingRoute
   '/transfer': typeof TransferRoute
   '/asset/$id': typeof AssetIdRoute
+  '/auth/recover': typeof AuthRecoverRoute
   '/auth/signup': typeof AuthSignupRoute
   '/auth/verify': typeof AuthVerifyRoute
   '/auth': typeof AuthIndexRoute
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/trading': typeof TradingRoute
   '/transfer': typeof TransferRoute
   '/asset/$id': typeof AssetIdRoute
+  '/auth/recover': typeof AuthRecoverRoute
   '/auth/signup': typeof AuthSignupRoute
   '/auth/verify': typeof AuthVerifyRoute
   '/auth/': typeof AuthIndexRoute
@@ -158,6 +167,7 @@ export interface FileRouteTypes {
     | '/trading'
     | '/transfer'
     | '/asset/$id'
+    | '/auth/recover'
     | '/auth/signup'
     | '/auth/verify'
     | '/auth/'
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/trading'
     | '/transfer'
     | '/asset/$id'
+    | '/auth/recover'
     | '/auth/signup'
     | '/auth/verify'
     | '/auth'
@@ -190,6 +201,7 @@ export interface FileRouteTypes {
     | '/trading'
     | '/transfer'
     | '/asset/$id'
+    | '/auth/recover'
     | '/auth/signup'
     | '/auth/verify'
     | '/auth/'
@@ -207,6 +219,7 @@ export interface RootRouteChildren {
   TradingRoute: typeof TradingRoute
   TransferRoute: typeof TransferRoute
   AssetIdRoute: typeof AssetIdRoute
+  AuthRecoverRoute: typeof AuthRecoverRoute
   AuthSignupRoute: typeof AuthSignupRoute
   AuthVerifyRoute: typeof AuthVerifyRoute
   AuthIndexRoute: typeof AuthIndexRoute
@@ -298,6 +311,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/recover': {
+      id: '/auth/recover'
+      path: '/auth/recover'
+      fullPath: '/auth/recover'
+      preLoaderRoute: typeof AuthRecoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/signup': {
       id: '/auth/signup'
       path: '/auth/signup'
@@ -327,6 +347,7 @@ const rootRouteChildren: RootRouteChildren = {
   TradingRoute: TradingRoute,
   TransferRoute: TransferRoute,
   AssetIdRoute: AssetIdRoute,
+  AuthRecoverRoute: AuthRecoverRoute,
   AuthSignupRoute: AuthSignupRoute,
   AuthVerifyRoute: AuthVerifyRoute,
   AuthIndexRoute: AuthIndexRoute,

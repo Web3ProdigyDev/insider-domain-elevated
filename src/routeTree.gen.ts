@@ -20,6 +20,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TradingRouteImport } from './routes/trading'
 import { Route as TransferRouteImport } from './routes/transfer'
 import { Route as AssetIdRouteImport } from './routes/asset.$id'
+import { Route as AuthIndexRouteImport } from './routes/auth.index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -76,6 +77,11 @@ const AssetIdRoute = AssetIdRouteImport.update({
   path: '/asset/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthIndexRoute = AuthIndexRouteImport.update({
+  id: '/auth/',
+  path: '/auth/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/trading': typeof TradingRoute
   '/transfer': typeof TransferRoute
   '/asset/$id': typeof AssetIdRoute
+  '/auth/': typeof AuthIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/trading': typeof TradingRoute
   '/transfer': typeof TransferRoute
   '/asset/$id': typeof AssetIdRoute
+  '/auth': typeof AuthIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/trading': typeof TradingRoute
   '/transfer': typeof TransferRoute
   '/asset/$id': typeof AssetIdRoute
+  '/auth/': typeof AuthIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/trading'
     | '/transfer'
     | '/asset/$id'
+    | '/auth/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/trading'
     | '/transfer'
     | '/asset/$id'
+    | '/auth'
   id:
     | '__root__'
     | '/'
@@ -157,6 +168,7 @@ export interface FileRouteTypes {
     | '/trading'
     | '/transfer'
     | '/asset/$id'
+    | '/auth/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -171,6 +183,7 @@ export interface RootRouteChildren {
   TradingRoute: typeof TradingRoute
   TransferRoute: typeof TransferRoute
   AssetIdRoute: typeof AssetIdRoute
+  AuthIndexRoute: typeof AuthIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -252,6 +265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AssetIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/': {
+      id: '/auth/'
+      path: '/auth'
+      fullPath: '/auth/'
+      preLoaderRoute: typeof AuthIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -267,17 +287,8 @@ const rootRouteChildren: RootRouteChildren = {
   TradingRoute: TradingRoute,
   TransferRoute: TransferRoute,
   AssetIdRoute: AssetIdRoute,
+  AuthIndexRoute: AuthIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

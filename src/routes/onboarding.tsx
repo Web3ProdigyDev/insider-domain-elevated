@@ -131,7 +131,7 @@ function Onboarding() {
           >
             Yes, confirm
           </Button>
-          <Button variant="ghost" full onClick={() => navigate({ to: "/settings/account" })}>
+          <Button variant="ghost" full onClick={() => navigate({ to: "/settings" })}>
             Edit my information
           </Button>
         </>
@@ -161,7 +161,7 @@ function Onboarding() {
           >
             Yes, confirm
           </Button>
-          <Button variant="ghost" full onClick={() => navigate({ to: "/settings/account" })}>
+          <Button variant="ghost" full onClick={() => navigate({ to: "/settings" })}>
             Change my information
           </Button>
         </>

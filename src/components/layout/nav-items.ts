@@ -1,4 +1,4 @@
-import { Home, LineChart, Users, Crosshair, Wallet, Settings, Bell } from "lucide-react";
+import { Home, LineChart, Users, Sparkles, Wallet, Settings, Bell, Crosshair } from "lucide-react";
 
 export type NavItem = {
   label: string;
@@ -11,12 +11,13 @@ export type NavItem = {
 export const navItems: NavItem[] = [
   { label: "Overview", to: "/", icon: Home, primary: true },
   { label: "Markets", to: "/markets", icon: LineChart, primary: true },
-  { label: "Trading", to: "/trading", icon: Crosshair, primary: true },
+  { label: "Assistant", to: "/assistant", icon: Sparkles, primary: true },
   { label: "Portfolio", to: "/portfolio", icon: Wallet, primary: true },
   { label: "Circle", to: "/circle", icon: Users, primary: true },
 ];
 
 export const utilityNavItems: NavItem[] = [
+  { label: "Trading", to: "/trading", icon: Crosshair },
   { label: "Notifications", to: "/notifications", icon: Bell },
   { label: "Settings", to: "/settings", icon: Settings },
 ];

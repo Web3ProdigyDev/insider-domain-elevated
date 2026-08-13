@@ -21,10 +21,7 @@ export function BottomNav() {
                 className="flex flex-col items-center gap-1.5 py-3 transition-colors duration-300 ease-[var(--ease-luxe)]"
               >
                 <item.icon
-                  className={cn(
-                    "size-5",
-                    active ? "text-gold" : "text-muted-foreground",
-                  )}
+                  className={cn("size-5", active ? "text-gold" : "text-muted-foreground")}
                   strokeWidth={1.75}
                 />
                 <span

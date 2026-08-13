@@ -1,7 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { navItems, utilityNavItems } from "./nav-items";
-import { demoMember } from "@/lib/placeholder-data";
 
 export function AppSidebar({ className }: { className?: string }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -40,19 +39,6 @@ export function AppSidebar({ className }: { className?: string }) {
           ))}
         </nav>
       </div>
-
-      <Link
-        to="/settings"
-        className="flex min-w-0 items-center gap-3 rounded-xl border border-border px-3 py-3 transition-colors duration-300 ease-[var(--ease-luxe)] hover:border-border-strong hover:bg-sidebar-accent/60"
-      >
-        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-gold-muted text-[0.7rem] text-gold">
-          AM
-        </span>
-        <span className="min-w-0">
-          <span className="block truncate text-sm text-foreground">{demoMember.name}</span>
-          <span className="text-eyebrow">{demoMember.tier}</span>
-        </span>
-      </Link>
     </aside>
   );
 }

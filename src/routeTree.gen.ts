@@ -17,6 +17,7 @@ import { Route as MarketsRouteImport } from './routes/markets'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReceiveRouteImport } from './routes/receive'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TradingRouteImport } from './routes/trading'
@@ -65,6 +66,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const PortfolioRoute = PortfolioRouteImport.update({
   id: '/portfolio',
   path: '/portfolio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReceiveRoute = ReceiveRouteImport.update({
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/portfolio': typeof PortfolioRoute
+  '/privacy': typeof PrivacyRoute
   '/receive': typeof ReceiveRoute
   '/settings': typeof SettingsRoute
   '/trading': typeof TradingRoute
@@ -141,6 +148,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/portfolio': typeof PortfolioRoute
+  '/privacy': typeof PrivacyRoute
   '/receive': typeof ReceiveRoute
   '/settings': typeof SettingsRoute
   '/trading': typeof TradingRoute
@@ -161,6 +169,7 @@ export interface FileRoutesById {
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/portfolio': typeof PortfolioRoute
+  '/privacy': typeof PrivacyRoute
   '/receive': typeof ReceiveRoute
   '/settings': typeof SettingsRoute
   '/trading': typeof TradingRoute
@@ -182,6 +191,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/onboarding'
     | '/portfolio'
+    | '/privacy'
     | '/receive'
     | '/settings'
     | '/trading'
@@ -201,6 +211,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/onboarding'
     | '/portfolio'
+    | '/privacy'
     | '/receive'
     | '/settings'
     | '/trading'
@@ -220,6 +231,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/onboarding'
     | '/portfolio'
+    | '/privacy'
     | '/receive'
     | '/settings'
     | '/trading'
@@ -240,6 +252,7 @@ export interface RootRouteChildren {
   NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRoute
   PortfolioRoute: typeof PortfolioRoute
+  PrivacyRoute: typeof PrivacyRoute
   ReceiveRoute: typeof ReceiveRoute
   SettingsRoute: typeof SettingsRoute
   TradingRoute: typeof TradingRoute
@@ -307,6 +320,13 @@ declare module '@tanstack/react-router' {
       path: '/portfolio'
       fullPath: '/portfolio'
       preLoaderRoute: typeof PortfolioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/receive': {
@@ -384,6 +404,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRoute,
   PortfolioRoute: PortfolioRoute,
+  PrivacyRoute: PrivacyRoute,
   ReceiveRoute: ReceiveRoute,
   SettingsRoute: SettingsRoute,
   TradingRoute: TradingRoute,

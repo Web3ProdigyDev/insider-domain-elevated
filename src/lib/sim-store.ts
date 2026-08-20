@@ -195,8 +195,18 @@ const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
 const words = [
-  "harbor", "quiet", "ember", "vault", "cedar", "atlas", "signal", "north",
-  "marble", "orbit", "ledger", "cobalt",
+  "harbor",
+  "quiet",
+  "ember",
+  "vault",
+  "cedar",
+  "atlas",
+  "signal",
+  "north",
+  "marble",
+  "orbit",
+  "ledger",
+  "cobalt",
 ];
 
 export function demoPhrase(seed = Date.now()): string {
@@ -377,9 +387,27 @@ function seedThreads(now: number): Thread[] {
       online: true,
       unread: 1,
       messages: [
-        { id: "m-1", from: "l.castellane", body: "Did you read the invitation note for M.?", at: now - 3 * HOUR, reactions: [] },
-        { id: "m-2", from: ME, body: "Reading it now. Leaning approve.", at: now - 2.6 * HOUR, reactions: [] },
-        { id: "m-3", from: "l.castellane", body: "Good. We're at three of five.", at: now - 40 * MINUTE, reactions: [] },
+        {
+          id: "m-1",
+          from: "l.castellane",
+          body: "Did you read the invitation note for M.?",
+          at: now - 3 * HOUR,
+          reactions: [],
+        },
+        {
+          id: "m-2",
+          from: ME,
+          body: "Reading it now. Leaning approve.",
+          at: now - 2.6 * HOUR,
+          reactions: [],
+        },
+        {
+          id: "m-3",
+          from: "l.castellane",
+          body: "Good. We're at three of five.",
+          at: now - 40 * MINUTE,
+          reactions: [],
+        },
       ],
     },
     {
@@ -389,7 +417,13 @@ function seedThreads(now: number): Thread[] {
       online: false,
       unread: 0,
       messages: [
-        { id: "m-4", from: "r.okonjo", body: "Assistant flagged an allocation drift on my book overnight. Elegant.", at: now - 2 * DAY, reactions: ["insight"] },
+        {
+          id: "m-4",
+          from: "r.okonjo",
+          body: "Assistant flagged an allocation drift on my book overnight. Elegant.",
+          at: now - 2 * DAY,
+          reactions: ["insight"],
+        },
       ],
     },
   ];
@@ -606,6 +640,27 @@ export function adjustBalance(assetId: string, delta: number) {
 
 export function setBalance(assetId: string, amount: number) {
   set({ balances: { ...state.balances, [assetId]: Math.max(0, amount) } });
+}
+
+/** Admin-only simulation control: changes demo balances and records the action. */
+export function adminSetBalance(assetId: string, amount: number, target = ME) {
+  const before = state.balances[assetId] ?? 0;
+  const after = Math.max(0, amount);
+  set({
+    balances: { ...state.balances, [assetId]: after },
+    audit: [
+      {
+        id: uid("audit"),
+        admin: ME,
+        action: "Set simulated balance",
+        target,
+        before: `${assetId}: ${before}`,
+        after: `${assetId}: ${after}`,
+        at: Date.now(),
+      },
+      ...state.audit,
+    ].slice(0, 100),
+  });
 }
 
 /* -------------------------------------------------------- transactions */
@@ -897,7 +952,10 @@ export function createInvitation(input: {
   const invitation: Invitation = {
     id: uid("inv"),
     candidate: input.candidate.trim(),
-    candidateHandle: input.candidate.trim().toLowerCase().replace(/[^a-z]+/g, "."),
+    candidateHandle: input.candidate
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z]+/g, "."),
     invitedBy: input.invitedBy ?? "A. Marchetti",
     inviterHandle: input.inviterHandle ?? ME,
     note: input.note.trim(),
@@ -942,7 +1000,12 @@ export function castVote(invitationId: string, choice: "approve" | "decline", ha
   });
 }
 
-export function addInvitationComment(invitationId: string, body: string, author = "A. Marchetti", handle = ME) {
+export function addInvitationComment(
+  invitationId: string,
+  body: string,
+  author = "A. Marchetti",
+  handle = ME,
+) {
   set({
     invitations: state.invitations.map((i) =>
       i.id === invitationId
@@ -969,7 +1032,13 @@ export function revokeInvitation(invitationId: string) {
 /* ------------------------------------------------------------ messages */
 
 export function sendMessage(threadId: string, body: string) {
-  const message: ChatMessage = { id: uid("m"), from: ME, body: body.trim(), at: Date.now(), reactions: [] };
+  const message: ChatMessage = {
+    id: uid("m"),
+    from: ME,
+    body: body.trim(),
+    at: Date.now(),
+    reactions: [],
+  };
   set({
     threads: state.threads.map((t) =>
       t.id === threadId ? { ...t, messages: [...t.messages, message] } : t,

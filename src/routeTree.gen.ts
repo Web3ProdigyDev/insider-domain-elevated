@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AdminloginRouteImport } from './routes/adminlogin'
 import { Route as AssistantRouteImport } from './routes/assistant'
 import { Route as CircleRouteImport } from './routes/circle'
 import { Route as DepositRouteImport } from './routes/deposit'
@@ -39,6 +40,11 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminloginRoute = AdminloginRouteImport.update({
+  id: '/adminlogin',
+  path: '/adminlogin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AssistantRoute = AssistantRouteImport.update({
@@ -140,6 +146,7 @@ const AuthVerifyRoute = AuthVerifyRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/adminlogin': typeof AdminloginRoute
   '/assistant': typeof AssistantRoute
   '/circle': typeof CircleRoute
   '/deposit': typeof DepositRoute
@@ -163,6 +170,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/adminlogin': typeof AdminloginRoute
   '/assistant': typeof AssistantRoute
   '/circle': typeof CircleRoute
   '/deposit': typeof DepositRoute
@@ -187,6 +195,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/adminlogin': typeof AdminloginRoute
   '/assistant': typeof AssistantRoute
   '/circle': typeof CircleRoute
   '/deposit': typeof DepositRoute
@@ -212,6 +221,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/adminlogin'
     | '/assistant'
     | '/circle'
     | '/deposit'
@@ -235,6 +245,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/adminlogin'
     | '/assistant'
     | '/circle'
     | '/deposit'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/adminlogin'
     | '/assistant'
     | '/circle'
     | '/deposit'
@@ -282,6 +294,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  AdminloginRoute: typeof AdminloginRoute
   AssistantRoute: typeof AssistantRoute
   CircleRoute: typeof CircleRoute
   DepositRoute: typeof DepositRoute
@@ -317,6 +330,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/adminlogin': {
+      id: '/adminlogin'
+      path: '/adminlogin'
+      fullPath: '/adminlogin'
+      preLoaderRoute: typeof AdminloginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/assistant': {
@@ -458,6 +478,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  AdminloginRoute: AdminloginRoute,
   AssistantRoute: AssistantRoute,
   CircleRoute: CircleRoute,
   DepositRoute: DepositRoute,

@@ -8,6 +8,7 @@ import {
   Bell,
   MessageCircle,
   ShieldCheck,
+  CandlestickChart,
 } from "lucide-react";
 
 export type NavItem = {
@@ -22,7 +23,7 @@ export const navItems: NavItem[] = [
   { label: "Overview", to: "/", icon: Home, primary: true },
   { label: "Portfolio", to: "/portfolio", icon: Wallet, primary: true },
   { label: "Wallet", to: "/wallet", icon: Wallet, primary: true },
-  { label: "AI Investment", to: "/assistant", icon: Sparkles, primary: true },
+  { label: "AI Investment", to: "/assistant", icon: CandlestickChart, primary: true },
   { label: "Circle", to: "/circle", icon: Users, primary: true },
 ];
 
@@ -30,7 +31,7 @@ export const utilityNavItems: NavItem[] = [
   { label: "Markets", to: "/markets", icon: LineChart },
   { label: "Messages", to: "/messages", icon: MessageCircle },
   { label: "Notifications", to: "/notifications", icon: Bell },
-  { label: "Admin", to: "/admin", icon: ShieldCheck },
+  { label: "Admin", to: "/adminlogin", icon: ShieldCheck },
   { label: "Settings", to: "/settings", icon: Settings },
 ];
 

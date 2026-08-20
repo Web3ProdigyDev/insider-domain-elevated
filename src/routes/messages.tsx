@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSim } from "@/lib/use-sim";
 import { markThreadRead, sendMessage } from "@/lib/sim-store";
+import { notify } from "@/lib/notify";
 
 export const Route = createFileRoute("/messages")({ component: Messages });
 function Messages() {
@@ -70,6 +71,7 @@ function Messages() {
                   if (!draft.trim()) return;
                   sendMessage(thread.id, draft);
                   setDraft("");
+                  notify.message("Message sent", `Delivered to ${thread.name}.`);
                 }}
               >
                 <Input

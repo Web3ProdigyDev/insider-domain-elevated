@@ -41,6 +41,7 @@ function Circle() {
   const [open, setOpen] = useState(false);
   const [posts, setPosts] = useState<FeedPost[]>(feedPosts);
   const [draft, setDraft] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
 
   const toggleLike = (id: string) =>
     setPosts((prev) =>
@@ -169,8 +170,13 @@ function Circle() {
             </Button>
             <Button
               onClick={() => {
+                if (!inviteEmail.includes("@")) {
+                  notify.error("Enter an email address", "Use a valid demo address to continue.");
+                  return;
+                }
                 setOpen(false);
-                notify.success("Invitation sent", "You have no invitations remaining.");
+                setInviteEmail("");
+                notify.success("Invitation sent", `A simulated invite was sent to ${inviteEmail}.`);
               }}
             >
               Send
@@ -178,7 +184,13 @@ function Circle() {
           </>
         }
       >
-        <Input label="Email address" placeholder="name@domain.com" type="email" />
+        <Input
+          label="Email address"
+          placeholder="name@domain.com"
+          type="email"
+          value={inviteEmail}
+          onChange={(event) => setInviteEmail(event.target.value)}
+        />
       </Modal>
     </AppShell>
   );

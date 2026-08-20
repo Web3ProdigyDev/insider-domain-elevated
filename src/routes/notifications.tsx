@@ -15,7 +15,8 @@ export const Route = createFileRoute("/notifications")({
       { title: "Notifications — Insider Domain" },
       {
         name: "description",
-        content: "Quiet, typeset notices: assistant reviews, invitations, funding and system notes.",
+        content:
+          "Quiet, typeset notices: assistant reviews, invitations, funding and system notes.",
       },
       { property: "og:title", content: "Notifications — Insider Domain" },
       {
@@ -71,6 +72,7 @@ function Notifications() {
               type="button"
               onClick={() => {
                 markNotificationRead(n.id);
+                notify.message("Notice opened", n.title);
                 void navigate({ to: n.to });
               }}
               className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-4 rounded-2xl border border-border bg-card px-5 py-4 text-left transition-colors duration-300 ease-[var(--ease-luxe)] hover:border-border-strong hover:bg-surface-raised"

@@ -36,6 +36,7 @@ function Transfer() {
   const [fromId, setFromId] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
   const [destination, setDestination] = useState("");
+  const [reviewing, setReviewing] = useState(false);
 
   const from = positions.find((p) => p.id === fromId) ?? positions[0];
   const numeric = Number(amount) || 0;
@@ -100,6 +101,11 @@ function Transfer() {
                 {formatPrice(numeric * (from?.price ?? 0))}
               </span>
             </div>
+            {reviewing && (
+              <div className="rounded-2xl border border-gold/30 bg-gold-muted px-4 py-3 text-sm text-foreground">
+                Review: send {numeric.toLocaleString()} {from?.symbol ?? "asset"} to {destination}.
+              </div>
+            )}
             <Button
               full
               onClick={() => {
@@ -111,12 +117,21 @@ function Transfer() {
                   notify.error("Enter a destination", "Paste a valid address to continue.");
                   return;
                 }
+                if (!reviewing) {
+                  setReviewing(true);
+                  notify.message(
+                    "Transfer ready for review",
+                    "Check the destination before confirming.",
+                  );
+                  return;
+                }
                 notify.success(
                   `Transfer submitted`,
                   `${numeric.toLocaleString()} ${from.symbol} · simulated, settling now.`,
                 );
                 setAmount("");
                 setDestination("");
+                setReviewing(false);
               }}
             >
               Review and send

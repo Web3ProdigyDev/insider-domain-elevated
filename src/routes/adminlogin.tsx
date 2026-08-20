@@ -16,6 +16,10 @@ function AdminLogin() {
   const { members, transactions, assistant, audit, balances } = useSim();
   const [assetId, setAssetId] = React.useState("bitcoin");
   const [amount, setAmount] = React.useState(String(balances.bitcoin ?? 0));
+  const [query, setQuery] = React.useState("");
+  const visibleMembers = members.filter((member) =>
+    `${member.name} ${member.handle}`.toLowerCase().includes(query.trim().toLowerCase()),
+  );
 
   return (
     <AppShell eyebrow="Simulation controls" title="Admin Control Center">
@@ -104,41 +108,56 @@ function AdminLogin() {
         </div>
 
         <section>
-          <p className="text-eyebrow">Member controls</p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-eyebrow">Member controls</p>
+            <Input
+              aria-label="Search members"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search members"
+              className="max-w-xs"
+            />
+          </div>
           <div className="mt-3 flex flex-col gap-2">
-            {members.map((member) => (
-              <div
-                key={member.handle}
-                className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3"
-              >
-                <div>
-                  <p className="text-sm text-foreground">{member.name}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    @{member.handle} · {member.tier}
-                  </p>
-                </div>
-                <Badge
-                  className="ml-auto"
-                  variant={member.status === "active" ? "secondary" : "destructive"}
+            {visibleMembers.length ? (
+              visibleMembers.map((member) => (
+                <div
+                  key={member.handle}
+                  className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3"
                 >
-                  {member.status}
-                </Badge>
-                {member.handle !== "a.marchetti" && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() =>
-                      setMemberStatus(
-                        member.handle,
-                        member.status === "active" ? "suspended" : "active",
-                      )
-                    }
+                  <div>
+                    <p className="text-sm text-foreground">{member.name}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      @{member.handle} · {member.tier}
+                    </p>
+                  </div>
+                  <Badge
+                    className="ml-auto"
+                    variant={member.status === "active" ? "secondary" : "destructive"}
                   >
-                    {member.status === "active" ? "Suspend" : "Restore"}
-                  </Button>
-                )}
-              </div>
-            ))}
+                    {member.status}
+                  </Badge>
+                  {member.handle !== "a.marchetti" && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() =>
+                        setMemberStatus(
+                          member.handle,
+                          member.status === "active" ? "suspended" : "active",
+                        )
+                      }
+                    >
+                      {member.status === "active" ? "Suspend" : "Restore"}
+                    </Button>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p className="rounded-xl border border-border px-3 py-4 text-sm text-muted-foreground">
+                No members match that search.
+              </p>
+            )}
           </div>
         </section>
 

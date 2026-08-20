@@ -39,6 +39,7 @@ export const Route = createFileRoute("/markets")({
 function Markets() {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
+  const [view, setView] = useState<"all" | "held" | "gainers">("all");
 
   const { coins, isLoading, isError } = useMarkets();
   const { positions } = usePortfolio();
@@ -64,7 +65,11 @@ function Markets() {
         placeholder="Search 300 instruments"
       />
 
-      <SegmentedTabs defaultValue="all" className="mt-6">
+      <SegmentedTabs
+        value={view}
+        onValueChange={(value) => setView(value as typeof view)}
+        className="mt-6"
+      >
         <SegmentedTabsList>
           <SegmentedTabsTrigger value="all">All</SegmentedTabsTrigger>
           <SegmentedTabsTrigger value="held">Held</SegmentedTabsTrigger>

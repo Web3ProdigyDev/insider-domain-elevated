@@ -30,6 +30,8 @@ export const Route = createFileRoute("/settings")({
 });
 
 function Settings() {
+  const [verified, setVerified] = useState(true);
+
   return (
     <AppShell eyebrow="Account" title="Settings">
       <MemberCard
@@ -84,9 +86,17 @@ function Settings() {
                 Sessions are verified on every entry.
               </span>
             </span>
-            <Badge variant="gold" className="ml-auto">
-              Verified
-            </Badge>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="ml-auto"
+              onClick={() => {
+                setVerified((value) => !value);
+                notify.message(verified ? "Verification paused" : "Verification enabled");
+              }}
+            >
+              <Badge variant="gold">{verified ? "Verified" : "Review"}</Badge>
+            </Button>
           </div>
         </div>
       </section>

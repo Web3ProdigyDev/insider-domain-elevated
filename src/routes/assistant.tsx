@@ -1,6 +1,16 @@
 import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Activity, Check, Pause, Play, Sparkles } from "lucide-react";
+import {
+  Activity,
+  BarChart3,
+  Check,
+  CircleDollarSign,
+  Pause,
+  Play,
+  RefreshCw,
+  Sparkles,
+  TrendingUp,
+} from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { Card } from "@/components/ui/card";
@@ -150,16 +160,19 @@ function SetupAssistant({
   return (
     <section className="flex flex-col gap-6">
       <Card padding="lg" variant="raised">
-        <div className="flex items-center gap-3">
-          <span className="grid size-9 place-items-center rounded-full bg-gold-muted text-gold">
-            <Sparkles className="size-4" />
-          </span>
-          <div>
-            <p className="text-sm text-foreground">AI Investment is off</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Turn it on to let the assistant review your simulated portfolio quietly.
-            </p>
+        <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_220px] md:items-center">
+          <div className="flex items-center gap-3">
+            <span className="grid size-9 place-items-center rounded-full bg-gold-muted text-gold">
+              <Sparkles className="size-4" />
+            </span>
+            <div>
+              <p className="text-sm text-foreground">AI Investment is off</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Turn it on to let the assistant review your simulated portfolio quietly.
+              </p>
+            </div>
           </div>
+          <AICompanion state="idle" />
         </div>
         <div className="mt-6 flex items-start gap-3 border-t border-border pt-5">
           <Badge variant="secondary">Simulation only</Badge>
@@ -186,7 +199,7 @@ function ActiveAssistant({ assistant }: { assistant: ReturnType<typeof useSim>["
   return (
     <div className="flex flex-col gap-8">
       <Card padding="lg" variant="raised">
-        <div className="flex items-start justify-between gap-4">
+        <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_220px] md:items-center">
           <div>
             <div className="flex items-center gap-2">
               <span className="size-2 rounded-full bg-gold shadow-[0_0_0_5px] shadow-gold/10" />
@@ -197,7 +210,10 @@ function ActiveAssistant({ assistant }: { assistant: ReturnType<typeof useSim>["
               your day.
             </p>
           </div>
-          <Badge variant="gold">Active</Badge>
+          <div className="flex items-center justify-between gap-4 md:flex-col md:items-end">
+            <AICompanion state="active" />
+            <Badge variant="gold">Active</Badge>
+          </div>
         </div>
         <dl className="mt-8 grid grid-cols-2 gap-5 sm:grid-cols-4">
           <Stat label="Reviews">{assistant.reviews}</Stat>
@@ -208,13 +224,38 @@ function ActiveAssistant({ assistant }: { assistant: ReturnType<typeof useSim>["
           <Stat label="State">Online</Stat>
         </dl>
       </Card>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Link
+          to="/markets"
+          className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground transition-colors hover:border-border-strong hover:bg-surface-raised"
+        >
+          <BarChart3 className="size-4 text-gold" />
+          <span>Review market signals</span>
+        </Link>
+        <Link
+          to="/portfolio"
+          className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground transition-colors hover:border-border-strong hover:bg-surface-raised"
+        >
+          <CircleDollarSign className="size-4 text-gold" />
+          <span>Open portfolio</span>
+        </Link>
+      </div>
       <section>
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-eyebrow">Quiet activity</p>
             <h2 className="mt-1 text-lg text-foreground">While you were away</h2>
           </div>
-          <Activity className="size-4 text-muted-foreground" />
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              assistantTick();
+              notify.success("Review complete", "A simulated portfolio review was recorded.");
+            }}
+          >
+            <RefreshCw /> Review now
+          </Button>
         </div>
         {assistant.events.length ? (
           <ol className="flex flex-col gap-3">
@@ -242,6 +283,25 @@ function ActiveAssistant({ assistant }: { assistant: ReturnType<typeof useSim>["
           />
         )}
       </section>
+    </div>
+  );
+}
+
+function AICompanion({ state }: { state: "active" | "idle" }) {
+  const active = state === "active";
+  return (
+    <div
+      className={cn("ai-companion", active && "ai-companion-active")}
+      role="img"
+      aria-label={active ? "AI companion is working" : "AI companion is idle"}
+    >
+      <div className="ai-companion-face">
+        <span className="ai-companion-eye" />
+        <span className="ai-companion-eye" />
+        <span className="ai-companion-mouth" />
+      </div>
+      <span className="ai-companion-signal">{active ? <TrendingUp /> : <CircleDollarSign />}</span>
+      <span className="ai-companion-label">{active ? "scanning" : "standby"}</span>
     </div>
   );
 }

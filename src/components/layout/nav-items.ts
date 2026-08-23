@@ -22,6 +22,7 @@ export type NavItem = {
 export const navItems: NavItem[] = [
   { label: "Overview", to: "/", icon: Home, primary: true },
   { label: "Wallet", to: "/wallet", icon: Wallet, primary: true },
+  { label: "Markets", to: "/markets", icon: LineChart, primary: true },
   { label: "AI Investment", to: "/assistant", icon: CandlestickChart, primary: true },
   { label: "Circle", to: "/circle", icon: Users, primary: true },
 ];

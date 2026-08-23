@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CoinLogo } from "@/components/common/coin-logo";
 import { useSim } from "@/lib/use-sim";
-import { useMarkets } from "@/lib/use-markets";
+import { useMarkets, usePortfolio } from "@/lib/use-markets";
 
 export const Route = createFileRoute("/wallet")({ component: Wallet });
 function Wallet() {
   const { wallet, balances, transactions } = useSim();
   const { coins } = useMarkets();
+  const { positions, balance, change24h } = usePortfolio();
   return (
     <AppShell eyebrow="Simulated custody" title="Wallet">
       <div className="flex flex-col gap-6">
@@ -48,17 +49,40 @@ function Wallet() {
             </Button>
           </div>
         </Card>
+        <section className="grid gap-3 sm:grid-cols-3" aria-label="Portfolio summary">
+          <Card padding="md">
+            <p className="text-eyebrow">Portfolio value</p>
+            <p className="numeric mt-2 text-2xl text-foreground">
+              ${balance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+            </p>
+          </Card>
+          <Card padding="md">
+            <p className="text-eyebrow">24h movement</p>
+            <p className="numeric mt-2 text-2xl text-foreground">
+              {change24h >= 0 ? "+" : ""}
+              {change24h.toFixed(2)}%
+            </p>
+          </Card>
+          <Card padding="md">
+            <p className="text-eyebrow">Assets held</p>
+            <p className="numeric mt-2 text-2xl text-foreground">
+              {positions.filter((position) => position.amount > 0).length}
+            </p>
+          </Card>
+        </section>
         <section>
           <p className="text-eyebrow">Balances</p>
-          <div className="mt-3 flex flex-col gap-2">
+          <div className="mt-3 flex max-h-[52vh] flex-col gap-2 overflow-y-auto overscroll-contain pr-1">
             {Object.entries(balances)
               .slice(0, 8)
               .map(([id, amount]) => {
                 const coin = coins.find((item) => item.id === id);
                 return (
-                  <div
+                  <Link
                     key={id}
-                    className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3"
+                    to="/asset/$id"
+                    params={{ id }}
+                    className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 transition-colors hover:border-border-strong hover:bg-surface-raised"
                   >
                     <CoinLogo src={coin?.image} symbol={coin?.symbol ?? id.slice(0, 3)} size={32} />
                     <span className="text-sm text-foreground">{coin?.name ?? id}</span>
@@ -73,13 +97,18 @@ function Wallet() {
                           : "—"}
                       </span>
                     </span>
-                  </div>
+                  </Link>
                 );
               })}
           </div>
         </section>
         <section>
-          <p className="text-eyebrow">Recent activity</p>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <p className="text-eyebrow">Recent activity</p>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/markets">View markets</Link>
+            </Button>
+          </div>
           <div className="mt-3 flex flex-col gap-2">
             {transactions.slice(0, 5).map((tx) => (
               <div

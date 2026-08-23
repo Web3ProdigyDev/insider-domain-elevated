@@ -55,12 +55,18 @@ function AssetDetail() {
 
   return (
     <AppShell eyebrow={holding ? "Held position" : "Instrument"} title={name}>
-      <Link
-        to="/markets"
-        className="mb-6 inline-flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="size-3.5" strokeWidth={1.75} /> Back to markets
-      </Link>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <Link
+          to="/markets"
+          className="inline-flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="size-3.5" strokeWidth={1.75} /> Back to markets
+        </Link>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span>Operations:</span>
+          <span>buy · sell · send · receive</span>
+        </div>
+      </div>
 
       <Card padding="lg" variant="raised">
         <div className="flex items-start justify-between gap-4">
@@ -79,7 +85,13 @@ function AssetDetail() {
         </p>
         <p className="mt-1.5 text-xs text-muted-foreground">Live mid, refreshed continuously</p>
 
-        <Sparkline seed={id} change={change} height={72} className="mt-6" />
+        <div className="mt-6 rounded-xl border border-border bg-surface-raised/50 p-3">
+          <div className="mb-2 flex items-center justify-between text-[0.65rem] uppercase tracking-[0.16em] text-muted-foreground">
+            <span>Live chart</span>
+            <span>1D</span>
+          </div>
+          <Sparkline seed={id} change={change} height={92} />
+        </div>
       </Card>
 
       <QuickActions

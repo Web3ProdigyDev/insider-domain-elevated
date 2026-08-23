@@ -101,7 +101,7 @@ function Markets() {
             />
           ) : visible.length ? (
             <>
-              <div className="space-y-3">
+              <div className="flex max-h-[52vh] flex-col gap-3 overflow-y-auto overscroll-contain pr-1">
                 {visible.map((coin) => (
                   <CoinCard key={coin.id} coin={coin} />
                 ))}
@@ -123,7 +123,7 @@ function Markets() {
         </SegmentedTabsContent>
 
         <SegmentedTabsContent value="held">
-          <div className="space-y-3">
+          <div className="flex max-h-[52vh] flex-col gap-3 overflow-y-auto overscroll-contain pr-1">
             {positions.map((position) => (
               <AssetCard key={position.id} position={position} />
             ))}
@@ -131,7 +131,7 @@ function Markets() {
         </SegmentedTabsContent>
 
         <SegmentedTabsContent value="gainers">
-          <div className="space-y-3">
+          <div className="flex max-h-[52vh] flex-col gap-3 overflow-y-auto overscroll-contain pr-1">
             {[...coins]
               .sort((a, b) => b.change24h - a.change24h)
               .slice(0, 20)

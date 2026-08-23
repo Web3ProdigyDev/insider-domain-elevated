@@ -19,18 +19,19 @@ import { Route as MarketsRouteImport } from './routes/markets'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReceiveRouteImport } from './routes/receive'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TradingRouteImport } from './routes/trading'
 import { Route as TransferRouteImport } from './routes/transfer'
 import { Route as WalletRouteImport } from './routes/wallet'
+import { Route as WithdrawRouteImport } from './routes/withdraw'
 import { Route as AssetIdRouteImport } from './routes/asset.$id'
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as AuthRecoverRouteImport } from './routes/auth.recover'
 import { Route as AuthSignupRouteImport } from './routes/auth.signup'
 import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
+import { Route as TransferAssetIdRouteImport } from './routes/transfer.$assetId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -82,11 +83,6 @@ const OnboardingRoute = OnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PortfolioRoute = PortfolioRouteImport.update({
-  id: '/portfolio',
-  path: '/portfolio',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
@@ -117,6 +113,11 @@ const WalletRoute = WalletRouteImport.update({
   path: '/wallet',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WithdrawRoute = WithdrawRouteImport.update({
+  id: '/withdraw',
+  path: '/withdraw',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AssetIdRoute = AssetIdRouteImport.update({
   id: '/asset/$id',
   path: '/asset/$id',
@@ -142,6 +143,11 @@ const AuthVerifyRoute = AuthVerifyRouteImport.update({
   path: '/auth/verify',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TransferAssetIdRoute = TransferAssetIdRouteImport.update({
+  id: '/$assetId',
+  path: '/$assetId',
+  getParentRoute: () => TransferRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -154,17 +160,18 @@ export interface FileRoutesByFullPath {
   '/messages': typeof MessagesRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
-  '/portfolio': typeof PortfolioRoute
   '/privacy': typeof PrivacyRoute
   '/receive': typeof ReceiveRoute
   '/settings': typeof SettingsRoute
   '/trading': typeof TradingRoute
-  '/transfer': typeof TransferRoute
+  '/transfer': typeof TransferRouteWithChildren
   '/wallet': typeof WalletRoute
+  '/withdraw': typeof WithdrawRoute
   '/asset/$id': typeof AssetIdRoute
   '/auth/recover': typeof AuthRecoverRoute
   '/auth/signup': typeof AuthSignupRoute
   '/auth/verify': typeof AuthVerifyRoute
+  '/transfer/$assetId': typeof TransferAssetIdRoute
   '/auth/': typeof AuthIndexRoute
 }
 export interface FileRoutesByTo {
@@ -178,17 +185,18 @@ export interface FileRoutesByTo {
   '/messages': typeof MessagesRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
-  '/portfolio': typeof PortfolioRoute
   '/privacy': typeof PrivacyRoute
   '/receive': typeof ReceiveRoute
   '/settings': typeof SettingsRoute
   '/trading': typeof TradingRoute
-  '/transfer': typeof TransferRoute
+  '/transfer': typeof TransferRouteWithChildren
   '/wallet': typeof WalletRoute
+  '/withdraw': typeof WithdrawRoute
   '/asset/$id': typeof AssetIdRoute
   '/auth/recover': typeof AuthRecoverRoute
   '/auth/signup': typeof AuthSignupRoute
   '/auth/verify': typeof AuthVerifyRoute
+  '/transfer/$assetId': typeof TransferAssetIdRoute
   '/auth': typeof AuthIndexRoute
 }
 export interface FileRoutesById {
@@ -203,17 +211,18 @@ export interface FileRoutesById {
   '/messages': typeof MessagesRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
-  '/portfolio': typeof PortfolioRoute
   '/privacy': typeof PrivacyRoute
   '/receive': typeof ReceiveRoute
   '/settings': typeof SettingsRoute
   '/trading': typeof TradingRoute
-  '/transfer': typeof TransferRoute
+  '/transfer': typeof TransferRouteWithChildren
   '/wallet': typeof WalletRoute
+  '/withdraw': typeof WithdrawRoute
   '/asset/$id': typeof AssetIdRoute
   '/auth/recover': typeof AuthRecoverRoute
   '/auth/signup': typeof AuthSignupRoute
   '/auth/verify': typeof AuthVerifyRoute
+  '/transfer/$assetId': typeof TransferAssetIdRoute
   '/auth/': typeof AuthIndexRoute
 }
 export interface FileRouteTypes {
@@ -229,17 +238,18 @@ export interface FileRouteTypes {
     | '/messages'
     | '/notifications'
     | '/onboarding'
-    | '/portfolio'
     | '/privacy'
     | '/receive'
     | '/settings'
     | '/trading'
     | '/transfer'
     | '/wallet'
+    | '/withdraw'
     | '/asset/$id'
     | '/auth/recover'
     | '/auth/signup'
     | '/auth/verify'
+    | '/transfer/$assetId'
     | '/auth/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -253,17 +263,18 @@ export interface FileRouteTypes {
     | '/messages'
     | '/notifications'
     | '/onboarding'
-    | '/portfolio'
     | '/privacy'
     | '/receive'
     | '/settings'
     | '/trading'
     | '/transfer'
     | '/wallet'
+    | '/withdraw'
     | '/asset/$id'
     | '/auth/recover'
     | '/auth/signup'
     | '/auth/verify'
+    | '/transfer/$assetId'
     | '/auth'
   id:
     | '__root__'
@@ -277,17 +288,18 @@ export interface FileRouteTypes {
     | '/messages'
     | '/notifications'
     | '/onboarding'
-    | '/portfolio'
     | '/privacy'
     | '/receive'
     | '/settings'
     | '/trading'
     | '/transfer'
     | '/wallet'
+    | '/withdraw'
     | '/asset/$id'
     | '/auth/recover'
     | '/auth/signup'
     | '/auth/verify'
+    | '/transfer/$assetId'
     | '/auth/'
   fileRoutesById: FileRoutesById
 }
@@ -302,13 +314,13 @@ export interface RootRouteChildren {
   MessagesRoute: typeof MessagesRoute
   NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRoute
-  PortfolioRoute: typeof PortfolioRoute
   PrivacyRoute: typeof PrivacyRoute
   ReceiveRoute: typeof ReceiveRoute
   SettingsRoute: typeof SettingsRoute
   TradingRoute: typeof TradingRoute
-  TransferRoute: typeof TransferRoute
+  TransferRoute: typeof TransferRouteWithChildren
   WalletRoute: typeof WalletRoute
+  WithdrawRoute: typeof WithdrawRoute
   AssetIdRoute: typeof AssetIdRoute
   AuthRecoverRoute: typeof AuthRecoverRoute
   AuthSignupRoute: typeof AuthSignupRoute
@@ -388,13 +400,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/portfolio': {
-      id: '/portfolio'
-      path: '/portfolio'
-      fullPath: '/portfolio'
-      preLoaderRoute: typeof PortfolioRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/privacy': {
       id: '/privacy'
       path: '/privacy'
@@ -437,6 +442,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WalletRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/withdraw': {
+      id: '/withdraw'
+      path: '/withdraw'
+      fullPath: '/withdraw'
+      preLoaderRoute: typeof WithdrawRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/asset/$id': {
       id: '/asset/$id'
       path: '/asset/$id'
@@ -472,8 +484,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthVerifyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/transfer/$assetId': {
+      id: '/transfer/$assetId'
+      path: '/$assetId'
+      fullPath: '/transfer/$assetId'
+      preLoaderRoute: typeof TransferAssetIdRouteImport
+      parentRoute: typeof TransferRoute
+    }
   }
 }
+
+interface TransferRouteChildren {
+  TransferAssetIdRoute: typeof TransferAssetIdRoute
+}
+
+const TransferRouteChildren: TransferRouteChildren = {
+  TransferAssetIdRoute: TransferAssetIdRoute,
+}
+
+const TransferRouteWithChildren = TransferRoute._addFileChildren(
+  TransferRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -486,13 +517,13 @@ const rootRouteChildren: RootRouteChildren = {
   MessagesRoute: MessagesRoute,
   NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRoute,
-  PortfolioRoute: PortfolioRoute,
   PrivacyRoute: PrivacyRoute,
   ReceiveRoute: ReceiveRoute,
   SettingsRoute: SettingsRoute,
   TradingRoute: TradingRoute,
-  TransferRoute: TransferRoute,
+  TransferRoute: TransferRouteWithChildren,
   WalletRoute: WalletRoute,
+  WithdrawRoute: WithdrawRoute,
   AssetIdRoute: AssetIdRoute,
   AuthRecoverRoute: AuthRecoverRoute,
   AuthSignupRoute: AuthSignupRoute,

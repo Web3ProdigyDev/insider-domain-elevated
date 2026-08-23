@@ -21,7 +21,6 @@ export type NavItem = {
 /** Single source of truth for navigation across sidebar + bottom nav. */
 export const navItems: NavItem[] = [
   { label: "Overview", to: "/", icon: Home, primary: true },
-  { label: "Portfolio", to: "/portfolio", icon: Wallet, primary: true },
   { label: "Wallet", to: "/wallet", icon: Wallet, primary: true },
   { label: "AI Investment", to: "/assistant", icon: CandlestickChart, primary: true },
   { label: "Circle", to: "/circle", icon: Users, primary: true },

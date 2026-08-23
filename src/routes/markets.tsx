@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -55,7 +55,15 @@ function Markets() {
   const visible = filtered.slice((current - 1) * PER_PAGE, current * PER_PAGE);
 
   return (
-    <AppShell eyebrow="Live" title="Markets">
+    <AppShell
+      eyebrow="Live"
+      title="Markets"
+      action={
+        <Button size="sm" asChild>
+          <Link to="/wallet">View wallet</Link>
+        </Button>
+      }
+    >
       <SearchBar
         value={query}
         onValueChange={(v) => {

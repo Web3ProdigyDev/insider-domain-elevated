@@ -1,11 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  ArrowUpRight,
-  ArrowDownLeft,
-  Plus,
-  Repeat,
-  Crosshair,
-} from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, Plus, Repeat, Crosshair } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
@@ -101,7 +95,7 @@ function Overview() {
           title="Positions"
           action={
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/portfolio">
+              <Link to="/wallet">
                 All <ArrowUpRight />
               </Link>
             </Button>
@@ -164,7 +158,7 @@ function Overview() {
           title="Recent activity"
           action={
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/portfolio">
+              <Link to="/wallet">
                 All <ArrowUpRight />
               </Link>
             </Button>

@@ -233,7 +233,7 @@ function ActiveAssistant({ assistant }: { assistant: ReturnType<typeof useSim>["
           <span>Review market signals</span>
         </Link>
         <Link
-          to="/portfolio"
+          to="/markets"
           className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground transition-colors hover:border-border-strong hover:bg-surface-raised"
         >
           <CircleDollarSign className="size-4 text-gold" />

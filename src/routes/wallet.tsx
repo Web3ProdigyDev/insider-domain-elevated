@@ -39,9 +39,12 @@ function Wallet() {
               </Link>
             </Button>
             <Button asChild variant="secondary">
-              <Link to="/transfer">
+              <Link to="/withdraw">
                 <ArrowUpFromLine /> Withdraw
               </Link>
+            </Button>
+            <Button asChild variant="ghost">
+              <Link to="/markets">Browse markets</Link>
             </Button>
           </div>
         </Card>
@@ -59,8 +62,16 @@ function Wallet() {
                   >
                     <CoinLogo src={coin?.image} symbol={coin?.symbol ?? id.slice(0, 3)} size={32} />
                     <span className="text-sm text-foreground">{coin?.name ?? id}</span>
-                    <span className="numeric ml-auto text-sm text-muted-foreground">
-                      {amount.toFixed(4)}
+                    <span className="ml-auto text-right">
+                      <span className="numeric block text-sm text-foreground">
+                        {amount.toFixed(4)} {coin?.symbol ?? ""}
+                      </span>
+                      <span className="numeric block text-xs text-muted-foreground">
+                        {coin?.price ? `$${coin.price.toLocaleString()}` : "Price unavailable"} ·{" "}
+                        {coin?.price
+                          ? `$${(amount * coin.price).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+                          : "—"}
+                      </span>
                     </span>
                   </div>
                 );

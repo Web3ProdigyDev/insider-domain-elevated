@@ -13,7 +13,7 @@ import { QuickActions } from "@/components/common/quick-actions";
 import { TransactionCard } from "@/components/cards/transaction-card";
 import { TradeSheet, type TradeMode } from "@/components/trade/trade-sheet";
 import { formatPrice, formatCompact } from "@/components/cards/coin-card";
-import { formatSigned } from "@/lib/placeholder-data";
+import { formatSigned } from "@/lib/format";
 import { getWalletData } from "@/lib/wallet.functions";
 import { useQuery } from "@tanstack/react-query";
 import { useMarkets } from "@/lib/use-markets";
@@ -175,8 +175,6 @@ function AssetDetail() {
         symbol={symbol}
         name={name}
         price={price}
-        address={holding?.address}
-        network={holding?.network}
       />
     </AppShell>
   );

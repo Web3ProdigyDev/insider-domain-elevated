@@ -6,8 +6,7 @@ import { AuthShell } from "@/components/layout/auth-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { notify } from "@/lib/notify";
-import { verifyEmail, verificationCodeFor, signOut } from "@/lib/auth-store";
+import { authClient } from "@/lib/auth-client";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/auth/verify")({
@@ -41,31 +40,21 @@ function Verify() {
 
   if (!user) return null;
 
-  const expected = verificationCodeFor(user.email);
-
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (code.trim() !== expected) {
-      setError("That code does not match.");
-      return;
-    }
-    verifyEmail(user.id);
-    notify.success("Email verified", "Your access review is next.");
-    void navigate({ to: "/onboarding" });
+    setError("Email verification delivery is not configured yet.");
   };
 
   return (
     <AuthShell
       eyebrow="Verification"
       title="Confirm your email"
-      description={`We sent a six-digit code to ${user.email}. This environment is simulated, so the code is shown below.`}
+      description={`Email verification for ${user.email} is pending delivery configuration.`}
     >
       <Card padding="lg">
         <div className="mb-6 flex items-center gap-3 rounded-2xl border border-gold/25 bg-gold-muted px-4 py-3">
           <MailCheck className="size-4 shrink-0 text-gold" strokeWidth={1.75} />
-          <p className="text-sm text-gold">
-            Simulated code: <span className="numeric tracking-[0.3em]">{expected}</span>
-          </p>
+          <p className="text-sm text-gold">Check your inbox after email delivery is enabled.</p>
         </div>
 
         <form className="space-y-5" onSubmit={submit}>
@@ -89,7 +78,7 @@ function Verify() {
             variant="ghost"
             full
             onClick={() => {
-              signOut();
+              void authClient.signOut();
               void navigate({ to: "/auth" });
             }}
           >

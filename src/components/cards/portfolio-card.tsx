@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
-import { formatCurrency, formatSigned } from "@/lib/placeholder-data";
+import { formatCurrency, formatSigned } from "@/lib/format";
 
 export function PortfolioCard({
   label = "Total balance",
@@ -29,12 +29,7 @@ export function PortfolioCard({
         {formatCurrency(balance)}
       </p>
       <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span
-          className={cn(
-            "numeric text-sm",
-            positive ? "text-positive" : "text-negative",
-          )}
-        >
+        <span className={cn("numeric text-sm", positive ? "text-positive" : "text-negative")}>
           {formatSigned(change24h)}
         </span>
         <span className="numeric text-sm text-muted-foreground">

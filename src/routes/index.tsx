@@ -13,7 +13,7 @@ import { SectionHeader } from "@/components/common/section-header";
 import { QuickActions } from "@/components/common/quick-actions";
 import { Sparkline } from "@/components/common/sparkline";
 import { AllocationBar } from "@/components/common/allocation-bar";
-import { formatSigned } from "@/lib/placeholder-data";
+import { formatSigned } from "@/lib/format";
 import { useMarkets, usePortfolio } from "@/lib/use-markets";
 import { useAuth } from "@/lib/use-auth";
 import { getWalletData } from "@/lib/wallet.functions";
@@ -145,7 +145,7 @@ function Overview() {
                 <p className="text-sm text-foreground">Autonomous execution</p>
               </div>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                Scanning liquidity across 300 instruments. Simulated entries only.
+                Scanning live market conditions across supported instruments.
               </p>
             </div>
             <Badge variant="gold">Armed</Badge>

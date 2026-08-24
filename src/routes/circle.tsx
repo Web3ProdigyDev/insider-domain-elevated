@@ -15,8 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { members, demoMember } from "@/lib/placeholder-data";
-import { feedPosts, type FeedPost } from "@/lib/feed-data";
+import { type FeedPost } from "@/lib/feed-data";
 import { notify } from "@/lib/notify";
 
 export const Route = createFileRoute("/circle")({
@@ -39,56 +38,18 @@ export const Route = createFileRoute("/circle")({
 
 function Circle() {
   const [open, setOpen] = useState(false);
-  const [posts, setPosts] = useState<FeedPost[]>(feedPosts);
+  const [posts] = useState<FeedPost[]>([]);
   const [draft, setDraft] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
 
-  const toggleLike = (id: string) =>
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === id ? { ...p, liked: !p.liked, likes: p.likes + (p.liked ? -1 : 1) } : p,
-      ),
-    );
-
-  const addComment = (id: string, body: string) =>
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === id
-          ? {
-              ...p,
-              comments: [
-                ...p.comments,
-                {
-                  id: `${id}-${Date.now()}`,
-                  author: demoMember.name,
-                  handle: demoMember.handle,
-                  body,
-                  date: "Just now",
-                },
-              ],
-            }
-          : p,
-      ),
-    );
+  const toggleLike = () =>
+    notify.message("Circle unavailable", "Social actions are not configured yet.");
+  const addComment = () =>
+    notify.message("Circle unavailable", "Social actions are not configured yet.");
 
   const publish = () => {
-    const body = draft.trim();
-    if (!body) return;
-    setPosts((prev) => [
-      {
-        id: `p-${Date.now()}`,
-        author: demoMember.name,
-        handle: demoMember.handle,
-        tier: demoMember.tier,
-        date: "Just now",
-        body,
-        likes: 0,
-        liked: false,
-        comments: [],
-      },
-      ...prev,
-    ]);
-    setDraft("");
+    if (!draft.trim()) return;
+    notify.message("Circle unavailable", "Publishing is not configured yet.");
   };
 
   return (
@@ -150,9 +111,11 @@ function Circle() {
           <section className="mt-10">
             <SectionHeader title="Introduced by you" />
             <div className="space-y-3">
-              {members.map((member) => (
-                <MemberCard key={member.id} member={member} />
-              ))}
+              <Card padding="md">
+                <p className="text-sm text-muted-foreground">
+                  No member directory is configured yet.
+                </p>
+              </Card>
             </div>
           </section>
         </SegmentedTabsContent>
@@ -171,12 +134,15 @@ function Circle() {
             <Button
               onClick={() => {
                 if (!inviteEmail.includes("@")) {
-                  notify.error("Enter an email address", "Use a valid demo address to continue.");
+                  notify.error("Enter an email address", "Use a valid email address to continue.");
                   return;
                 }
                 setOpen(false);
                 setInviteEmail("");
-                notify.success("Invitation sent", `A simulated invite was sent to ${inviteEmail}.`);
+                notify.message(
+                  "Invitations unavailable",
+                  "Invitation delivery is not configured yet.",
+                );
               }}
             >
               Send

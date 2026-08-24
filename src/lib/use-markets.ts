@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 
 import { getMarketCoins, type MarketCoin } from "./markets.functions";
 import { useLivePrices } from "./use-live-prices";
-import { holdings } from "./holdings";
 
 /** Shared live-market access. One query, one cache, used by every screen. */
 export function useMarkets() {
@@ -47,38 +46,19 @@ export type Position = {
   weight: number;
 };
 
-/** Live positions derived from simulated holdings × real prices. */
+/** Live market portfolio view; user balances are loaded by wallet queries. */
 export function usePortfolio() {
-  const { byId, isLoading, isError } = useMarkets();
+  const { isLoading, isError } = useMarkets();
 
-  return React.useMemo(() => {
-    const rows = holdings.map((h) => {
-      const coin = byId.get(h.id);
-      const price = coin?.price ?? 0;
-      return {
-        id: h.id,
-        symbol: h.symbol,
-        name: h.name,
-        image: coin?.image,
-        amount: h.amount,
-        price,
-        change24h: coin?.change24h ?? 0,
-        value: price * h.amount,
-        address: h.address,
-        network: h.network,
-        weight: 0,
-      } satisfies Position;
-    });
-
-    const balance = rows.reduce((sum, r) => sum + r.value, 0);
-    const positions = rows
-      .map((r) => ({ ...r, weight: balance ? r.value / balance : 0 }))
-      .sort((a, b) => b.value - a.value);
-
-    // 24h change of the book, value-weighted.
-    const change24h = positions.reduce((sum, p) => sum + p.change24h * p.weight, 0);
-    const changeValue = balance - balance / (1 + change24h / 100);
-
-    return { positions, balance, change24h, changeValue, isLoading, isError };
-  }, [byId, isLoading, isError]);
+  return React.useMemo(
+    () => ({
+      positions: [] as Position[],
+      balance: 0,
+      change24h: 0,
+      changeValue: 0,
+      isLoading,
+      isError,
+    }),
+    [isLoading, isError],
+  );
 }

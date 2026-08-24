@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Crosshair, Power } from "lucide-react";
 
@@ -16,7 +16,7 @@ import {
   SegmentedTabsTrigger,
 } from "@/components/common/segmented-tabs";
 import { TradeLogCard, type TradeLogEntry } from "@/components/cards/trade-log-card";
-import { formatSigned } from "@/lib/placeholder-data";
+import { formatSigned } from "@/lib/format";
 import { notify } from "@/lib/notify";
 import { useMarkets } from "@/lib/use-markets";
 import { cn } from "@/lib/utils";
@@ -33,8 +33,7 @@ export const Route = createFileRoute("/trading")({
       { title: "Trading — Insider Domain" },
       {
         name: "description",
-        content:
-          "The Sniper AI desk: autonomous, simulated execution across 300 live instruments.",
+        content: "The Sniper AI desk: autonomous, simulated execution across 300 live instruments.",
       },
       { property: "og:title", content: "Trading — Insider Domain" },
       {
@@ -47,41 +46,13 @@ export const Route = createFileRoute("/trading")({
 });
 
 function Trading() {
-  const { coins, isLoading } = useMarkets();
-  const [armed, setArmed] = useState(true);
+  const { isLoading } = useMarkets();
+  const [armed, setArmed] = useState(false);
   const [mode, setMode] = useState<(typeof MODES)[number]["id"]>("balanced");
   const [log, setLog] = useState<TradeLogEntry[]>([]);
 
-  // Simulated execution feed. Fires only while the desk is armed.
-  useEffect(() => {
-    if (!armed || !coins.length) return;
-    const id = setInterval(() => {
-      const coin = coins[Math.floor(Math.random() * Math.min(coins.length, 120))];
-      if (!coin) return;
-      const spread = mode === "decisive" ? 4 : mode === "balanced" ? 2.2 : 1.1;
-      setLog((prev) =>
-        [
-          {
-            id: `${coin.id}-${Date.now()}`,
-            side: coin.change24h >= 0 ? "long" : "short",
-            symbol: coin.symbol,
-            name: coin.name,
-            image: coin.image,
-            entry: coin.price,
-            pnl: (Math.random() - 0.38) * spread,
-            time: new Date().toLocaleTimeString("en-GB", {
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-            }),
-            status: Math.random() > 0.55 ? "open" : "closed",
-          } satisfies TradeLogEntry,
-          ...prev,
-        ].slice(0, 24),
-      );
-    }, 3600);
-    return () => clearInterval(id);
-  }, [armed, coins, mode]);
+  const executionUnavailable = () =>
+    notify.message("Execution unavailable", "Live trading execution is not configured.");
 
   const stats = useMemo(() => {
     const wins = log.filter((l) => l.pnl >= 0).length;
@@ -102,8 +73,7 @@ function Trading() {
           variant={armed ? "secondary" : "primary"}
           size="sm"
           onClick={() => {
-            setArmed((a) => !a);
-            notify.message(armed ? "Desk disarmed" : "Desk armed", "Simulated execution only.");
+            executionUnavailable();
           }}
         >
           <Power /> {armed ? "Disarm" : "Arm desk"}
@@ -178,13 +148,17 @@ function Trading() {
           ) : (
             <EmptyState
               icon={<Crosshair />}
-              title={isLoading ? "Connecting to the tape" : armed ? "Waiting for a setup" : "Desk idle"}
+              title={
+                isLoading ? "Connecting to the tape" : armed ? "Waiting for a setup" : "Desk idle"
+              }
               description={
                 armed
                   ? "Executions will appear here as conditions are met."
-                  : "Arm the desk to begin simulated execution."
+                  : "Live execution is unavailable until trading is configured."
               }
-              {...(armed ? {} : { action: <Button onClick={() => setArmed(true)}>Arm desk</Button> })}
+              {...(armed
+                ? {}
+                : { action: <Button onClick={() => setArmed(true)}>Arm desk</Button> })}
             />
           )}
         </SegmentedTabsContent>

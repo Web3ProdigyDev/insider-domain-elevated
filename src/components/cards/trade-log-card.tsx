@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { CoinLogo } from "@/components/common/coin-logo";
-import { formatSigned } from "@/lib/placeholder-data";
+import { formatSigned } from "@/lib/format";
 import { formatPrice } from "@/components/cards/coin-card";
 
 export type TradeLogEntry = {
@@ -44,12 +44,7 @@ export function TradeLogCard({
           {formatPrice(entry.entry)} · {entry.time}
         </p>
       </div>
-      <p
-        className={cn(
-          "numeric shrink-0 text-sm",
-          positive ? "text-positive" : "text-negative",
-        )}
-      >
+      <p className={cn("numeric shrink-0 text-sm", positive ? "text-positive" : "text-negative")}>
         {formatSigned(entry.pnl)}
       </p>
     </div>

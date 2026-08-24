@@ -1,12 +1,10 @@
 import * as React from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { AuthShell } from "@/components/layout/auth-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { notify } from "@/lib/notify";
-import { resetPassword, verificationCodeFor } from "@/lib/auth-store";
 
 export const Route = createFileRoute("/auth/recover")({
   head: () => ({
@@ -32,28 +30,18 @@ function Recover() {
   const [confirm, setConfirm] = React.useState("");
   const [error, setError] = React.useState("");
 
-  const expected = email ? verificationCodeFor(email) : "";
-
   const request = (e: React.FormEvent) => {
     e.preventDefault();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) {
       setError("Enter a valid email");
       return;
     }
-    setError("");
-    setStage("reset");
-    notify.message("Recovery code issued", "Simulated delivery — the code is shown on screen.");
+    setError("Password reset delivery is not configured yet.");
   };
 
   const reset = (e: React.FormEvent) => {
     e.preventDefault();
-    if (code.trim() !== expected) return setError("That recovery code does not match.");
-    if (password.length < 8) return setError("Password must be at least 8 characters.");
-    if (password !== confirm) return setError("Passwords do not match.");
-    const result = resetPassword(email, password);
-    if (!result.ok) return setError(result.error);
-    notify.success("Password updated", "Sign in with your new password.");
-    void navigate({ to: "/auth" });
+    setError("Password reset delivery is not configured yet.");
   };
 
   return (
@@ -83,9 +71,6 @@ function Recover() {
           </form>
         ) : (
           <form className="space-y-5" onSubmit={reset}>
-            <p className="rounded-2xl border border-gold/25 bg-gold-muted px-4 py-3 text-sm text-gold">
-              Simulated code: <span className="numeric tracking-[0.3em]">{expected}</span>
-            </p>
             <Input
               label="Recovery code"
               inputMode="numeric"

@@ -39,7 +39,7 @@ export const Route = createFileRoute("/assistant")({
   head: () => ({
     meta: [
       { title: "AI Investment — Insider Domain" },
-      { name: "description", content: "A quiet simulated investment assistant." },
+      { name: "description", content: "A private investment assistant awaiting configuration." },
     ],
   }),
   component: Assistant,
@@ -60,29 +60,7 @@ function Assistant() {
   React.useEffect(() => {
     if (assistant.status !== "activating") return;
     setStep(0);
-    const timer = window.setInterval(
-      () => setStep((current) => Math.min(current + 1, SEQUENCE.length - 1)),
-      850,
-    );
-    return () => window.clearInterval(timer);
   }, [assistant.status]);
-
-  React.useEffect(() => {
-    if (assistant.status === "activating" && step === SEQUENCE.length - 1) {
-      activateAssistant();
-      notify.success(
-        "AI Investment is active",
-        "It will continue quietly in this simulated environment.",
-      );
-    }
-  }, [assistant.status, step]);
-
-  React.useEffect(() => {
-    if (!active) return;
-    catchUpAssistant();
-    const timer = window.setInterval(() => assistantTick(), 60_000);
-    return () => window.clearInterval(timer);
-  }, [active]);
 
   return (
     <AppShell
@@ -142,7 +120,12 @@ function Assistant() {
         <ActiveAssistant assistant={assistant} />
       ) : (
         <SetupAssistant
-          onActivate={() => setAssistantStatus("activating")}
+          onActivate={() =>
+            notify.message(
+              "AI Investment unavailable",
+              "Assistant execution is not configured yet.",
+            )
+          }
           hasActivatedBefore={assistant.hasActivatedBefore}
         />
       )}
@@ -168,7 +151,7 @@ function SetupAssistant({
             <div>
               <p className="text-sm text-foreground">AI Investment is off</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Turn it on to let the assistant review your simulated portfolio quietly.
+                Assistant portfolio review is unavailable until the service is configured.
               </p>
             </div>
           </div>

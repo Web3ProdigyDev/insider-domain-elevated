@@ -5,12 +5,28 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CoinLogo } from "@/components/common/coin-logo";
-import { useSim } from "@/lib/use-sim";
 import { useMarkets, usePortfolio } from "@/lib/use-markets";
+import { getWalletData } from "@/lib/wallet.functions";
+import { useQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/wallet")({ component: Wallet });
 function Wallet() {
-  const { wallet, balances, transactions } = useSim();
+  const walletQuery = useQuery({
+    queryKey: ["wallet-data"],
+    queryFn: () => getWalletData(),
+    retry: false,
+  });
+  const wallet = walletQuery.data;
+  const balances = Object.fromEntries(
+    (wallet?.balances ?? []).map((row) => [row.assetId, Number(row.amount)]),
+  );
+  const transactions = (wallet?.activity ?? []).map((row) => ({
+    id: row.id,
+    note: `${row.type} ${row.assetId}`,
+    symbol: row.assetId,
+    status: row.status,
+    amount: Number(row.amount),
+  }));
   const { coins } = useMarkets();
   const { positions, balance, change24h } = usePortfolio();
   return (
@@ -22,15 +38,13 @@ function Wallet() {
               <WalletCards className="size-5" />
             </span>
             <div>
-              <p className="text-sm text-foreground">{wallet?.label ?? "No wallet connected"}</p>
+              <p className="text-sm text-foreground">Primary wallet</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {wallet
-                  ? `${wallet.address.slice(0, 10)}…${wallet.address.slice(-6)}`
-                  : "Create one from Settings"}
+                {walletQuery.isLoading ? "Loading account data" : "No wallet activity yet"}
               </p>
             </div>
             <Badge className="ml-auto" variant="secondary">
-              Demo
+              Connected
             </Badge>
           </div>
           <div className="mt-8 grid gap-3 sm:grid-cols-2">

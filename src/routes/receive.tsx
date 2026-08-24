@@ -5,7 +5,6 @@ import { AppShell } from "@/components/layout/app-shell";
 import { SectionHeader } from "@/components/common/section-header";
 import { CopyField } from "@/components/common/copy-field";
 import { Card } from "@/components/ui/card";
-import { holdings } from "@/lib/holdings";
 
 export const Route = createFileRoute("/receive")({
   head: () => ({

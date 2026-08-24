@@ -13,8 +13,11 @@ import { SectionHeader } from "@/components/common/section-header";
 import { QuickActions } from "@/components/common/quick-actions";
 import { Sparkline } from "@/components/common/sparkline";
 import { AllocationBar } from "@/components/common/allocation-bar";
-import { transactions, demoMember, formatSigned } from "@/lib/placeholder-data";
+import { formatSigned } from "@/lib/placeholder-data";
 import { useMarkets, usePortfolio } from "@/lib/use-markets";
+import { useAuth } from "@/lib/use-auth";
+import { getWalletData } from "@/lib/wallet.functions";
+import { useQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -36,8 +39,14 @@ export const Route = createFileRoute("/")({
 });
 
 function Overview() {
+  const { user } = useAuth();
   const { positions, balance, change24h, changeValue, isLoading } = usePortfolio();
   const { coins } = useMarkets();
+  const walletQuery = useQuery({
+    queryKey: ["wallet-data"],
+    queryFn: () => getWalletData(),
+    retry: false,
+  });
 
   const movers = [...coins]
     .slice(0, 100)
@@ -46,7 +55,7 @@ function Overview() {
 
   return (
     <AppShell
-      eyebrow={`${demoMember.tier} member`}
+      eyebrow={user ? `${user.firstName} · member` : "Member overview"}
       title="Overview"
       action={
         <Button size="sm" asChild>
@@ -165,9 +174,25 @@ function Overview() {
           }
         />
         <div className="space-y-3">
-          {transactions.slice(0, 3).map((transaction) => (
-            <TransactionCard key={transaction.id} transaction={transaction} />
+          {(walletQuery.data?.activity ?? []).slice(0, 3).map((transaction) => (
+            <TransactionCard
+              key={transaction.id}
+              transaction={{
+                id: transaction.id,
+                type: transaction.type as "buy" | "sell" | "deposit" | "withdrawal",
+                asset: transaction.assetId,
+                amount: Number(transaction.amount),
+                value: Number(transaction.amount),
+                date: transaction.createdAt.toLocaleDateString(),
+                status: transaction.status as "settled" | "pending" | "failed",
+              }}
+            />
           ))}
+          {!walletQuery.isLoading && !walletQuery.data?.activity?.length ? (
+            <Card padding="md">
+              <p className="text-sm text-muted-foreground">No account activity yet.</p>
+            </Card>
+          ) : null}
         </div>
       </section>
     </AppShell>

@@ -14,7 +14,9 @@ import { QuickActions } from "@/components/common/quick-actions";
 import { TransactionCard } from "@/components/cards/transaction-card";
 import { TradeSheet, type TradeMode } from "@/components/trade/trade-sheet";
 import { formatPrice, formatCompact } from "@/components/cards/coin-card";
-import { formatSigned, transactions } from "@/lib/placeholder-data";
+import { formatSigned } from "@/lib/placeholder-data";
+import { getWalletData } from "@/lib/wallet.functions";
+import { useQuery } from "@tanstack/react-query";
 import { holdings } from "@/lib/holdings";
 import { useMarkets } from "@/lib/use-markets";
 import { cn } from "@/lib/utils";
@@ -40,6 +42,11 @@ export const Route = createFileRoute("/asset/$id")({
 function AssetDetail() {
   const { id } = Route.useParams();
   const { byId, isLoading } = useMarkets();
+  const walletQuery = useQuery({
+    queryKey: ["wallet-data"],
+    queryFn: () => getWalletData(),
+    retry: false,
+  });
   const [mode, setMode] = useState<TradeMode | null>(null);
 
   const coin = byId.get(id);
@@ -51,7 +58,7 @@ function AssetDetail() {
   const positive = change >= 0;
   const amount = holding?.amount ?? 0;
 
-  const related = transactions.filter((t) => t.asset === symbol);
+  const related = (walletQuery.data?.activity ?? []).filter((t) => t.assetId === id);
 
   return (
     <AppShell eyebrow={holding ? "Held position" : "Instrument"} title={name}>
@@ -139,7 +146,18 @@ function AssetDetail() {
           <SectionHeader title="Activity" />
           <div className="space-y-3">
             {related.map((t) => (
-              <TransactionCard key={t.id} transaction={t} />
+              <TransactionCard
+                key={t.id}
+                transaction={{
+                  id: t.id,
+                  type: t.type as "buy" | "sell" | "deposit" | "withdrawal",
+                  asset: symbol,
+                  amount: Number(t.amount),
+                  value: Number(t.amount),
+                  date: t.createdAt.toLocaleDateString(),
+                  status: t.status as "settled" | "pending" | "failed",
+                }}
+              />
             ))}
           </div>
         </section>

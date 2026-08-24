@@ -17,3 +17,13 @@ export const transactions = pgTable("transactions", {
   metadata: jsonb("metadata").notNull().default({}),
   createdAt: timestamp("createdAt", { withTimezone: true }).notNull().defaultNow(),
 });
+
+export const notifications = pgTable("notifications", {
+  id: text("id").primaryKey(),
+  userId: text("userId").notNull(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  href: text("href").notNull().default("/"),
+  readAt: timestamp("readAt", { withTimezone: true }),
+  createdAt: timestamp("createdAt", { withTimezone: true }).notNull().defaultNow(),
+});

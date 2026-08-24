@@ -30,7 +30,7 @@ function Wallet() {
   const { coins } = useMarkets();
   const { positions, balance, change24h } = usePortfolio();
   return (
-    <AppShell eyebrow="Simulated custody" title="Wallet">
+    <AppShell eyebrow="Account custody" title="Wallet">
       <div className="flex flex-col gap-6">
         <Card variant="raised" padding="lg">
           <div className="flex items-center gap-3">
@@ -40,11 +40,17 @@ function Wallet() {
             <div>
               <p className="text-sm text-foreground">Primary wallet</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {walletQuery.isLoading ? "Loading account data" : "No wallet activity yet"}
+                {walletQuery.isLoading
+                  ? "Loading account data"
+                  : walletQuery.isError
+                    ? "Wallet data unavailable"
+                    : wallet?.balances?.length
+                      ? "Balances synced from your account"
+                      : "No wallet activity yet"}
               </p>
             </div>
             <Badge className="ml-auto" variant="secondary">
-              Connected
+              {walletQuery.isError ? "Unavailable" : "Live"}
             </Badge>
           </div>
           <div className="mt-8 grid gap-3 sm:grid-cols-2">

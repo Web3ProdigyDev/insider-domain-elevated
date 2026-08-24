@@ -1,10 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, Check } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { EmptyState } from "@/components/common/empty-state";
 import { Button } from "@/components/ui/button";
 import { notify } from "@/lib/notify";
+import { getNotifications, markAllNotificationsRead } from "@/lib/notification.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/notifications")({
@@ -40,16 +42,15 @@ function when(at: number) {
 }
 
 function Notifications() {
-  const notifications: Array<{
-    id: string;
-    read: boolean;
-    title: string;
-    body: string;
-    createdAt: number;
-    to: "/";
-  }> = [];
   const navigate = useNavigate();
-  const unread = 0;
+  const queryClient = useQueryClient();
+  const notificationsQuery = useQuery({
+    queryKey: ["notifications"],
+    queryFn: () => getNotifications(),
+    retry: false,
+  });
+  const notifications = notificationsQuery.data ?? [];
+  const unread = notifications.filter((item) => !item.read).length;
 
   return (
     <AppShell
@@ -60,8 +61,10 @@ function Notifications() {
           variant="ghost"
           size="sm"
           disabled={!unread}
-          onClick={() => {
-            notify.message("No unread notices");
+          onClick={async () => {
+            await markAllNotificationsRead();
+            await queryClient.invalidateQueries({ queryKey: ["notifications"] });
+            notify.message("Notifications updated", "All notices are marked as read.");
           }}
         >
           <Check /> Mark all read

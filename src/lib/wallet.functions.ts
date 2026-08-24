@@ -26,14 +26,28 @@ export const getWalletData = createServerFn({ method: "GET" }).handler(async () 
 });
 
 export const recordWalletTransaction = createServerFn({ method: "POST" })
-  .inputValidator(
-    (input: {
-      type: string;
-      assetId: string;
-      amount: string;
-      metadata?: Record<string, unknown>;
-    }) => input,
-  )
+  .inputValidator((input: unknown) => {
+    if (!input || typeof input !== "object") throw new Error("Invalid transaction");
+    const value = input as Record<string, unknown>;
+    const type = typeof value.type === "string" ? value.type.trim() : "";
+    const assetId = typeof value.assetId === "string" ? value.assetId.trim() : "";
+    const amount = typeof value.amount === "string" ? value.amount.trim() : "";
+    if (!["buy", "sell", "deposit", "withdrawal"].includes(type)) {
+      throw new Error("Unsupported transaction type");
+    }
+    if (!assetId || !/^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(amount) || Number(amount) <= 0) {
+      throw new Error("Amount and asset are invalid");
+    }
+    return {
+      type,
+      assetId,
+      amount,
+      metadata:
+        value.metadata && typeof value.metadata === "object"
+          ? (value.metadata as Record<string, unknown>)
+          : {},
+    };
+  })
   .handler(async ({ data }) => {
     const userId = await getUserId();
     const id = crypto.randomUUID();

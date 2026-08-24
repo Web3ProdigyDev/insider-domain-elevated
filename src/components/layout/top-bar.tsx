@@ -2,8 +2,11 @@ import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { Bell, Settings } from "lucide-react";
 
+import { useQuery } from "@tanstack/react-query";
+
 import { cn } from "@/lib/utils";
-import { notifications, demoMember } from "@/lib/placeholder-data";
+import { getNotifications } from "@/lib/notification.functions";
+import { useAuth } from "@/lib/use-auth";
 
 export function TopBar({
   title,
@@ -16,11 +19,18 @@ export function TopBar({
   action?: ReactNode | undefined;
   className?: string | undefined;
 }) {
-  const unread = notifications.filter((n) => n.unread).length;
-  const initials = demoMember.name
+  const { user } = useAuth();
+  const notificationsQuery = useQuery({
+    queryKey: ["notifications"],
+    queryFn: () => getNotifications(),
+    retry: false,
+    enabled: Boolean(user),
+  });
+  const unread = notificationsQuery.data?.filter((n) => !n.read).length ?? 0;
+  const initials = (user?.firstName || user?.surname || user?.email || "U")
     .split(/[\s.]+/)
     .filter(Boolean)
-    .map((p) => p[0])
+    .map((part) => part[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();

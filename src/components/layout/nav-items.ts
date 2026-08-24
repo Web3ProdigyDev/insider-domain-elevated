@@ -7,7 +7,6 @@ import {
   Settings,
   Bell,
   MessageCircle,
-  ShieldCheck,
   CandlestickChart,
 } from "lucide-react";
 
@@ -31,7 +30,6 @@ export const utilityNavItems: NavItem[] = [
   { label: "Markets", to: "/markets", icon: LineChart },
   { label: "Messages", to: "/messages", icon: MessageCircle },
   { label: "Notifications", to: "/notifications", icon: Bell },
-  { label: "Admin", to: "/adminlogin", icon: ShieldCheck },
   { label: "Settings", to: "/settings", icon: Settings },
 ];
 

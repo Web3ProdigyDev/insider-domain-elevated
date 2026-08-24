@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateOfBirthPicker } from "@/components/common/date-of-birth-picker";
 import { notify } from "@/lib/notify";
-import { signUp, isValidInvitation, referrerFor } from "@/lib/auth-store";
+import { isValidInvitation, referrerFor } from "@/lib/auth-store";
+import { authClient } from "@/lib/auth-client";
 import { AGE_CONFIG, calculateAge } from "@/lib/age";
 
 export const Route = createFileRoute("/auth/signup")({
@@ -72,7 +73,10 @@ function SignUpRoute() {
     setFields((prev) => {
       const next = { ...prev, [key]: value };
       try {
-        window.localStorage.setItem(DRAFT_KEY, JSON.stringify({ ...next, password: "", confirm: "" }));
+        window.localStorage.setItem(
+          DRAFT_KEY,
+          JSON.stringify({ ...next, password: "", confirm: "" }),
+        );
       } catch {
         /* ignore */
       }
@@ -91,27 +95,21 @@ function SignUpRoute() {
     if (!fields.dob) next.dob = "Select your date of birth";
     else if (calculateAge(fields.dob) < AGE_CONFIG.minimumAge)
       next.dob = `Membership requires age ${AGE_CONFIG.minimumAge} or above`;
-    if (!isValidInvitation(fields.invitationCode))
-      next.invitationCode = "Format: ID-0000-ABCD";
+    if (!isValidInvitation(fields.invitationCode)) next.invitationCode = "Format: ID-0000-ABCD";
     setErrors(next);
     return Object.keys(next).length === 0;
   };
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    const result = signUp({
-      surname: fields.surname,
-      firstName: fields.firstName,
-      middleName: fields.middleName,
-      username: fields.username,
-      email: fields.email,
+    const result = await authClient.signUp.email({
+      name: [fields.firstName, fields.middleName, fields.surname].filter(Boolean).join(" "),
+      email: fields.email.trim(),
       password: fields.password,
-      dob: fields.dob,
-      invitationCode: fields.invitationCode,
     });
-    if (!result.ok) {
-      setErrors({ email: result.error });
+    if (result.error) {
+      setErrors({ email: "We could not create the account. Check the details and try again." });
       return;
     }
     try {
@@ -119,8 +117,8 @@ function SignUpRoute() {
     } catch {
       /* ignore */
     }
-    notify.success("Membership created", "Verify your email to continue.");
-    void navigate({ to: "/auth/verify" });
+    notify.success("Account created", "Your secure session is active.");
+    void navigate({ to: "/onboarding" });
   };
 
   const referrer = isValidInvitation(fields.invitationCode)

@@ -1,37 +1,43 @@
 import * as React from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 
-import {
-  authStore,
-  currentUser,
-  hydrateAuth,
-  type MemberRecord,
-} from "./auth-store";
+import type { MemberRecord } from "./auth-store";
+import { authClient } from "./auth-client";
 
 /** Subscribes to the simulated auth store. SSR-safe. */
 export function useAuth() {
-  const state = React.useSyncExternalStore(
-    authStore.subscribe,
-    authStore.get,
-    authStore.get,
-  );
+  const session = authClient.useSession();
+  const user: MemberRecord | null = session.data?.user
+    ? ({
+        id: session.data.user.id,
+        email: session.data.user.email,
+        firstName: session.data.user.name.split(" ")[0] ?? session.data.user.name,
+        surname: session.data.user.name.split(" ").slice(1).join(" "),
+        middleName: "",
+        username: session.data.user.email.split("@")[0],
+        password: "",
+        dob: "",
+        invitationCode: "",
+        invitedBy: "",
+        role: "member",
+        emailVerified: session.data.user.emailVerified,
+        onboardingCompleted: true,
+        onboarding: {
+          identityConfirmed: true,
+          ageConfirmed: true,
+          invitationConfirmed: true,
+          privacyAccepted: true,
+          securityAccepted: true,
+          communications: ["account", "security"],
+          experience: null,
+        },
+        wallet: null,
+        createdAt: session.data.user.createdAt.toISOString(),
+      } as MemberRecord)
+    : null;
 
-  React.useEffect(() => {
-    hydrateAuth();
-  }, []);
-
-  const [ready, setReady] = React.useState(false);
-  React.useEffect(() => setReady(true), []);
-
-  const user: MemberRecord | null = React.useMemo(
-    () => state.users.find((u) => u.id === state.sessionId) ?? null,
-    [state.users, state.sessionId],
-  );
-
-  return { ...state, user, ready };
+  return { user, ready: !session.isPending, session: session.data };
 }
-
-export { currentUser };
 
 /**
  * Client-side membership gate used by the application shell.

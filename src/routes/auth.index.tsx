@@ -6,8 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { notify } from "@/lib/notify";
-import { signIn } from "@/lib/auth-store";
-import { useAuth } from "@/lib/use-auth";
+import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/auth/")({
   head: () => ({
@@ -29,30 +28,20 @@ export const Route = createFileRoute("/auth/")({
 
 function SignIn() {
   const navigate = useNavigate();
-  const { user, ready } = useAuth();
   const [identifier, setIdentifier] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
 
-  React.useEffect(() => {
-    if (!ready || !user) return;
-    if (!user.emailVerified) void navigate({ to: "/auth/verify", replace: true });
-    else if (!user.onboardingCompleted) void navigate({ to: "/onboarding", replace: true });
-    else void navigate({ to: "/", replace: true });
-  }, [ready, user, navigate]);
-
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = signIn(identifier, password);
-    if (!result.ok) {
-      setError(result.error);
+    setError("");
+    const result = await authClient.signIn.email({ email: identifier.trim(), password });
+    if (result.error) {
+      setError("Those credentials were not recognised.");
       return;
     }
-    setError("");
-    notify.success("Welcome back", `Signed in as ${result.value.firstName}.`);
-    if (!result.value.emailVerified) void navigate({ to: "/auth/verify" });
-    else if (!result.value.onboardingCompleted) void navigate({ to: "/onboarding" });
-    else void navigate({ to: "/" });
+    notify.success("Welcome back", "Your secure session is active.");
+    void navigate({ to: "/" });
   };
 
   return (
@@ -93,7 +82,7 @@ function SignIn() {
             <Link to="/auth/recover" className="transition-colors hover:text-foreground">
               Forgot password
             </Link>
-            <span className="numeric">Demo · a.marchetti / insider</span>
+            <span>Use your account email</span>
           </div>
         </form>
       </Card>

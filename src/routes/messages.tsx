@@ -5,16 +5,19 @@ import { AppShell } from "@/components/layout/app-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useSim } from "@/lib/use-sim";
-import { markThreadRead, sendMessage } from "@/lib/sim-store";
 import { notify } from "@/lib/notify";
 
 export const Route = createFileRoute("/messages")({ component: Messages });
 function Messages() {
-  const { threads } = useSim();
-  const [selected, setSelected] = useState(threads[0]?.id ?? "");
+  const threads: Array<{
+    id: string;
+    name: string;
+    online: boolean;
+    messages: Array<{ id: string; from: string; body: string }>;
+  }> = [];
+  const [selected, setSelected] = useState("");
   const [draft, setDraft] = useState("");
-  const thread = threads.find((item) => item.id === selected) ?? threads[0];
+  const thread = threads.find((item) => item.id === selected);
   return (
     <AppShell eyebrow="Private correspondence" title="Messages">
       <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
@@ -30,7 +33,6 @@ function Messages() {
                 type="button"
                 onClick={() => {
                   setSelected(item.id);
-                  markThreadRead(item.id);
                 }}
                 className={`rounded-xl px-3 py-3 text-left ${item.id === thread?.id ? "bg-surface-raised" : "hover:bg-surface-raised/60"}`}
               >
@@ -69,9 +71,11 @@ function Messages() {
                 onSubmit={(event) => {
                   event.preventDefault();
                   if (!draft.trim()) return;
-                  sendMessage(thread.id, draft);
                   setDraft("");
-                  notify.message("Message sent", `Delivered to ${thread.name}.`);
+                  notify.message(
+                    "Messaging unavailable",
+                    "No server-backed conversations are configured yet.",
+                  );
                 }}
               >
                 <Input

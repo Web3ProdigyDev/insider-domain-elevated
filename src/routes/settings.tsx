@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { Bell, Shield, LogOut, ChevronRight } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -9,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { notify } from "@/lib/notify";
-import { demoMember } from "@/lib/placeholder-data";
+import { authClient } from "@/lib/auth-client";
+import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -30,17 +32,19 @@ export const Route = createFileRoute("/settings")({
 });
 
 function Settings() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [verified, setVerified] = useState(true);
 
   return (
     <AppShell eyebrow="Account" title="Settings">
       <MemberCard
         member={{
-          id: "self",
-          name: demoMember.name,
-          handle: demoMember.handle,
-          tier: demoMember.tier,
-          since: demoMember.memberSince,
+          id: user?.id ?? "self",
+          name: user ? `${user.firstName} ${user.surname}`.trim() : "Account",
+          handle: user?.username ?? "member",
+          tier: "Member",
+          since: user?.createdAt ?? new Date().toISOString(),
         }}
       />
 
@@ -54,13 +58,17 @@ function Settings() {
               notify.success("Profile saved", "Your details are updated.");
             }}
           >
-            <Input label="Display name" defaultValue={demoMember.name} />
-            <Input label="Handle" defaultValue={demoMember.handle} />
+            <Input
+              label="Display name"
+              defaultValue={user ? `${user.firstName} ${user.surname}`.trim() : ""}
+            />
+            <Input label="Handle" defaultValue={user?.username ?? ""} />
             <Input
               label="Email"
               type="email"
-              defaultValue="a.marchetti@insiderdomain.com"
-              hint="Used only for entry verification."
+              defaultValue={user?.email ?? ""}
+              readOnly
+              hint="Your login email is managed by secure account authentication."
             />
             <Button type="submit">Save profile</Button>
           </form>
@@ -109,7 +117,11 @@ function Settings() {
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => notify.message("Signed out", "This is a simulated session.")}
+              onClick={async () => {
+                await authClient.signOut();
+                notify.message("Signed out", "Your session has been closed.");
+                void navigate({ to: "/auth", replace: true });
+              }}
             >
               <LogOut /> Sign out
             </Button>

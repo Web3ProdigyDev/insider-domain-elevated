@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/common/section-header";
 import { CoinLogo } from "@/components/common/coin-logo";
 import { Sparkline } from "@/components/common/sparkline";
-import { CopyField } from "@/components/common/copy-field";
 import { QuickActions } from "@/components/common/quick-actions";
 import { TransactionCard } from "@/components/cards/transaction-card";
 import { TradeSheet, type TradeMode } from "@/components/trade/trade-sheet";
@@ -17,7 +16,6 @@ import { formatPrice, formatCompact } from "@/components/cards/coin-card";
 import { formatSigned } from "@/lib/placeholder-data";
 import { getWalletData } from "@/lib/wallet.functions";
 import { useQuery } from "@tanstack/react-query";
-import { holdings } from "@/lib/holdings";
 import { useMarkets } from "@/lib/use-markets";
 import { cn } from "@/lib/utils";
 
@@ -27,12 +25,12 @@ export const Route = createFileRoute("/asset/$id")({
       { title: "Asset — Insider Domain" },
       {
         name: "description",
-        content: "Live price, holdings, address and simulated order actions for one instrument.",
+        content: "Live price, holdings, and order actions for one instrument.",
       },
       { property: "og:title", content: "Asset — Insider Domain" },
       {
         property: "og:description",
-        content: "Live price, holdings, address and simulated order actions for one instrument.",
+        content: "Live price, holdings, and order actions for one instrument.",
       },
     ],
   }),
@@ -50,18 +48,18 @@ function AssetDetail() {
   const [mode, setMode] = useState<TradeMode | null>(null);
 
   const coin = byId.get(id);
-  const holding = holdings.find((h) => h.id === id);
-  const symbol = coin?.symbol ?? holding?.symbol ?? id.toUpperCase();
-  const name = coin?.name ?? holding?.name ?? id;
+  const balanceRow = walletQuery.data?.balances.find((row) => row.assetId === id);
+  const symbol = coin?.symbol ?? id.toUpperCase();
+  const name = coin?.name ?? id;
   const price = coin?.price ?? 0;
   const change = coin?.change24h ?? 0;
   const positive = change >= 0;
-  const amount = holding?.amount ?? 0;
+  const amount = Number(balanceRow?.amount ?? 0);
 
   const related = (walletQuery.data?.activity ?? []).filter((t) => t.assetId === id);
 
   return (
-    <AppShell eyebrow={holding ? "Held position" : "Instrument"} title={name}>
+    <AppShell eyebrow={amount > 0 ? "Held position" : "Instrument"} title={name}>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <Link
           to="/markets"
@@ -111,17 +109,15 @@ function AssetDetail() {
         ]}
       />
 
-      {holding ? (
+      {amount > 0 ? (
         <section className="mt-10">
           <SectionHeader title="Your position" />
           <Card padding="lg">
             <dl className="space-y-4">
               <Row label="Holdings">{`${amount.toLocaleString()} ${symbol}`}</Row>
               <Row label="Market value">{formatPrice(amount * price)}</Row>
-              <Row label="Network">{holding.network}</Row>
             </dl>
           </Card>
-          <CopyField className="mt-3" label={`${symbol} address`} value={holding.address} />
         </section>
       ) : null}
 

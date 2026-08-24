@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { notify } from "@/lib/notify";
+import { recordWalletTransaction } from "@/lib/wallet.functions";
 
 export const Route = createFileRoute("/withdraw")({ component: Withdraw });
 function Withdraw() {
@@ -25,9 +26,9 @@ function Withdraw() {
             <ArrowUpFromLine className="size-5" />
           </span>
           <div>
-            <p className="text-sm text-foreground">Withdraw simulated funds</p>
+            <p className="text-sm text-foreground">Withdraw funds</p>
             <p className="text-xs text-muted-foreground">
-              Choose an amount and destination for the demo.
+              Enter an amount and verified destination for review.
             </p>
           </div>
         </div>
@@ -44,21 +45,31 @@ function Withdraw() {
             label="Destination address"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            placeholder="Paste demo address"
+            placeholder="Paste destination address"
           />
           <Button
             full
             onClick={() => {
               if (!(Number(amount) > 0))
                 return notify.error("Enter an amount", "Withdrawals need a positive amount.");
-              if (address.length < 8)
-                return notify.error(
-                  "Add a destination",
-                  "Use at least 8 characters for this demo.",
+              if (address.trim().length < 8)
+                return notify.error("Add a destination", "Enter a valid destination address.");
+              void recordWalletTransaction({
+                data: {
+                  type: "withdrawal",
+                  assetId: "bitcoin",
+                  amount,
+                  metadata: { destination: address.trim() },
+                },
+              })
+                .then(() => {
+                  notify.success("Withdrawal queued", "Your withdrawal is under review.");
+                  setAmount("");
+                  setAddress("");
+                })
+                .catch(() =>
+                  notify.error("Withdrawal unavailable", "Could not save this withdrawal."),
                 );
-              notify.success("Withdrawal queued", "The simulated withdrawal is now under review.");
-              setAmount("");
-              setAddress("");
             }}
           >
             Review withdrawal

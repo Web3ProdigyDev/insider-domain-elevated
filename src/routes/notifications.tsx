@@ -5,8 +5,6 @@ import { AppShell } from "@/components/layout/app-shell";
 import { EmptyState } from "@/components/common/empty-state";
 import { Button } from "@/components/ui/button";
 import { notify } from "@/lib/notify";
-import { useSim } from "@/lib/use-sim";
-import { markAllNotificationsRead, markNotificationRead } from "@/lib/sim-store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/notifications")({
@@ -42,9 +40,16 @@ function when(at: number) {
 }
 
 function Notifications() {
-  const { notifications } = useSim();
+  const notifications: Array<{
+    id: string;
+    read: boolean;
+    title: string;
+    body: string;
+    createdAt: number;
+    to: "/";
+  }> = [];
   const navigate = useNavigate();
-  const unread = notifications.filter((n) => !n.read).length;
+  const unread = 0;
 
   return (
     <AppShell
@@ -56,8 +61,7 @@ function Notifications() {
           size="sm"
           disabled={!unread}
           onClick={() => {
-            markAllNotificationsRead();
-            notify.message("All notices marked read");
+            notify.message("No unread notices");
           }}
         >
           <Check /> Mark all read
@@ -71,7 +75,6 @@ function Notifications() {
               key={n.id}
               type="button"
               onClick={() => {
-                markNotificationRead(n.id);
                 notify.message("Notice opened", n.title);
                 void navigate({ to: n.to });
               }}

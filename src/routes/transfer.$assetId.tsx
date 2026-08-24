@@ -10,6 +10,7 @@ import { formatPrice } from "@/components/cards/coin-card";
 import { SectionHeader } from "@/components/common/section-header";
 import { notify } from "@/lib/notify";
 import { usePortfolio } from "@/lib/use-markets";
+import { recordWalletTransaction } from "@/lib/wallet.functions";
 
 export const Route = createFileRoute("/transfer/$assetId")({ component: TransferDetails });
 function TransferDetails() {
@@ -50,7 +51,7 @@ function TransferDetails() {
       <section className="mt-8">
         <SectionHeader
           title="Transfer details"
-          description="This demo transfer never moves real funds."
+          description="Transfers are recorded for review against your account."
         />
         <Card padding="lg">
           <div className="flex flex-col gap-5">
@@ -65,7 +66,7 @@ function TransferDetails() {
               label="Destination address"
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
-              placeholder="Paste demo address"
+              placeholder="Paste destination address"
             />
             <div className="flex items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 text-sm">
               <span className="text-muted-foreground">Estimated value</span>
@@ -80,15 +81,25 @@ function TransferDetails() {
                     `Available: ${asset.amount} ${asset.symbol}.`,
                   );
                 if (destination.trim().length < 8)
-                  return notify.error(
-                    "Add a destination",
-                    "Use at least 8 characters for this demo.",
+                  return notify.error("Add a destination", "Enter a valid destination address.");
+                void recordWalletTransaction({
+                  data: {
+                    type: "transfer",
+                    assetId: asset.id,
+                    amount: String(numeric),
+                    metadata: { destination: destination.trim() },
+                  },
+                })
+                  .then(() => {
+                    notify.success(
+                      "Transfer submitted",
+                      `${numeric} ${asset.symbol} is pending review.`,
+                    );
+                    void navigate({ to: "/wallet" });
+                  })
+                  .catch(() =>
+                    notify.error("Transfer unavailable", "Could not save this transfer."),
                   );
-                notify.success(
-                  "Transfer submitted",
-                  `${numeric} ${asset.symbol} is settling in simulation.`,
-                );
-                void navigate({ to: "/wallet" });
               }}
             >
               Review and send

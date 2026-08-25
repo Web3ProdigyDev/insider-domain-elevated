@@ -23,6 +23,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TradingRouteImport } from './routes/trading'
 import { Route as TransferRouteImport } from './routes/transfer'
 import { Route as WalletRouteImport } from './routes/wallet'
+import { Route as WalletSetupRouteImport } from './routes/wallet-setup'
 import { Route as WithdrawRouteImport } from './routes/withdraw'
 import { Route as AssetIdRouteImport } from './routes/asset.$id'
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
@@ -101,6 +102,11 @@ const WalletRoute = WalletRouteImport.update({
   path: '/wallet',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WalletSetupRoute = WalletSetupRouteImport.update({
+  id: '/wallet-setup',
+  path: '/wallet-setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WithdrawRoute = WithdrawRouteImport.update({
   id: '/withdraw',
   path: '/withdraw',
@@ -152,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/trading': typeof TradingRoute
   '/transfer': typeof TransferRouteWithChildren
   '/wallet': typeof WalletRoute
+  '/wallet-setup': typeof WalletSetupRoute
   '/withdraw': typeof WithdrawRoute
   '/asset/$id': typeof AssetIdRoute
   '/auth/recover': typeof AuthRecoverRoute
@@ -175,6 +182,7 @@ export interface FileRoutesByTo {
   '/trading': typeof TradingRoute
   '/transfer': typeof TransferRouteWithChildren
   '/wallet': typeof WalletRoute
+  '/wallet-setup': typeof WalletSetupRoute
   '/withdraw': typeof WithdrawRoute
   '/asset/$id': typeof AssetIdRoute
   '/auth/recover': typeof AuthRecoverRoute
@@ -199,6 +207,7 @@ export interface FileRoutesById {
   '/trading': typeof TradingRoute
   '/transfer': typeof TransferRouteWithChildren
   '/wallet': typeof WalletRoute
+  '/wallet-setup': typeof WalletSetupRoute
   '/withdraw': typeof WithdrawRoute
   '/asset/$id': typeof AssetIdRoute
   '/auth/recover': typeof AuthRecoverRoute
@@ -224,6 +233,7 @@ export interface FileRouteTypes {
     | '/trading'
     | '/transfer'
     | '/wallet'
+    | '/wallet-setup'
     | '/withdraw'
     | '/asset/$id'
     | '/auth/recover'
@@ -247,6 +257,7 @@ export interface FileRouteTypes {
     | '/trading'
     | '/transfer'
     | '/wallet'
+    | '/wallet-setup'
     | '/withdraw'
     | '/asset/$id'
     | '/auth/recover'
@@ -270,6 +281,7 @@ export interface FileRouteTypes {
     | '/trading'
     | '/transfer'
     | '/wallet'
+    | '/wallet-setup'
     | '/withdraw'
     | '/asset/$id'
     | '/auth/recover'
@@ -294,6 +306,7 @@ export interface RootRouteChildren {
   TradingRoute: typeof TradingRoute
   TransferRoute: typeof TransferRouteWithChildren
   WalletRoute: typeof WalletRoute
+  WalletSetupRoute: typeof WalletSetupRoute
   WithdrawRoute: typeof WithdrawRoute
   AssetIdRoute: typeof AssetIdRoute
   AuthRecoverRoute: typeof AuthRecoverRoute
@@ -402,6 +415,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WalletRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/wallet-setup': {
+      id: '/wallet-setup'
+      path: '/wallet-setup'
+      fullPath: '/wallet-setup'
+      preLoaderRoute: typeof WalletSetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/withdraw': {
       id: '/withdraw'
       path: '/withdraw'
@@ -481,6 +501,7 @@ const rootRouteChildren: RootRouteChildren = {
   TradingRoute: TradingRoute,
   TransferRoute: TransferRouteWithChildren,
   WalletRoute: WalletRoute,
+  WalletSetupRoute: WalletSetupRoute,
   WithdrawRoute: WithdrawRoute,
   AssetIdRoute: AssetIdRoute,
   AuthRecoverRoute: AuthRecoverRoute,

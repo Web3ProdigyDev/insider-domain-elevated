@@ -3,10 +3,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 
 import { AuthShell } from "@/components/layout/auth-shell";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { OtpForm } from "@/components/auth/otp-form";
 import { notify } from "@/lib/notify";
-import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/auth/")({
   head: () => ({
@@ -28,18 +26,8 @@ export const Route = createFileRoute("/auth/")({
 
 function SignIn() {
   const navigate = useNavigate();
-  const [identifier, setIdentifier] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [error, setError] = React.useState("");
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    const result = await authClient.signIn.email({ email: identifier.trim(), password });
-    if (result.error) {
-      setError("Those credentials were not recognised.");
-      return;
-    }
+  const [email, setEmail] = React.useState("");
+  const onSuccess = () => {
     notify.success("Welcome back", "Your secure session is active.");
     void navigate({ to: "/" });
   };
@@ -59,32 +47,7 @@ function SignIn() {
       }
     >
       <Card padding="lg">
-        <form className="space-y-5" onSubmit={submit}>
-          <Input
-            label="Email or username"
-            autoComplete="username"
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
-            placeholder="a.marchetti"
-          />
-          <Input
-            label="Password"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            {...(error ? { error } : {})}
-          />
-          <Button type="submit" full>
-            Sign in
-          </Button>
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <Link to="/auth/recover" className="transition-colors hover:text-foreground">
-              Forgot password
-            </Link>
-            <span>Use your account email</span>
-          </div>
-        </form>
+        <OtpForm mode="sign-in" email={email} onEmailChange={setEmail} onSuccess={onSuccess} />
       </Card>
     </AuthShell>
   );

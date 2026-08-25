@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { notify } from "@/lib/notify";
-import { authClient } from "@/lib/auth-client";
+import { signOut } from "@/lib/supabase/auth";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/settings")({
@@ -118,7 +118,7 @@ function Settings() {
               variant="secondary"
               size="sm"
               onClick={async () => {
-                await authClient.signOut();
+                await signOut();
                 notify.message("Signed out", "Your session has been closed.");
                 void navigate({ to: "/auth", replace: true });
               }}

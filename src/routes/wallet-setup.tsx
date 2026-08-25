@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { notify } from "@/lib/notify";
-import { authClient } from "@/lib/auth-client";
+import { createClient } from "@/lib/supabase/client";
 import { Wallet } from "ethers";
 
 export const Route = createFileRoute("/wallet-setup")({
@@ -44,11 +44,26 @@ function WalletSetup() {
   const [busy, setBusy] = React.useState(false);
   const [recoveryPhrase, setRecoveryPhrase] = React.useState("");
   const [createdWallet, setCreatedWallet] = React.useState<Wallet | null>(null);
-  const { data: session } = authClient.useSession();
+  const [session, setSession] = React.useState<{ user: { id: string } } | null>(null);
+  const supabase = React.useMemo(() => createClient(), []);
 
   React.useEffect(() => {
-    if (!session?.user) void navigate({ to: "/auth", replace: true });
-  }, [navigate, session]);
+    let active = true;
+    void supabase.auth.getSession().then(({ data }) => {
+      if (active) setSession(data.session ? { user: { id: data.session.user.id } } : null);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, next) => {
+      if (active) setSession(next ? { user: { id: next.user.id } } : null);
+    });
+    return () => {
+      active = false;
+      listener.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  React.useEffect(() => {
+    if (session === null) return;
+  }, [session]);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -89,7 +104,7 @@ function WalletSetup() {
     }
   };
 
-  if (!session?.user) return null;
+  if (!session) return null;
   return (
     <AuthShell
       eyebrow="Private setup"

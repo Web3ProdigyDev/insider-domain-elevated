@@ -4,7 +4,7 @@ import * as React from "react";
 import { ArrowRight, Mail, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth-client";
+import { sendOtp, verifyOtp } from "@/lib/supabase/auth";
 
 export function OtpForm({
   mode,
@@ -32,10 +32,7 @@ export function OtpForm({
   const send = async () => {
     setBusy(true);
     setError("");
-    const result = await authClient.emailOtp.sendVerificationOtp({
-      email: email.trim(),
-      type: "sign-in",
-    });
+    const result = await sendOtp(email);
     setBusy(false);
     if (result.error) {
       setError("We could not send a code. Check the email and try again.");
@@ -49,7 +46,7 @@ export function OtpForm({
     event.preventDefault();
     setBusy(true);
     setError("");
-    const result = await authClient.signIn.emailOtp({ email: email.trim(), otp: code });
+    const result = await verifyOtp(email, code);
     setBusy(false);
     if (result.error) {
       setError("That code is invalid or expired. Request a new one.");

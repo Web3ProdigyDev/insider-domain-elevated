@@ -2,25 +2,38 @@ import * as React from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 
 import type { MemberRecord } from "./auth-store";
-import { authClient } from "./auth-client";
+import { createClient } from "./supabase/client";
 
 /** Subscribes to the simulated auth store. SSR-safe. */
 export function useAuth() {
-  const session = authClient.useSession();
-  const user: MemberRecord | null = session.data?.user
+  const supabase = React.useMemo(() => createClient(), []);
+  const [session, setSession] = React.useState<any>(undefined);
+  React.useEffect(() => {
+    let active = true;
+    void supabase.auth.getSession().then(({ data }) => active && setSession(data.session));
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, next) => active && setSession(next),
+    );
+    return () => {
+      active = false;
+      listener.subscription.unsubscribe();
+    };
+  }, [supabase]);
+  const authUser = session?.user;
+  const user: MemberRecord | null = authUser
     ? ({
-        id: session.data.user.id,
-        email: session.data.user.email,
-        firstName: session.data.user.name.split(" ")[0] ?? session.data.user.name,
-        surname: session.data.user.name.split(" ").slice(1).join(" "),
+        id: authUser.id,
+        email: authUser.email ?? "",
+        firstName: authUser.user_metadata?.full_name?.split(" ")[0] ?? "Member",
+        surname: authUser.user_metadata?.full_name?.split(" ").slice(1).join(" ") ?? "",
         middleName: "",
-        username: session.data.user.email.split("@")[0],
+        username: (authUser.email ?? "member").split("@")[0],
         password: "",
         dob: "",
         invitationCode: "",
         invitedBy: "",
         role: "member",
-        emailVerified: session.data.user.emailVerified,
+        emailVerified: Boolean(authUser.email_confirmed_at),
         onboardingCompleted: true,
         onboarding: {
           identityConfirmed: true,
@@ -32,11 +45,10 @@ export function useAuth() {
           experience: null,
         },
         wallet: null,
-        createdAt: session.data.user.createdAt.toISOString(),
+        createdAt: authUser.created_at,
       } as MemberRecord)
     : null;
-
-  return { user, ready: !session.isPending, session: session.data };
+  return { user, ready: session !== undefined, session };
 }
 
 /**

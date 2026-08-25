@@ -1,64 +1,56 @@
-import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeaders } from "@tanstack/react-start/server";
-import { desc, eq } from "drizzle-orm";
-import { auth } from "./auth";
-import { db } from "./db";
-import { transactions, walletBalances } from "./wallet-schema";
+import { createClient } from "./supabase/client";
 
-async function getUserId() {
-  const session = await auth.api.getSession({ headers: getRequestHeaders() });
-  if (!session?.user) throw new Error("Unauthorized");
-  return session.user.id;
-}
-
-export const getWalletData = createServerFn({ method: "GET" }).handler(async () => {
-  const userId = await getUserId();
+export async function getWalletData() {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
   const [balances, activity] = await Promise.all([
-    db.select().from(walletBalances).where(eq(walletBalances.userId, userId)),
-    db
-      .select()
-      .from(transactions)
-      .where(eq(transactions.userId, userId))
-      .orderBy(desc(transactions.createdAt))
+    supabase.from("wallet_balances").select("*").eq("user_id", user.id),
+    supabase
+      .from("transactions")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
       .limit(25),
   ]);
-  return { balances, activity };
-});
+  if (balances.error) throw balances.error;
+  if (activity.error) throw activity.error;
+  return { balances: balances.data ?? [], activity: activity.data ?? [] };
+}
 
-export const recordWalletTransaction = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => {
-    if (!input || typeof input !== "object") throw new Error("Invalid transaction");
-    const value = input as Record<string, unknown>;
-    const type = typeof value.type === "string" ? value.type.trim() : "";
-    const assetId = typeof value.assetId === "string" ? value.assetId.trim() : "";
-    const amount = typeof value.amount === "string" ? value.amount.trim() : "";
-    if (!["buy", "sell", "deposit", "withdrawal"].includes(type)) {
-      throw new Error("Unsupported transaction type");
-    }
-    if (!assetId || !/^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(amount) || Number(amount) <= 0) {
-      throw new Error("Amount and asset are invalid");
-    }
-    return {
-      type,
-      assetId,
-      amount,
-      metadata:
-        value.metadata && typeof value.metadata === "object"
-          ? (value.metadata as Record<string, unknown>)
-          : {},
-    };
-  })
-  .handler(async ({ data }) => {
-    const userId = await getUserId();
-    const id = crypto.randomUUID();
-    await db.insert(transactions).values({
-      id,
-      userId,
-      type: data.type,
-      assetId: data.assetId,
-      amount: data.amount,
-      metadata: data.metadata ?? {},
+export async function recordWalletTransaction(input: {
+  type: string;
+  assetId: string;
+  amount: string;
+  metadata?: Record<string, unknown>;
+}) {
+  if (
+    !["buy", "sell", "deposit", "withdrawal"].includes(input.type) ||
+    !input.assetId.trim() ||
+    !/^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(input.amount) ||
+    Number(input.amount) <= 0
+  )
+    throw new Error("Invalid transaction");
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+  const { data, error } = await supabase
+    .from("transactions")
+    .insert({
+      id: crypto.randomUUID(),
+      user_id: user.id,
+      type: input.type,
+      asset_id: input.assetId.trim(),
+      amount: input.amount,
+      metadata: input.metadata ?? {},
       status: "pending",
-    });
-    return { id };
-  });
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data;
+}

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useSession } from "@/lib/auth-client";
+import { createClient } from "@/lib/supabase/client";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({ meta: [{ title: "Set up your wallet — Insider Domain" }] }),
@@ -9,10 +9,13 @@ export const Route = createFileRoute("/onboarding")({
 
 function OnboardingRedirect() {
   const navigate = useNavigate();
-  const { data: session, isPending } = useSession();
   React.useEffect(() => {
-    if (!isPending) void navigate({ to: session?.user ? "/wallet-setup" : "/auth", replace: true });
-  }, [isPending, navigate, session?.user]);
+    void createClient()
+      .auth.getSession()
+      .then(({ data }) => {
+        void navigate({ to: data.session ? "/wallet-setup" : "/auth", replace: true });
+      });
+  }, [navigate]);
   return (
     <main className="grid min-h-screen place-items-center bg-background text-sm text-muted-foreground">
       Preparing your private setup…

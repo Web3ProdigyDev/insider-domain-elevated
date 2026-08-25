@@ -1,37 +1,36 @@
-import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeaders } from "@tanstack/react-start/server";
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { createClient } from "./supabase/client";
 
-import { auth } from "./auth";
-import { db } from "./db";
-import { notifications } from "./wallet-schema";
-
-async function getUserId() {
-  const session = await auth.api.getSession({ headers: getRequestHeaders() });
-  if (!session?.user) throw new Error("Unauthorized");
-  return session.user.id;
+export async function getNotifications() {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    ...row,
+    read: row.read_at !== null,
+    createdAt: new Date(row.created_at).getTime(),
+  }));
 }
 
-export const getNotifications = createServerFn({ method: "GET" }).handler(async () => {
-  const userId = await getUserId();
-  const rows = await db
-    .select()
-    .from(notifications)
-    .where(eq(notifications.userId, userId))
-    .orderBy(desc(notifications.createdAt))
-    .limit(50);
-  return rows.map((row) => ({
-    ...row,
-    read: row.readAt !== null,
-    createdAt: row.createdAt.getTime(),
-  }));
-});
-
-export const markAllNotificationsRead = createServerFn({ method: "POST" }).handler(async () => {
-  const userId = await getUserId();
-  await db
-    .update(notifications)
-    .set({ readAt: new Date() })
-    .where(and(eq(notifications.userId, userId), isNull(notifications.readAt)));
+export async function markAllNotificationsRead() {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+  const { error } = await supabase
+    .from("notifications")
+    .update({ read_at: new Date().toISOString() })
+    .eq("user_id", user.id)
+    .is("read_at", null);
+  if (error) throw error;
   return { ok: true };
-});
+}

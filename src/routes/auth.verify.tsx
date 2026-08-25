@@ -6,7 +6,7 @@ import { AuthShell } from "@/components/layout/auth-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth-client";
+import { signOut } from "@/lib/supabase/auth";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/auth/verify")({
@@ -78,7 +78,7 @@ function Verify() {
             variant="ghost"
             full
             onClick={() => {
-              void authClient.signOut();
+              void signOut();
               void navigate({ to: "/auth" });
             }}
           >

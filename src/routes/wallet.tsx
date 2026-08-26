@@ -93,6 +93,17 @@ function Wallet() {
         <section>
           <p className="text-eyebrow">Balances</p>
           <div className="mt-3 flex max-h-[52vh] flex-col gap-2 overflow-y-auto overscroll-contain pr-1">
+            {Object.keys(balances).length === 0 ? (
+              <Card padding="md" className="border-dashed">
+                <p className="text-sm text-foreground">Your wallet is ready for its first asset.</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  Deposit funds to see balances and activity appear here.
+                </p>
+                <Button className="mt-4" size="sm" asChild>
+                  <Link to="/deposit">Make a deposit</Link>
+                </Button>
+              </Card>
+            ) : null}
             {Object.entries(balances)
               .slice(0, 8)
               .map(([id, amount]) => {
@@ -130,6 +141,14 @@ function Wallet() {
             </Button>
           </div>
           <div className="mt-3 flex flex-col gap-2">
+            {transactions.length === 0 ? (
+              <Card padding="md" className="border-dashed">
+                <p className="text-sm text-foreground">No activity yet.</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  Completed deposits, transfers, and withdrawals will appear here.
+                </p>
+              </Card>
+            ) : null}
             {transactions.slice(0, 5).map((tx) => (
               <div
                 key={tx.id}

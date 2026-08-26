@@ -49,12 +49,12 @@ function Verify() {
     <AuthShell
       eyebrow="Verification"
       title="Confirm your email"
-      description={`Email verification for ${user.email} is pending delivery configuration.`}
+      description={`We sent a confirmation link to ${user.email}. Confirm it to unlock your account.`}
     >
       <Card padding="lg">
         <div className="mb-6 flex items-center gap-3 rounded-2xl border border-gold/25 bg-gold-muted px-4 py-3">
           <MailCheck className="size-4 shrink-0 text-gold" strokeWidth={1.75} />
-          <p className="text-sm text-gold">Check your inbox after email delivery is enabled.</p>
+          <p className="text-sm text-gold">Check your inbox for a secure confirmation link.</p>
         </div>
 
         <form className="space-y-5" onSubmit={submit}>

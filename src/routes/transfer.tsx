@@ -7,13 +7,14 @@ import { CoinLogo } from "@/components/common/coin-logo";
 import { formatPrice } from "@/components/cards/coin-card";
 import { SearchBar } from "@/components/common/search-bar";
 import { EmptyState } from "@/components/common/empty-state";
+import { SkeletonList } from "@/components/common/skeletons";
 import { usePortfolio } from "@/lib/use-markets";
 import { useState } from "react";
 
 export const Route = createFileRoute("/transfer")({ component: TransferPicker });
 
 function TransferPicker() {
-  const { positions } = usePortfolio();
+  const { positions, isLoading } = usePortfolio();
   const [query, setQuery] = useState("");
   const visible = positions.filter((p) =>
     `${p.name} ${p.symbol}`.toLowerCase().includes(query.toLowerCase()),
@@ -38,7 +39,9 @@ function TransferPicker() {
         className="mb-4"
       />
       <div className="flex flex-col gap-2">
-        {visible.length ? (
+        {isLoading ? (
+          <SkeletonList rows={6} />
+        ) : visible.length ? (
           visible.map((p) => (
             <Link
               key={p.id}

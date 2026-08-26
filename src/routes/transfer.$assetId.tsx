@@ -20,7 +20,38 @@ function TransferDetails() {
   const navigate = useNavigate();
   const [amount, setAmount] = useState("");
   const [destination, setDestination] = useState("");
+  const [reviewing, setReviewing] = useState(false);
+  const [busy, setBusy] = useState(false);
   const numeric = Number(amount) || 0;
+  const validate = () => {
+    if (numeric <= 0 || numeric > asset.amount) {
+      notify.error("Check the amount", `Available: ${asset.amount} ${asset.symbol}.`);
+      return false;
+    }
+    if (destination.trim().length < 8) {
+      notify.error("Add a destination", "Enter a valid destination address.");
+      return false;
+    }
+    return true;
+  };
+  const confirm = async () => {
+    if (!validate()) return;
+    setBusy(true);
+    try {
+      await recordWalletTransaction({
+        type: "transfer",
+        assetId: asset.id,
+        amount: String(numeric),
+        metadata: { destination: destination.trim() },
+      });
+      notify.success("Transfer submitted", `${numeric} ${asset.symbol} is pending review.`);
+      void navigate({ to: "/wallet" });
+    } catch {
+      notify.error("Transfer unavailable", "Could not save this transfer.");
+    } finally {
+      setBusy(false);
+    }
+  };
   if (!asset)
     return (
       <AppShell eyebrow="Movement" title="Asset not found">
@@ -54,55 +85,61 @@ function TransferDetails() {
           description="Transfers are recorded for review against your account."
         />
         <Card padding="lg">
-          <div className="flex flex-col gap-5">
-            <Input
-              label={`Amount (${asset.symbol})`}
-              inputMode="decimal"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
-            />
-            <Input
-              label="Destination address"
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-              placeholder="Paste destination address"
-            />
-            <div className="flex items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 text-sm">
-              <span className="text-muted-foreground">Estimated value</span>
-              <span className="numeric text-foreground">{formatPrice(numeric * asset.price)}</span>
+          {reviewing ? (
+            <div className="flex flex-col gap-5">
+              <div className="rounded-2xl border border-border bg-surface-raised p-5">
+                <p className="text-eyebrow">Review transfer</p>
+                <p className="mt-4 text-sm text-foreground">
+                  {amount} {asset.symbol}
+                </p>
+                <p className="mt-1 break-all text-xs text-muted-foreground">{destination}</p>
+                <p className="mt-5 text-sm text-negative">This can&apos;t be undone.</p>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  variant="secondary"
+                  full
+                  disabled={busy}
+                  onClick={() => setReviewing(false)}
+                >
+                  Back
+                </Button>
+                <Button full disabled={busy} onClick={confirm}>
+                  {busy ? "Sending transfer…" : "Confirm transfer"}
+                </Button>
+              </div>
             </div>
-            <Button
-              full
-              onClick={() => {
-                if (numeric <= 0 || numeric > asset.amount)
-                  return notify.error(
-                    "Check the amount",
-                    `Available: ${asset.amount} ${asset.symbol}.`,
-                  );
-                if (destination.trim().length < 8)
-                  return notify.error("Add a destination", "Enter a valid destination address.");
-                void recordWalletTransaction({
-                  type: "transfer",
-                  assetId: asset.id,
-                  amount: String(numeric),
-                  metadata: { destination: destination.trim() },
-                })
-                  .then(() => {
-                    notify.success(
-                      "Transfer submitted",
-                      `${numeric} ${asset.symbol} is pending review.`,
-                    );
-                    void navigate({ to: "/wallet" });
-                  })
-                  .catch(() =>
-                    notify.error("Transfer unavailable", "Could not save this transfer."),
-                  );
-              }}
-            >
-              Review and send
-            </Button>
-          </div>
+          ) : (
+            <div className="flex flex-col gap-5">
+              <Input
+                label={`Amount (${asset.symbol})`}
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+              />
+              <Input
+                label="Destination address"
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+                placeholder="Paste destination address"
+              />
+              <div className="flex items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 text-sm">
+                <span className="text-muted-foreground">Estimated value</span>
+                <span className="numeric text-foreground">
+                  {formatPrice(numeric * asset.price)}
+                </span>
+              </div>
+              <Button
+                full
+                onClick={() => {
+                  if (validate()) setReviewing(true);
+                }}
+              >
+                Review transfer
+              </Button>
+            </div>
+          )}
         </Card>
       </section>
     </AppShell>

@@ -7,6 +7,7 @@ import { SearchBar } from "@/components/common/search-bar";
 import { CoinCard } from "@/components/cards/coin-card";
 import { AssetCard } from "@/components/cards/asset-card";
 import { EmptyState } from "@/components/common/empty-state";
+import { SkeletonList } from "@/components/common/skeletons";
 import {
   SegmentedTabs,
   SegmentedTabsContent,

@@ -1,9 +1,11 @@
+import * as React from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, Check } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { EmptyState } from "@/components/common/empty-state";
+import { SkeletonList } from "@/components/common/skeletons";
 import { Button } from "@/components/ui/button";
 import { notify } from "@/lib/notify";
 import { getNotifications, markAllNotificationsRead } from "@/lib/notification.functions";
@@ -51,6 +53,7 @@ function Notifications() {
   });
   const notifications = notificationsQuery.data ?? [];
   const unread = notifications.filter((item) => !item.read).length;
+  const [markingRead, setMarkingRead] = React.useState(false);
 
   return (
     <AppShell
@@ -60,18 +63,25 @@ function Notifications() {
         <Button
           variant="ghost"
           size="sm"
-          disabled={!unread}
+          disabled={!unread || markingRead}
           onClick={async () => {
-            await markAllNotificationsRead();
-            await queryClient.invalidateQueries({ queryKey: ["notifications"] });
-            notify.message("Notifications updated", "All notices are marked as read.");
+            setMarkingRead(true);
+            try {
+              await markAllNotificationsRead();
+              await queryClient.invalidateQueries({ queryKey: ["notifications"] });
+              notify.message("Notifications updated", "All notices are marked as read.");
+            } finally {
+              setMarkingRead(false);
+            }
           }}
         >
-          <Check /> Mark all read
+          <Check /> {markingRead ? "Marking read…" : "Mark all read"}
         </Button>
       }
     >
-      {notifications.length ? (
+      {notificationsQuery.isLoading ? (
+        <SkeletonList rows={5} />
+      ) : notifications.length ? (
         <div className="space-y-3">
           {notifications.map((n) => (
             <button

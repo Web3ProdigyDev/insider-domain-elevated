@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CoinLogo } from "@/components/common/coin-logo";
+import { SkeletonCard } from "@/components/common/skeletons";
 import { useMarkets, usePortfolio } from "@/lib/use-markets";
 import { getWalletData } from "@/lib/wallet.functions";
 import { useQuery } from "@tanstack/react-query";
@@ -70,25 +71,35 @@ function Wallet() {
           </div>
         </Card>
         <section className="grid gap-3 sm:grid-cols-3" aria-label="Portfolio summary">
-          <Card padding="md">
-            <p className="text-eyebrow">Portfolio value</p>
-            <p className="numeric mt-2 text-2xl text-foreground">
-              ${balance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-            </p>
-          </Card>
-          <Card padding="md">
-            <p className="text-eyebrow">24h movement</p>
-            <p className="numeric mt-2 text-2xl text-foreground">
-              {change24h >= 0 ? "+" : ""}
-              {change24h.toFixed(2)}%
-            </p>
-          </Card>
-          <Card padding="md">
-            <p className="text-eyebrow">Assets held</p>
-            <p className="numeric mt-2 text-2xl text-foreground">
-              {positions.filter((position) => position.amount > 0).length}
-            </p>
-          </Card>
+          {walletQuery.isLoading ? (
+            <>
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </>
+          ) : (
+            <>
+              <Card padding="md">
+                <p className="text-eyebrow">Portfolio value</p>
+                <p className="numeric mt-2 text-2xl text-foreground">
+                  ${balance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                </p>
+              </Card>
+              <Card padding="md">
+                <p className="text-eyebrow">24h movement</p>
+                <p className="numeric mt-2 text-2xl text-foreground">
+                  {change24h >= 0 ? "+" : ""}
+                  {change24h.toFixed(2)}%
+                </p>
+              </Card>
+              <Card padding="md">
+                <p className="text-eyebrow">Assets held</p>
+                <p className="numeric mt-2 text-2xl text-foreground">
+                  {positions.filter((position) => position.amount > 0).length}
+                </p>
+              </Card>
+            </>
+          )}
         </section>
         <section>
           <p className="text-eyebrow">Balances</p>

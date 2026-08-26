@@ -8,7 +8,7 @@ export async function signUpWithPassword(input: { email: string; password: strin
     options: {
       data: { full_name: input.name.trim() },
       emailRedirectTo:
-        import.meta.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ??
+        import.meta.env.VITE_SUPABASE_REDIRECT_URL ??
         `${window.location.origin}/auth/callback`,
     },
   });
@@ -24,7 +24,7 @@ export async function resendConfirmation(email: string) {
     email: email.trim().toLowerCase(),
     options: {
       emailRedirectTo:
-        import.meta.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ??
+        import.meta.env.VITE_SUPABASE_REDIRECT_URL ??
         `${window.location.origin}/auth/callback`,
     },
   });

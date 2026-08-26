@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CoinLogo } from "@/components/common/coin-logo";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { notify } from "@/lib/notify";
 import { useMarkets } from "@/lib/use-markets";
 import { recordWalletTransaction } from "@/lib/wallet.functions";
+import { hasVault, unlockVault } from "@/lib/wallet-vault";
 
 export const Route = createFileRoute("/withdraw")({ component: Withdraw });
 function Withdraw() {
@@ -19,6 +20,12 @@ function Withdraw() {
   const [assetId, setAssetId] = useState("bitcoin");
   const [reviewing, setReviewing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [vaultExists, setVaultExists] = useState(false);
+  const [vaultPassword, setVaultPassword] = useState("");
+  const [vaultError, setVaultError] = useState("");
+  useEffect(() => {
+    void hasVault().then(setVaultExists);
+  }, []);
   const asset = coins.find((coin) => coin.id === assetId) ?? coins[0];
   const validate = () => {
     if (!(Number(amount) > 0)) {
@@ -33,7 +40,17 @@ function Withdraw() {
   };
   const confirm = async () => {
     if (!validate()) return;
+    setVaultError("");
     setBusy(true);
+    if (vaultExists) {
+      try {
+        await unlockVault(vaultPassword);
+      } catch {
+        setVaultError("That password did not unlock this local vault. Try again.");
+        setBusy(false);
+        return;
+      }
+    }
     try {
       await recordWalletTransaction({
         type: "withdrawal",
@@ -74,6 +91,26 @@ function Withdraw() {
         {reviewing ? (
           <div className="mt-8 flex flex-col gap-5">
             <div className="rounded-2xl border border-border bg-surface-raised p-5">
+              {vaultExists ? (
+                <div className="mb-5">
+                  <Input
+                    label="Vault password"
+                    type="password"
+                    autoComplete="current-password"
+                    value={vaultPassword}
+                    onChange={(event) => {
+                      setVaultPassword(event.target.value);
+                      setVaultError("");
+                    }}
+                    placeholder="Unlock to confirm"
+                  />
+                  {vaultError ? <p className="mt-2 text-xs text-negative">{vaultError}</p> : null}
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Local decrypt only proves control of this vault; it does not broadcast to a
+                    blockchain network.
+                  </p>
+                </div>
+              ) : null}
               <p className="text-eyebrow">Review withdrawal</p>
               <div className="mt-4 flex items-center gap-3">
                 <CoinLogo src={asset?.image} symbol={asset?.symbol ?? "—"} size={36} />
@@ -90,7 +127,7 @@ function Withdraw() {
               <Button variant="secondary" full disabled={busy} onClick={() => setReviewing(false)}>
                 Back
               </Button>
-              <Button full disabled={busy} onClick={confirm}>
+              <Button full disabled={busy || (vaultExists && !vaultPassword)} onClick={confirm}>
                 {busy ? "Sending withdrawal…" : "Confirm withdrawal"} {!busy ? <Check /> : null}
               </Button>
             </div>

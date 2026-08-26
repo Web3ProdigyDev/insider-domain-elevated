@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { Bell, Shield, LogOut, ChevronRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Bell, Shield, LogOut, ChevronRight, Trash2 } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { MemberCard } from "@/components/cards/member-card";
@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { notify } from "@/lib/notify";
 import { signOut } from "@/lib/supabase/auth";
 import { useAuth } from "@/lib/use-auth";
+import { clearVault, hasVault } from "@/lib/wallet-vault";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -35,6 +36,11 @@ function Settings() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [verified, setVerified] = useState(true);
+  const [vaultExists, setVaultExists] = useState(false);
+  const [resettingVault, setResettingVault] = useState(false);
+  useEffect(() => {
+    void hasVault().then(setVaultExists);
+  }, []);
 
   return (
     <AppShell eyebrow="Account" title="Settings">
@@ -107,6 +113,49 @@ function Settings() {
             </Button>
           </div>
         </div>
+      </section>
+
+      <section className="mt-10">
+        <SectionHeader title="Local wallet vault" />
+        <Card padding="lg">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-sm text-foreground">Reset this device&apos;s vault</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                This only deletes the local encrypted copy. It does not recover or move funds.
+              </p>
+            </div>
+            {resettingVault ? (
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" onClick={() => setResettingVault(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={!vaultExists}
+                  onClick={async () => {
+                    await clearVault();
+                    setVaultExists(false);
+                    setResettingVault(false);
+                    notify.message("Vault reset", "The local encrypted copy was deleted.");
+                  }}
+                >
+                  <Trash2 /> Confirm reset
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={!vaultExists}
+                onClick={() => setResettingVault(true)}
+              >
+                <Trash2 /> Reset vault
+              </Button>
+            )}
+          </div>
+        </Card>
       </section>
 
       <section className="mt-10">

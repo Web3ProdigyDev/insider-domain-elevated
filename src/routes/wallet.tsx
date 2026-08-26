@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowDownToLine, ArrowUpFromLine, WalletCards } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowDownToLine, ArrowUpFromLine, Copy, WalletCards } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,9 +10,19 @@ import { SkeletonCard } from "@/components/common/skeletons";
 import { useMarkets, usePortfolio } from "@/lib/use-markets";
 import { getWalletData } from "@/lib/wallet.functions";
 import { useQuery } from "@tanstack/react-query";
+import { hasVault, loadVault } from "@/lib/wallet-vault";
 
 export const Route = createFileRoute("/wallet")({ component: Wallet });
 function Wallet() {
+  const [vaultAddress, setVaultAddress] = useState<string | null>(null);
+  const [vaultChecked, setVaultChecked] = useState(false);
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    void hasVault().then(async (exists) => {
+      setVaultAddress(exists ? ((await loadVault())?.address ?? null) : null);
+      setVaultChecked(true);
+    });
+  }, []);
   const walletQuery = useQuery({
     queryKey: ["wallet-data"],
     queryFn: () => getWalletData(),
@@ -53,6 +64,44 @@ function Wallet() {
             <Badge className="ml-auto" variant="secondary">
               {walletQuery.isError ? "Unavailable" : "Live"}
             </Badge>
+          </div>
+          <div className="mt-6 rounded-2xl border border-border bg-surface px-4 py-3">
+            {!vaultChecked ? (
+              <p className="text-xs text-muted-foreground">Checking local vault…</p>
+            ) : vaultAddress ? (
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-muted-foreground">Public address</span>
+                <code className="truncate text-xs text-foreground">
+                  {vaultAddress.slice(0, 6)}…{vaultAddress.slice(-4)}
+                </code>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-auto"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(vaultAddress).then(() => {
+                      setCopied(true);
+                      window.setTimeout(() => setCopied(false), 1400);
+                    });
+                  }}
+                  aria-label="Copy wallet address"
+                >
+                  <Copy /> {copied ? "Copied" : "Copy"}
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm text-foreground">No local wallet vault</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Set up a wallet on this device to create an encrypted local vault.
+                  </p>
+                </div>
+                <Button size="sm" asChild>
+                  <Link to="/wallet-setup">Set up wallet</Link>
+                </Button>
+              </div>
+            )}
           </div>
           <div className="mt-8 grid gap-3 sm:grid-cols-2">
             <Button asChild>

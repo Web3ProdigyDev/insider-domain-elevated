@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
@@ -11,6 +11,7 @@ import { SectionHeader } from "@/components/common/section-header";
 import { notify } from "@/lib/notify";
 import { usePortfolio } from "@/lib/use-markets";
 import { recordWalletTransaction } from "@/lib/wallet.functions";
+import { hasVault, unlockVault } from "@/lib/wallet-vault";
 
 export const Route = createFileRoute("/transfer/$assetId")({ component: TransferDetails });
 function TransferDetails() {
@@ -22,6 +23,12 @@ function TransferDetails() {
   const [destination, setDestination] = useState("");
   const [reviewing, setReviewing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [vaultExists, setVaultExists] = useState(false);
+  const [vaultPassword, setVaultPassword] = useState("");
+  const [vaultError, setVaultError] = useState("");
+  useEffect(() => {
+    void hasVault().then(setVaultExists);
+  }, []);
   const numeric = Number(amount) || 0;
   const validate = () => {
     if (numeric <= 0 || numeric > asset.amount) {
@@ -36,7 +43,17 @@ function TransferDetails() {
   };
   const confirm = async () => {
     if (!validate()) return;
+    setVaultError("");
     setBusy(true);
+    if (vaultExists) {
+      try {
+        await unlockVault(vaultPassword);
+      } catch {
+        setVaultError("That password did not unlock this local vault. Try again.");
+        setBusy(false);
+        return;
+      }
+    }
     try {
       await recordWalletTransaction({
         type: "transfer",
@@ -88,6 +105,26 @@ function TransferDetails() {
           {reviewing ? (
             <div className="flex flex-col gap-5">
               <div className="rounded-2xl border border-border bg-surface-raised p-5">
+                {vaultExists ? (
+                  <div className="mb-5">
+                    <Input
+                      label="Vault password"
+                      type="password"
+                      autoComplete="current-password"
+                      value={vaultPassword}
+                      onChange={(event) => {
+                        setVaultPassword(event.target.value);
+                        setVaultError("");
+                      }}
+                      placeholder="Unlock to confirm"
+                    />
+                    {vaultError ? <p className="mt-2 text-xs text-negative">{vaultError}</p> : null}
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Local decrypt only proves control of this vault; it does not broadcast to a
+                      blockchain network.
+                    </p>
+                  </div>
+                ) : null}
                 <p className="text-eyebrow">Review transfer</p>
                 <p className="mt-4 text-sm text-foreground">
                   {amount} {asset.symbol}
@@ -104,7 +141,7 @@ function TransferDetails() {
                 >
                   Back
                 </Button>
-                <Button full disabled={busy} onClick={confirm}>
+                <Button full disabled={busy || (vaultExists && !vaultPassword)} onClick={confirm}>
                   {busy ? "Sending transfer…" : "Confirm transfer"}
                 </Button>
               </div>

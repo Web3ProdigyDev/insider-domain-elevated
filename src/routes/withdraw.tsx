@@ -6,12 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { notify } from "@/lib/notify";
+import { useMarkets } from "@/lib/use-markets";
 import { recordWalletTransaction } from "@/lib/wallet.functions";
 
 export const Route = createFileRoute("/withdraw")({ component: Withdraw });
 function Withdraw() {
+  const { coins } = useMarkets();
   const [amount, setAmount] = useState("");
   const [address, setAddress] = useState("");
+  const [assetId, setAssetId] = useState("bitcoin");
+  const asset = coins.find((coin) => coin.id === assetId) ?? coins[0];
   return (
     <AppShell eyebrow="Funding" title="Withdraw">
       <Link
@@ -33,9 +37,22 @@ function Withdraw() {
           </div>
         </div>
         <div className="mt-8 flex flex-col gap-5">
-          <Input label="Asset" value="Bitcoin (BTC)" readOnly />
+          <label className="flex flex-col gap-2 text-sm text-foreground">
+            <span>Asset</span>
+            <select
+              className="h-11 rounded-xl border border-border bg-card px-3 text-sm"
+              value={asset?.id ?? assetId}
+              onChange={(event) => setAssetId(event.target.value)}
+            >
+              {coins.map((coin) => (
+                <option key={coin.id} value={coin.id}>
+                  {coin.name} ({coin.symbol})
+                </option>
+              ))}
+            </select>
+          </label>
           <Input
-            label="Amount (BTC)"
+            label={`Amount (${asset?.symbol ?? "asset"})`}
             inputMode="decimal"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
@@ -55,12 +72,10 @@ function Withdraw() {
               if (address.trim().length < 8)
                 return notify.error("Add a destination", "Enter a valid destination address.");
               void recordWalletTransaction({
-                data: {
-                  type: "withdrawal",
-                  assetId: "bitcoin",
-                  amount,
-                  metadata: { destination: address.trim() },
-                },
+                type: "withdrawal",
+                assetId: asset?.id ?? assetId,
+                amount,
+                metadata: { destination: address.trim() },
               })
                 .then(() => {
                   notify.success("Withdrawal queued", "Your withdrawal is under review.");

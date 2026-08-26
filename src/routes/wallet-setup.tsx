@@ -44,6 +44,7 @@ function WalletSetup() {
   const [busy, setBusy] = React.useState(false);
   const [recoveryPhrase, setRecoveryPhrase] = React.useState("");
   const [createdWallet, setCreatedWallet] = React.useState<Wallet | null>(null);
+  const [phraseConfirmed, setPhraseConfirmed] = React.useState(false);
   const [session, setSession] = React.useState<{ user: { id: string } } | null>(null);
   const supabase = React.useMemo(() => createClient(), []);
 
@@ -68,8 +69,12 @@ function WalletSetup() {
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
-    if (password.length < 10) {
-      setError("Use at least 10 characters for your vault password.");
+    if (password.length < 12 || /^\d+$/.test(password)) {
+      setError("Use at least 12 characters and include more than numbers.");
+      return;
+    }
+    if (recoveryPhrase && !phraseConfirmed) {
+      setError("Confirm that you wrote down your recovery phrase before continuing.");
       return;
     }
     if (password !== confirm) {
@@ -152,6 +157,17 @@ function WalletSetup() {
                 <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
                   Anyone with this phrase can control the wallet. We cannot recover it.
                 </p>
+                <label className="mt-4 flex items-start gap-3 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={phraseConfirmed}
+                    onChange={(event) => setPhraseConfirmed(event.target.checked)}
+                    className="mt-0.5 size-4 accent-gold"
+                  />
+                  <span>
+                    I wrote down this recovery phrase and understand it cannot be recovered.
+                  </span>
+                </label>
               </div>
             ) : null}
             {mode === "import" ? (
@@ -175,7 +191,7 @@ function WalletSetup() {
               autoComplete="new-password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="10+ characters"
+              placeholder="12+ characters"
             />
             <Input
               label="Confirm vault password"

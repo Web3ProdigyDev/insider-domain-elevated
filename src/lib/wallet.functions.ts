@@ -27,7 +27,7 @@ export async function recordWalletTransaction(input: {
   metadata?: Record<string, unknown>;
 }) {
   if (
-    !["buy", "sell", "deposit", "withdrawal"].includes(input.type) ||
+    !["buy", "sell", "deposit", "withdrawal", "transfer"].includes(input.type) ||
     !input.assetId.trim() ||
     !/^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(input.amount) ||
     Number(input.amount) <= 0

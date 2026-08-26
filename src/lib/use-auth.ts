@@ -1,16 +1,62 @@
 import * as React from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
+import type { Session } from "@supabase/supabase-js";
 
-import type { MemberRecord } from "./auth-store";
 import { createClient } from "./supabase/client";
+
+type MemberRecord = {
+  id: string;
+  email: string;
+  firstName: string;
+  surname: string;
+  middleName: string;
+  username: string;
+  password: string;
+  dob: string;
+  invitationCode: string;
+  invitedBy: string;
+  role: string;
+  emailVerified: boolean;
+  onboardingCompleted: boolean;
+  onboarding: {
+    identityConfirmed: boolean;
+    ageConfirmed: boolean;
+    invitationConfirmed: boolean;
+    privacyAccepted: boolean;
+    securityAccepted: boolean;
+    communications: string[];
+    experience: string | null;
+  };
+  wallet: null;
+  createdAt: string;
+};
 
 /** Subscribes to the simulated auth store. SSR-safe. */
 export function useAuth() {
   const supabase = React.useMemo(() => createClient(), []);
-  const [session, setSession] = React.useState<any>(undefined);
+  const [session, setSession] = React.useState<Session | null | undefined>(undefined);
+  const [profile, setProfile] = React.useState<{
+    role: string;
+    onboarding_completed: boolean;
+    dob: string | null;
+    first_name: string | null;
+    surname: string | null;
+    username: string | null;
+  } | null>(null);
   React.useEffect(() => {
     let active = true;
-    void supabase.auth.getSession().then(({ data }) => active && setSession(data.session));
+    void supabase.auth.getSession().then(async ({ data }) => {
+      if (!active) return;
+      setSession(data.session);
+      if (data.session) {
+        const { data: row } = await supabase
+          .from("profiles")
+          .select("role,onboarding_completed,dob,first_name,surname,username")
+          .eq("id", data.session.user.id)
+          .maybeSingle();
+        if (active) setProfile(row);
+      } else setProfile(null);
+    });
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, next) => active && setSession(next),
     );
@@ -24,17 +70,17 @@ export function useAuth() {
     ? ({
         id: authUser.id,
         email: authUser.email ?? "",
-        firstName: authUser.user_metadata?.full_name?.split(" ")[0] ?? "Member",
-        surname: authUser.user_metadata?.full_name?.split(" ").slice(1).join(" ") ?? "",
+        firstName: profile?.first_name ?? "",
+        surname: profile?.surname ?? "",
         middleName: "",
-        username: (authUser.email ?? "member").split("@")[0],
+        username: profile?.username ?? "",
         password: "",
-        dob: "",
+        dob: profile?.dob ?? "",
         invitationCode: "",
         invitedBy: "",
-        role: "member",
+        role: profile?.role ?? "member",
         emailVerified: Boolean(authUser.email_confirmed_at),
-        onboardingCompleted: true,
+        onboardingCompleted: profile?.onboarding_completed ?? false,
         onboarding: {
           identityConfirmed: true,
           ageConfirmed: true,

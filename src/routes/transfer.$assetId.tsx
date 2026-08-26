@@ -83,12 +83,10 @@ function TransferDetails() {
                 if (destination.trim().length < 8)
                   return notify.error("Add a destination", "Enter a valid destination address.");
                 void recordWalletTransaction({
-                  data: {
-                    type: "transfer",
-                    assetId: asset.id,
-                    amount: String(numeric),
-                    metadata: { destination: destination.trim() },
-                  },
+                  type: "transfer",
+                  assetId: asset.id,
+                  amount: String(numeric),
+                  metadata: { destination: destination.trim() },
                 })
                   .then(() => {
                     notify.success(

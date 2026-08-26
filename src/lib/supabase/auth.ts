@@ -8,8 +8,7 @@ export async function signUpWithPassword(input: { email: string; password: strin
     options: {
       data: { full_name: input.name.trim() },
       emailRedirectTo:
-        process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ??
-        `${window.location.origin}/auth/callback`,
+        import.meta.env.VITE_SUPABASE_REDIRECT_URL ?? `${window.location.origin}/auth/callback`,
     },
   });
 }
@@ -22,7 +21,10 @@ export async function resendConfirmation(email: string) {
   return createClient().auth.resend({
     type: "signup",
     email: email.trim().toLowerCase(),
-    options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    options: {
+      emailRedirectTo:
+        import.meta.env.VITE_SUPABASE_REDIRECT_URL ?? `${window.location.origin}/auth/callback`,
+    },
   });
 }
 

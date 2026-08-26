@@ -1,10 +1,11 @@
 import * as React from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { OtpForm } from "@/components/auth/otp-form";
+import { Button } from "@/components/ui/button";
 import { notify } from "@/lib/notify";
+import { signUpWithPassword } from "@/lib/supabase/auth";
 
 export const Route = createFileRoute("/auth/signup")({
   head: () => ({
@@ -17,13 +18,27 @@ export const Route = createFileRoute("/auth/signup")({
 });
 
 function SignUpRoute() {
-  const navigate = useNavigate();
   const [email, setEmail] = React.useState("");
   const [name, setName] = React.useState("");
   const [invitation, setInvitation] = React.useState("");
+  const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
+  const [submitted, setSubmitted] = React.useState(false);
   const validInvitation = /^ID-\d{4}-[A-Z]{4}$/i.test(invitation.trim());
-  const ready = name.trim().length >= 2 && email.includes("@") && validInvitation;
+  const ready =
+    name.trim().length >= 2 && email.includes("@") && password.length >= 8 && validInvitation;
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!ready) return;
+    setError("");
+    const result = await signUpWithPassword({ email, password, name });
+    if (result.error) {
+      setError("We could not create that membership. Check your details and try again.");
+      return;
+    }
+    setSubmitted(true);
+    notify.success("Check your inbox", "Confirm your email to activate membership.");
+  };
 
   return (
     <AuthShell
@@ -40,7 +55,13 @@ function SignUpRoute() {
       }
     >
       <Card padding="lg">
-        <div className="space-y-5">
+        <form className="space-y-5" onSubmit={submit}>
+          {submitted ? (
+            <div className="rounded-2xl border border-gold/20 bg-gold-muted/40 p-4 text-sm leading-relaxed text-muted-foreground">
+              We sent a confirmation link to <span className="text-foreground">{email}</span>.
+              Confirm it, then sign in to continue.
+            </div>
+          ) : null}
           <Input
             label="Full name"
             autoComplete="name"
@@ -72,22 +93,23 @@ function SignUpRoute() {
             }}
             placeholder="you@example.com"
           />
-          {ready ? (
-            <OtpForm
-              mode="sign-up"
-              email={email}
-              onEmailChange={setEmail}
-              onSuccess={() => {
-                notify.success("Email verified", "Now secure your wallet.");
-                void navigate({ to: "/wallet-setup" });
-              }}
-            />
-          ) : (
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              Your invitation is checked before we send a one-time verification code.
-            </p>
-          )}
-        </div>
+          <Input
+            label="Password"
+            type="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="At least 8 characters"
+          />
+          {error ? <p className="text-xs text-negative">{error}</p> : null}
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Your invitation is checked before we create your account. Email confirmation is required
+            before access.
+          </p>
+          <Button type="submit" full disabled={!ready || submitted}>
+            {submitted ? "Confirmation sent" : "Create membership"}
+          </Button>
+        </form>
       </Card>
     </AuthShell>
   );

@@ -3,8 +3,10 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 
 import { AuthShell } from "@/components/layout/auth-shell";
 import { Card } from "@/components/ui/card";
-import { OtpForm } from "@/components/auth/otp-form";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { notify } from "@/lib/notify";
+import { signInWithPassword } from "@/lib/supabase/auth";
 
 export const Route = createFileRoute("/auth/")({
   head: () => ({
@@ -27,7 +29,16 @@ export const Route = createFileRoute("/auth/")({
 function SignIn() {
   const navigate = useNavigate();
   const [email, setEmail] = React.useState("");
-  const onSuccess = () => {
+  const [password, setPassword] = React.useState("");
+  const [error, setError] = React.useState("");
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError("");
+    const result = await signInWithPassword(email, password);
+    if (result.error) {
+      setError("Invalid email or password, or confirm your email first.");
+      return;
+    }
     notify.success("Welcome back", "Your secure session is active.");
     void navigate({ to: "/" });
   };
@@ -47,7 +58,31 @@ function SignIn() {
       }
     >
       <Card padding="lg">
-        <OtpForm mode="sign-in" email={email} onEmailChange={setEmail} onSuccess={onSuccess} />
+        <form className="space-y-5" onSubmit={submit}>
+          <Input
+            label="Email address"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="you@example.com"
+          />
+          <Input
+            label="Password"
+            type="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="Your password"
+            {...(error ? { error } : {})}
+          />
+          <Button type="submit" full disabled={!email.includes("@") || password.length < 8}>
+            Sign in
+          </Button>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            New members must confirm their email before signing in.
+          </p>
+        </form>
       </Card>
     </AuthShell>
   );

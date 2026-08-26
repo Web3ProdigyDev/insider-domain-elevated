@@ -39,7 +39,51 @@ export const Route = createFileRoute("/")({
 });
 
 function Overview() {
-  const { user } = useAuth();
+  const { user, ready } = useAuth();
+  if (ready && !user) {
+    return <GetStarted />;
+  }
+  return <OverviewContent user={user} />;
+}
+
+function GetStarted() {
+  return (
+    <AppShell
+      eyebrow="Private exchange"
+      title="Get started"
+      action={
+        <Button size="sm" asChild>
+          <Link to="/auth/signup">Create account</Link>
+        </Button>
+      }
+    >
+      <Card padding="lg" variant="raised">
+        <div className="max-w-xl space-y-5">
+          <Badge variant="gold">Invitation only</Badge>
+          <h2 className="text-3xl font-medium tracking-[var(--tracking-tightest)] text-foreground">
+            A calmer way to hold, trade, and move digital assets.
+          </h2>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Insider Domain is an internal exchange experience. Create an account with your
+            invitation, confirm your email, and set up your private wallet before entering the desk.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild>
+              <Link to="/auth/signup">
+                Get started <ArrowUpRight />
+              </Link>
+            </Button>
+            <Button variant="secondary" asChild>
+              <Link to="/auth">Already a member</Link>
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </AppShell>
+  );
+}
+
+function OverviewContent({ user }: { user: ReturnType<typeof useAuth>["user"] }) {
   const { positions, balance, change24h, changeValue, isLoading } = usePortfolio();
   const { coins } = useMarkets();
   const walletQuery = useQuery({

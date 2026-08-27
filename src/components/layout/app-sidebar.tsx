@@ -1,9 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { Shield } from "lucide-react";
+import { useAuth } from "@/lib/use-auth";
 import { cn } from "@/lib/utils";
 import { navItems, utilityNavItems } from "./nav-items";
 
 export function AppSidebar({ className }: { className?: string }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { user } = useAuth();
   const isActive = (to: string) => (to === "/" ? pathname === "/" : pathname.startsWith(to));
 
   return (
@@ -38,6 +41,15 @@ export function AppSidebar({ className }: { className?: string }) {
             <SidebarLink key={item.to} item={item} active={isActive(item.to)} />
           ))}
         </nav>
+        {user?.role === "admin" ? (
+          <div className="mt-8">
+            <p className="text-eyebrow mb-2 px-3">Oversight</p>
+            <SidebarLink
+              item={{ label: "Members", to: "/admin", icon: Shield }}
+              active={isActive("/admin")}
+            />
+          </div>
+        ) : null}
       </div>
     </aside>
   );

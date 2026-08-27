@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AssistantRouteImport } from './routes/assistant'
 import { Route as CircleRouteImport } from './routes/circle'
 import { Route as DepositRouteImport } from './routes/deposit'
@@ -25,6 +26,7 @@ import { Route as TransferRouteImport } from './routes/transfer'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as WalletSetupRouteImport } from './routes/wallet-setup'
 import { Route as WithdrawRouteImport } from './routes/withdraw'
+import { Route as AdminUserIdRouteImport } from './routes/admin.$userId'
 import { Route as AssetIdRouteImport } from './routes/asset.$id'
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as AuthRecoverRouteImport } from './routes/auth.recover'
@@ -35,6 +37,11 @@ import { Route as TransferAssetIdRouteImport } from './routes/transfer.$assetId'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AssistantRoute = AssistantRouteImport.update({
@@ -112,6 +119,11 @@ const WithdrawRoute = WithdrawRouteImport.update({
   path: '/withdraw',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminUserIdRoute = AdminUserIdRouteImport.update({
+  id: '/$userId',
+  path: '/$userId',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AssetIdRoute = AssetIdRouteImport.update({
   id: '/asset/$id',
   path: '/asset/$id',
@@ -145,6 +157,7 @@ const TransferAssetIdRoute = TransferAssetIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/assistant': typeof AssistantRoute
   '/circle': typeof CircleRoute
   '/deposit': typeof DepositRoute
@@ -160,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/wallet': typeof WalletRoute
   '/wallet-setup': typeof WalletSetupRoute
   '/withdraw': typeof WithdrawRoute
+  '/admin/$userId': typeof AdminUserIdRoute
   '/asset/$id': typeof AssetIdRoute
   '/auth/recover': typeof AuthRecoverRoute
   '/auth/signup': typeof AuthSignupRoute
@@ -169,6 +183,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/assistant': typeof AssistantRoute
   '/circle': typeof CircleRoute
   '/deposit': typeof DepositRoute
@@ -184,6 +199,7 @@ export interface FileRoutesByTo {
   '/wallet': typeof WalletRoute
   '/wallet-setup': typeof WalletSetupRoute
   '/withdraw': typeof WithdrawRoute
+  '/admin/$userId': typeof AdminUserIdRoute
   '/asset/$id': typeof AssetIdRoute
   '/auth/recover': typeof AuthRecoverRoute
   '/auth/signup': typeof AuthSignupRoute
@@ -194,6 +210,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/assistant': typeof AssistantRoute
   '/circle': typeof CircleRoute
   '/deposit': typeof DepositRoute
@@ -209,6 +226,7 @@ export interface FileRoutesById {
   '/wallet': typeof WalletRoute
   '/wallet-setup': typeof WalletSetupRoute
   '/withdraw': typeof WithdrawRoute
+  '/admin/$userId': typeof AdminUserIdRoute
   '/asset/$id': typeof AssetIdRoute
   '/auth/recover': typeof AuthRecoverRoute
   '/auth/signup': typeof AuthSignupRoute
@@ -220,6 +238,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/assistant'
     | '/circle'
     | '/deposit'
@@ -235,6 +254,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/wallet-setup'
     | '/withdraw'
+    | '/admin/$userId'
     | '/asset/$id'
     | '/auth/recover'
     | '/auth/signup'
@@ -244,6 +264,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/assistant'
     | '/circle'
     | '/deposit'
@@ -259,6 +280,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/wallet-setup'
     | '/withdraw'
+    | '/admin/$userId'
     | '/asset/$id'
     | '/auth/recover'
     | '/auth/signup'
@@ -268,6 +290,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/assistant'
     | '/circle'
     | '/deposit'
@@ -283,6 +306,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/wallet-setup'
     | '/withdraw'
+    | '/admin/$userId'
     | '/asset/$id'
     | '/auth/recover'
     | '/auth/signup'
@@ -293,6 +317,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   AssistantRoute: typeof AssistantRoute
   CircleRoute: typeof CircleRoute
   DepositRoute: typeof DepositRoute
@@ -322,6 +347,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/assistant': {
@@ -429,6 +461,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WithdrawRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/$userId': {
+      id: '/admin/$userId'
+      path: '/$userId'
+      fullPath: '/admin/$userId'
+      preLoaderRoute: typeof AdminUserIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/asset/$id': {
       id: '/asset/$id'
       path: '/asset/$id'
@@ -474,6 +513,16 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminRouteChildren {
+  AdminUserIdRoute: typeof AdminUserIdRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminUserIdRoute: AdminUserIdRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 interface TransferRouteChildren {
   TransferAssetIdRoute: typeof TransferAssetIdRoute
 }
@@ -488,6 +537,7 @@ const TransferRouteWithChildren = TransferRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   AssistantRoute: AssistantRoute,
   CircleRoute: CircleRoute,
   DepositRoute: DepositRoute,

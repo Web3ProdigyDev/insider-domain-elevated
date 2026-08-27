@@ -19,7 +19,9 @@ function Onboarding() {
   const [surname, setSurname] = React.useState("");
   const [username, setUsername] = React.useState("");
   const [dob, setDob] = React.useState("");
+  const [inviteCode, setInviteCode] = React.useState("");
   const [error, setError] = React.useState("");
+  const [inviteNotice, setInviteNotice] = React.useState("");
   const [busy, setBusy] = React.useState(false);
 
   React.useEffect(() => {
@@ -59,6 +61,17 @@ function Onboarding() {
       setError("We could not save your details. Please check the fields and try again.");
       return;
     }
+    if (inviteCode.trim()) {
+      const { data: redeemed, error: redeemError } = await supabase.rpc("redeem_invite_code", {
+        code: inviteCode.trim(),
+        user_id: session.user.id,
+      });
+      if (redeemError || !redeemed) {
+        setInviteNotice(
+          "That invite code was invalid or unavailable. You can continue as a member.",
+        );
+      }
+    }
     void navigate({ to: "/wallet-setup", replace: true });
   };
 
@@ -95,6 +108,16 @@ function Onboarding() {
             value={username}
             onChange={(event) => setUsername(event.target.value.replace(/[^a-z0-9_]/gi, ""))}
           />
+          <Input
+            label="Invite code (optional)"
+            value={inviteCode}
+            onChange={(event) => {
+              setInviteCode(event.target.value.toUpperCase());
+              setInviteNotice("");
+            }}
+            placeholder="FIRST-ADMIN-SETUP"
+          />
+          {inviteNotice ? <p className="text-xs text-muted-foreground">{inviteNotice}</p> : null}
           <Input
             label="Date of birth"
             type="date"

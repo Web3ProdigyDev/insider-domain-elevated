@@ -31,6 +31,38 @@ export async function listMembers(query?: string) {
   return data ?? [];
 }
 
+export async function listInviteCodes() {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase
+    .from("invite_codes")
+    .select("id,code,role,max_uses,uses,expires_at,created_at")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function createInviteCode(input: {
+  code: string;
+  role: "member" | "admin";
+  maxUses: number;
+  expiresAt?: string;
+}) {
+  const { supabase, user } = await requireAdmin();
+  const { data, error } = await supabase
+    .from("invite_codes")
+    .insert({
+      code: input.code,
+      role: input.role,
+      max_uses: input.maxUses,
+      expires_at: input.expiresAt || null,
+      created_by: user.id,
+    })
+    .select("id,code,role,max_uses,uses,expires_at,created_at")
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export async function getMemberDetail(userId: string) {
   const { supabase } = await requireAdmin();
   const [profile, balances, transactions] = await Promise.all([

@@ -26,10 +26,10 @@ export const Route = createFileRoute("/notifications")({
         content: "Assistant reviews, invitations, funding and system notes in one quiet place.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://insider-domain-elevated.lovable.app/notifications" },
+      { property: "og:url", content: `${import.meta.env.VITE_SITE_URL || "https://insider-domain-elevated.lovable.app"}/notifications` },
     ],
     links: [
-      { rel: "canonical", href: "https://insider-domain-elevated.lovable.app/notifications" },
+      { rel: "canonical", href: `${import.meta.env.VITE_SITE_URL || "https://insider-domain-elevated.lovable.app"}/notifications` },
     ],
   }),
   component: Notifications,

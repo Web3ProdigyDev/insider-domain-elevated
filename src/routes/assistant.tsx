@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CircleDollarSign, Play, Sparkles } from "lucide-react";
+import { CircleDollarSign, Play, Sparkles, TrendingUp } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { AppShell } from "@/components/layout/app-shell";

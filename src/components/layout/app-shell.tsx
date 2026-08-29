@@ -24,7 +24,7 @@ export function AppShell({
         <TopBar title={title} eyebrow={eyebrow} action={action} />
         <main
           className={cn(
-            "mx-auto w-full max-w-5xl flex-1 px-5 pb-28 pt-6 lg:px-10 lg:pb-16 lg:pt-8",
+            "mx-auto w-full max-w-5xl flex-1 px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-5 sm:px-5 sm:pt-6 lg:px-10 lg:pb-16 lg:pt-8",
             className,
           )}
         >

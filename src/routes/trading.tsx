@@ -98,7 +98,7 @@ function Trading() {
 
         <Sparkline seed={`sniper-${mode}`} change={stats.session} height={72} className="mt-6" />
 
-        <dl className="mt-6 grid grid-cols-3 gap-4">
+        <dl className="mt-6 grid grid-cols-3 gap-2 sm:gap-4">
           <Stat label="Session" tone={stats.session >= 0 ? "positive" : "negative"}>
             {formatSigned(stats.session)}
           </Stat>

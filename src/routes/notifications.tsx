@@ -91,7 +91,7 @@ function Notifications() {
                 notify.message("Notice opened", n.title);
                 void navigate({ to: n.to });
               }}
-              className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-4 rounded-2xl border border-border bg-card px-5 py-4 text-left transition-colors duration-300 ease-[var(--ease-luxe)] hover:border-border-strong hover:bg-surface-raised"
+              className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-2xl border border-border bg-card px-4 py-4 sm:gap-4 sm:px-5 text-left transition-colors duration-300 ease-[var(--ease-luxe)] hover:border-border-strong hover:bg-surface-raised"
             >
               <span
                 className={cn(

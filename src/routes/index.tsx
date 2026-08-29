@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { ArrowUpRight, ArrowDownLeft, Plus, Repeat, Crosshair } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -40,9 +41,13 @@ export const Route = createFileRoute("/")({
 
 function Overview() {
   const { user, ready } = useAuth();
-  if (ready && !user) {
-    return <GetStarted />;
-  }
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (ready && !user) void navigate({ to: "/auth", replace: true });
+  }, [ready, user, navigate]);
+
+  if (!ready || !user) return null;
   return <OverviewContent user={user} />;
 }
 

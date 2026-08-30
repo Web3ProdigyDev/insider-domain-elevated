@@ -47,7 +47,7 @@ function AdminMemberDetail() {
     <AppShell
       eyebrow="Admin"
       title={name}
-      description={profile.username ? `@${profile.username}` : "Member detail"}
+      description={profile.email || (profile.username ? `@${profile.username}` : "Member detail")}
       action={
         <Button variant="ghost" size="sm" asChild>
           <Link to="/admin">
@@ -58,6 +58,12 @@ function AdminMemberDetail() {
     >
       <div className="flex flex-col gap-8">
         <section className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <p className="text-eyebrow">Email</p>
+            <p className="mt-3 truncate text-sm text-foreground">
+              {profile.email || "Not available"}
+            </p>
+          </div>
           <div className="rounded-2xl border border-border bg-card p-5">
             <p className="text-eyebrow">Role</p>
             <div className="mt-3">

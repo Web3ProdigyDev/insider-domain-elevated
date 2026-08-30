@@ -113,7 +113,7 @@ function AdminMembers() {
           label="Search members"
           value={value}
           onChange={(event) => setValue(event.target.value)}
-          placeholder="Name or username"
+          placeholder="Name, username, or email"
           icon={<Search />}
         />
         {membersQuery.isLoading ? (
@@ -133,8 +133,13 @@ function AdminMembers() {
                       "Unnamed member"}
                   </p>
                   <p className="mt-1 truncate text-xs text-muted-foreground">
-                    {member.username ? `@${member.username}` : member.id}
+                    {member.email || (member.username ? `@${member.username}` : member.id)}
                   </p>
+                  {member.email && member.username && (
+                    <p className="mt-1 truncate text-xs text-muted-foreground/70">
+                      @{member.username}
+                    </p>
+                  )}
                 </div>
                 <Badge variant={member.role === "admin" ? "default" : "secondary"}>
                   {member.role}
@@ -152,7 +157,7 @@ function AdminMembers() {
           <EmptyState
             icon={<Shield />}
             title="No members match"
-            description="Try a different name or username."
+            description="Try a different name, username, or email."
           />
         )}
       </div>

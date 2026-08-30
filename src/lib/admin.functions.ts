@@ -17,13 +17,13 @@ export async function listMembers(query?: string) {
   const { supabase } = await requireAdmin();
   let request = supabase
     .from("profiles")
-    .select("id,first_name,surname,username,role,onboarding_completed,created_at")
+    .select("id,email,first_name,surname,username,role,onboarding_completed,created_at")
     .order("created_at", { ascending: false });
   const term = query?.trim();
   if (term) {
     const escaped = term.replace(/[%,]/g, "").replace(/'/g, "''");
     request = request.or(
-      `username.ilike.%${escaped}%,first_name.ilike.%${escaped}%,surname.ilike.%${escaped}%`,
+      `username.ilike.%${escaped}%,first_name.ilike.%${escaped}%,surname.ilike.%${escaped}%,email.ilike.%${escaped}%`,
     );
   }
   const { data, error } = await request;
@@ -68,7 +68,9 @@ export async function getMemberDetail(userId: string) {
   const [profile, balances, transactions] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id,first_name,surname,username,role,onboarding_completed,dob,created_at,updated_at")
+      .select(
+        "id,email,first_name,surname,username,role,onboarding_completed,dob,created_at,updated_at",
+      )
       .eq("id", userId)
       .maybeSingle(),
     supabase

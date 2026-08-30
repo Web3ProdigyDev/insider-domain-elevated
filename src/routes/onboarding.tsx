@@ -39,6 +39,7 @@ function Onboarding() {
     if (!session) return;
     setError("");
     const age = dob ? Math.floor((Date.now() - new Date(dob).getTime()) / 31_557_600_000) : 0;
+    if (busy) return;
     if (firstName.trim().length < 2 || surname.trim().length < 2)
       return setError("Enter your first and last name to continue.");
     if (!/^[a-z0-9_]{3,24}$/i.test(username))

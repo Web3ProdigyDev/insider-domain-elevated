@@ -24,16 +24,20 @@ function SignUpRoute() {
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
   const [submitted, setSubmitted] = React.useState(false);
+  const [busy, setBusy] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
   const validInvitation = /^ID-\d{4}-[A-Z]{4}$/i.test(invitation.trim());
   const ready =
     name.trim().length >= 2 && email.includes("@") && password.length >= 8 && validInvitation;
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!ready) return;
+    if (!ready || busy) return;
     setError("");
+    setBusy(true);
     const result = await signUpWithPassword({ email, password, name });
     if (result.error) {
       setError("We could not create that membership. Check your details and try again.");
+      setBusy(false);
       return;
     }
     setSubmitted(true);
@@ -95,8 +99,18 @@ function SignUpRoute() {
           />
           <Input
             label="Password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             autoComplete="new-password"
+            trailing={
+              <button
+                type="button"
+                className="text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setShowPassword((visible) => !visible)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            }
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="At least 8 characters"
@@ -106,8 +120,8 @@ function SignUpRoute() {
             Your invitation is checked before we create your account. Email confirmation is required
             before access.
           </p>
-          <Button type="submit" full disabled={!ready || submitted}>
-            {submitted ? "Confirmation sent" : "Create membership"}
+          <Button type="submit" full disabled={!ready || submitted || busy}>
+            {submitted ? "Confirmation sent" : busy ? "Creating membership…" : "Create membership"}
           </Button>
         </form>
       </Card>

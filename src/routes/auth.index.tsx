@@ -31,12 +31,17 @@ function SignIn() {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
+  const [busy, setBusy] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (busy) return;
     setError("");
+    setBusy(true);
     const result = await signInWithPassword(email, password);
     if (result.error) {
       setError("Invalid email or password, or confirm your email first.");
+      setBusy(false);
       return;
     }
     notify.success("Welcome back", "Your secure session is active.");
@@ -69,15 +74,25 @@ function SignIn() {
           />
           <Input
             label="Password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             autoComplete="current-password"
+            trailing={
+              <button
+                type="button"
+                className="text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setShowPassword((visible) => !visible)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            }
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Your password"
             {...(error ? { error } : {})}
           />
-          <Button type="submit" full disabled={!email.includes("@") || password.length < 8}>
-            Sign in
+          <Button type="submit" full disabled={!email.includes("@") || password.length < 8 || busy}>
+            {busy ? "Signing in…" : "Sign in"}
           </Button>
           <p className="text-xs leading-relaxed text-muted-foreground">
             New members must confirm their email before signing in.

@@ -29,6 +29,7 @@ function Verify() {
   const { user, ready } = useAuth();
   const [code, setCode] = React.useState("");
   const [error, setError] = React.useState("");
+  const [busy, setBusy] = React.useState(false);
 
   React.useEffect(() => {
     if (!ready) return;
@@ -40,9 +41,14 @@ function Verify() {
 
   if (!user) return null;
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    await new Promise((resolve) => window.setTimeout(resolve, 350));
     setError("Email verification delivery is not configured yet.");
+    setBusy(false);
   };
 
   return (
@@ -70,8 +76,8 @@ function Verify() {
             placeholder="000000"
             {...(error ? { error } : {})}
           />
-          <Button type="submit" full>
-            Verify and continue
+          <Button type="submit" full disabled={busy}>
+            {busy ? "Checking code…" : "Verify and continue"}
           </Button>
           <Button
             type="button"

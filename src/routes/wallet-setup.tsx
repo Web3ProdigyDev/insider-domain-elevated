@@ -45,6 +45,8 @@ function WalletSetup() {
   const [recoveryPhrase, setRecoveryPhrase] = React.useState("");
   const [createdWallet, setCreatedWallet] = React.useState<Wallet | null>(null);
   const [phraseConfirmed, setPhraseConfirmed] = React.useState(false);
+  const [showMaterial, setShowMaterial] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
   const [session, setSession] = React.useState<{ user: { id: string } } | null>(null);
   const supabase = React.useMemo(() => createClient(), []);
 
@@ -68,6 +70,7 @@ function WalletSetup() {
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (busy) return;
     setError("");
     if (password.length < 12 || /^\d+$/.test(password)) {
       setError("Use at least 12 characters and include more than numbers.");
@@ -173,9 +176,19 @@ function WalletSetup() {
             {mode === "import" ? (
               <Input
                 label="Seed phrase or private key"
-                type="password"
+                type={showMaterial ? "text" : "password"}
                 autoComplete="off"
                 value={material}
+                trailing={
+                  <button
+                    type="button"
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowMaterial((visible) => !visible)}
+                    aria-label={showMaterial ? "Hide wallet material" : "Show wallet material"}
+                  >
+                    {showMaterial ? "Hide" : "Show"}
+                  </button>
+                }
                 onChange={(event) => setMaterial(event.target.value)}
                 placeholder="Enter wallet material"
               />
@@ -187,7 +200,17 @@ function WalletSetup() {
             )}
             <Input
               label="Vault password"
-              type="password"
+              type={showPassword ? "text" : "password"}
+              trailing={
+                <button
+                  type="button"
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  aria-label={showPassword ? "Hide vault password" : "Show vault password"}
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              }
               autoComplete="new-password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
@@ -195,7 +218,7 @@ function WalletSetup() {
             />
             <Input
               label="Confirm vault password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               autoComplete="new-password"
               value={confirm}
               onChange={(event) => setConfirm(event.target.value)}

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 
 import { AuthShell } from "@/components/layout/auth-shell";
 import { Card } from "@/components/ui/card";
@@ -29,19 +29,27 @@ function Recover() {
   const [password, setPassword] = React.useState("");
   const [confirm, setConfirm] = React.useState("");
   const [error, setError] = React.useState("");
+  const [busy, setBusy] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
 
   const request = (e: React.FormEvent) => {
     e.preventDefault();
+    if (busy) return;
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) {
       setError("Enter a valid email");
       return;
     }
+    setBusy(true);
     setError("Password reset delivery is not configured yet.");
+    setBusy(false);
   };
 
   const reset = (e: React.FormEvent) => {
     e.preventDefault();
+    if (busy) return;
+    setBusy(true);
     setError("Password reset delivery is not configured yet.");
+    setBusy(false);
   };
 
   return (
@@ -65,8 +73,8 @@ function Recover() {
               onChange={(e) => setEmail(e.target.value)}
               {...(error ? { error } : {})}
             />
-            <Button type="submit" full>
-              Send recovery code
+            <Button type="submit" full disabled={busy}>
+              {busy ? "Preparing recovery…" : "Send recovery code"}
             </Button>
           </form>
         ) : (
@@ -80,19 +88,29 @@ function Recover() {
             />
             <Input
               label="New password"
-              type="password"
+              type={showPassword ? "text" : "password"}
+              trailing={
+                <button
+                  type="button"
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              }
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
             <Input
               label="Confirm new password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               {...(error ? { error } : {})}
             />
-            <Button type="submit" full>
-              Update password
+            <Button type="submit" full disabled={busy}>
+              {busy ? "Updating password…" : "Update password"}
             </Button>
           </form>
         )}

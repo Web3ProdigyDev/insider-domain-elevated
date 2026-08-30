@@ -38,7 +38,6 @@ async function saveVault(wallet: Wallet, password: string) {
 function WalletSetup() {
   const navigate = useNavigate();
   const { allowed } = useRequireMember({ allowIncomplete: true });
-  if (!allowed) return null;
   const [mode, setMode] = React.useState<"choose" | "create" | "import">("choose");
   const [material, setMaterial] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -115,7 +114,7 @@ function WalletSetup() {
     }
   };
 
-  if (!session) return null;
+  if (!allowed || !session) return null;
   return (
     <AuthShell
       eyebrow="Private setup"

@@ -90,7 +90,7 @@ function AdminMemberDetail() {
               {balances.map((balance) => (
                 <div
                   key={balance.id}
-                  className="flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-4"
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-4 sm:px-5"
                 >
                   <span className="text-sm text-foreground">{balance.asset_id}</span>
                   <span className="numeric text-sm text-foreground">{balance.amount}</span>
@@ -111,7 +111,7 @@ function AdminMemberDetail() {
           <h2 className="text-lg font-medium text-foreground">Transaction history</h2>
           {transactions.length ? (
             <div className="mt-4 overflow-x-auto rounded-2xl border border-border">
-              <table className="w-full min-w-[680px] text-left text-sm">
+              <table className="w-full min-w-[640px] text-left text-sm">
                 <thead className="border-b border-border bg-surface">
                   <tr>
                     <th className="px-5 py-3 font-medium text-muted-foreground">Type</th>

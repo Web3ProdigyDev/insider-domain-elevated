@@ -17,11 +17,18 @@ function Wallet() {
   const [vaultAddress, setVaultAddress] = useState<string | null>(null);
   const [vaultChecked, setVaultChecked] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [vaultError, setVaultError] = useState<string | null>(null);
   useEffect(() => {
-    void hasVault().then(async (exists) => {
-      setVaultAddress(exists ? ((await loadVault())?.address ?? null) : null);
-      setVaultChecked(true);
-    });
+    void hasVault()
+      .then(async (exists) => {
+        setVaultAddress(exists ? ((await loadVault())?.address ?? null) : null);
+        setVaultChecked(true);
+      })
+      .catch((error: unknown) => {
+        console.error("[v0] wallet vault status failed", error);
+        setVaultError("Local vault status unavailable");
+        setVaultChecked(true);
+      });
   }, []);
   const walletQuery = useQuery({
     queryKey: ["wallet-data"],
@@ -68,6 +75,10 @@ function Wallet() {
           <div className="mt-6 rounded-2xl border border-border bg-surface px-4 py-3">
             {!vaultChecked ? (
               <p className="text-xs text-muted-foreground">Checking local vault…</p>
+            ) : vaultError ? (
+              <p className="text-xs text-negative" role="status">
+                {vaultError}
+              </p>
             ) : vaultAddress ? (
               <div className="flex flex-wrap items-center gap-3">
                 <span className="text-xs text-muted-foreground">Public address</span>

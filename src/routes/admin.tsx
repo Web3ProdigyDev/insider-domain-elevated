@@ -91,7 +91,7 @@ function AdminMembers() {
           <div className="flex flex-col gap-3">
             {inviteQuery.data.map((invite) => (
               <Card key={invite.id} padding="md">
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-end">
                   <code className="text-sm text-foreground">{invite.code}</code>
                   <Badge variant={invite.role === "admin" ? "gold" : "secondary"}>
                     {invite.role}
@@ -125,7 +125,7 @@ function AdminMembers() {
                 key={member.id}
                 to="/admin/$userId"
                 params={{ userId: member.id }}
-                className="flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-card px-5 py-4 transition-colors hover:border-border-strong hover:bg-surface-raised"
+                className="flex flex-col items-stretch gap-3 rounded-2xl border border-border bg-card px-4 py-4 transition-colors hover:border-border-strong hover:bg-surface-raised sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 sm:px-5"
               >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm text-foreground">

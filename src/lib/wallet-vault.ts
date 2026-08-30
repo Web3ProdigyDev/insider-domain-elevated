@@ -6,6 +6,10 @@ const KEY = "primary";
 
 type StoredVault = { address: string; encrypted: string };
 
+function logVault(event: string, details?: unknown) {
+  if (import.meta.env.DEV) console.info(`[v0] wallet vault: ${event}`, details ?? "");
+}
+
 function openVaultDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DATABASE_NAME, 1);
@@ -20,12 +24,22 @@ function openVaultDatabase(): Promise<IDBDatabase> {
 }
 
 export async function loadVault(): Promise<StoredVault | null> {
-  if (typeof indexedDB === "undefined") return null;
+  if (typeof indexedDB === "undefined") {
+    logVault("IndexedDB unavailable");
+    return null;
+  }
   const database = await openVaultDatabase();
   try {
     return await new Promise<StoredVault | null>((resolve, reject) => {
       const request = database.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).get(KEY);
-      request.onsuccess = () => resolve((request.result as StoredVault | undefined) ?? null);
+      request.onsuccess = () => {
+        const vault = (request.result as StoredVault | undefined) ?? null;
+        logVault(
+          vault ? "vault found" : "vault empty",
+          vault ? { address: vault.address } : undefined,
+        );
+        resolve(vault);
+      };
       request.onerror = () => reject(request.error);
     });
   } finally {
@@ -38,6 +52,7 @@ export async function hasVault(): Promise<boolean> {
 }
 
 export async function unlockVault(password: string): Promise<Wallet> {
+  logVault("unlock requested");
   const stored = await loadVault();
   if (!stored) throw new Error("No local vault exists.");
   return Wallet.fromEncryptedJson(stored.encrypted, password);

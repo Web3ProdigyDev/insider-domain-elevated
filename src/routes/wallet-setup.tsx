@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { notify } from "@/lib/notify";
 import { createClient } from "@/lib/supabase/client";
+import { useRequireMember } from "@/lib/use-auth";
 import { Wallet } from "ethers";
 
 export const Route = createFileRoute("/wallet-setup")({
@@ -36,6 +37,8 @@ async function saveVault(wallet: Wallet, password: string) {
 
 function WalletSetup() {
   const navigate = useNavigate();
+  const { allowed } = useRequireMember({ allowIncomplete: true });
+  if (!allowed) return null;
   const [mode, setMode] = React.useState<"choose" | "create" | "import">("choose");
   const [material, setMaterial] = React.useState("");
   const [password, setPassword] = React.useState("");

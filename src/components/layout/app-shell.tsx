@@ -3,6 +3,7 @@ import { AppSidebar } from "./app-sidebar";
 import { BottomNav } from "./bottom-nav";
 import { TopBar } from "./top-bar";
 import { cn } from "@/lib/utils";
+import { useRequireMember } from "@/lib/use-auth";
 
 export function AppShell({
   title,
@@ -17,6 +18,9 @@ export function AppShell({
   children: ReactNode;
   className?: string | undefined;
 }) {
+  const { allowed } = useRequireMember();
+  if (!allowed) return null;
+
   return (
     <div className="flex min-h-screen w-full bg-background">
       <AppSidebar />

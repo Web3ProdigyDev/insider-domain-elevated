@@ -102,7 +102,7 @@ export function useAuth() {
  * Sends unauthenticated visitors to the entrance, and verified members
  * with unfinished onboarding into the access review.
  */
-export function useRequireMember({ adminOnly = false } = {}) {
+export function useRequireMember({ adminOnly = false, allowIncomplete = false } = {}) {
   const { user, ready } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -117,7 +117,7 @@ export function useRequireMember({ adminOnly = false } = {}) {
       void navigate({ to: "/auth/verify", replace: true });
       return;
     }
-    if (!user.onboardingCompleted) {
+    if (!allowIncomplete && !user.onboardingCompleted) {
       void navigate({ to: "/onboarding", replace: true });
       return;
     }
@@ -129,7 +129,7 @@ export function useRequireMember({ adminOnly = false } = {}) {
   const allowed =
     !!user &&
     user.emailVerified &&
-    user.onboardingCompleted &&
+    (allowIncomplete || user.onboardingCompleted) &&
     (!adminOnly || user.role === "admin");
 
   return { user, ready, allowed };

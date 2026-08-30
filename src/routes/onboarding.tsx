@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
+import { useRequireMember } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({ meta: [{ title: "Your details — Insider Domain" }] }),
@@ -13,6 +14,7 @@ export const Route = createFileRoute("/onboarding")({
 
 function Onboarding() {
   const navigate = useNavigate();
+  const { user, ready, allowed } = useRequireMember({ allowIncomplete: true });
   const supabase = React.useMemo(() => createClient(), []);
   const [session, setSession] = React.useState<{ user: { id: string } } | null>(null);
   const [firstName, setFirstName] = React.useState("");
@@ -76,7 +78,7 @@ function Onboarding() {
     void navigate({ to: "/wallet-setup", replace: true });
   };
 
-  if (!session) return null;
+  if (!ready || !user || !allowed || !session) return null;
   return (
     <AuthShell
       eyebrow="Step 1 of 2"

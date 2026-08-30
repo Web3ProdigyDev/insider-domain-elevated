@@ -74,7 +74,7 @@ function AssetDetail() {
       </div>
 
       <Card padding="lg" variant="raised">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-start sm:gap-4">
           <div className="flex min-w-0 items-center gap-3">
             <CoinLogo src={coin?.image} symbol={symbol} size={44} />
             <div className="min-w-0">

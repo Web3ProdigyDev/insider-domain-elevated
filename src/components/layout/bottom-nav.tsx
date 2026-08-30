@@ -18,7 +18,7 @@ export function BottomNav() {
             <li key={item.to}>
               <Link
                 to={item.to}
-                className="flex flex-col items-center gap-1.5 py-3 transition-colors duration-300 ease-[var(--ease-luxe)]"
+                className="flex min-h-16 flex-col items-center justify-center gap-1 py-2.5 transition-colors duration-300 ease-[var(--ease-luxe)] sm:gap-1.5 sm:py-3"
               >
                 <item.icon
                   className={cn("size-5", active ? "text-gold" : "text-muted-foreground")}

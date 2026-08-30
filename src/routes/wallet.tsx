@@ -45,7 +45,7 @@ function Wallet() {
     <AppShell eyebrow="Account custody" title="Wallet">
       <div className="flex flex-col gap-6">
         <Card variant="raised" padding="lg">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-start gap-3">
             <span className="grid size-10 place-items-center rounded-full bg-gold-muted text-gold">
               <WalletCards className="size-5" />
             </span>
@@ -69,7 +69,7 @@ function Wallet() {
             {!vaultChecked ? (
               <p className="text-xs text-muted-foreground">Checking local vault…</p>
             ) : vaultAddress ? (
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <span className="text-xs text-muted-foreground">Public address</span>
                 <code className="truncate text-xs text-foreground">
                   {vaultAddress.slice(0, 6)}…{vaultAddress.slice(-4)}

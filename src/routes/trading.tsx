@@ -119,7 +119,7 @@ function Trading() {
                 notify.message(`Posture set to ${m.label}`);
               }}
               className={cn(
-                "rounded-2xl border bg-card px-5 py-4 text-left transition-colors duration-300 ease-[var(--ease-luxe)]",
+                "min-h-20 rounded-2xl border bg-card px-4 py-4 text-left transition-colors duration-300 ease-[var(--ease-luxe)] sm:px-5",
                 mode === m.id
                   ? "border-gold/40 bg-surface-raised"
                   : "border-border hover:border-border-strong hover:bg-surface-raised",

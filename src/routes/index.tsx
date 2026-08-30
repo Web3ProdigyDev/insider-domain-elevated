@@ -187,7 +187,7 @@ function OverviewContent({ user }: { user: ReturnType<typeof useAuth>["user"] })
       <section className="mt-10">
         <SectionHeader title="Sniper AI" />
         <Card padding="lg" variant="raised">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <Crosshair className="size-4 text-gold" strokeWidth={1.75} />
@@ -200,7 +200,7 @@ function OverviewContent({ user }: { user: ReturnType<typeof useAuth>["user"] })
             <Badge variant="gold">Armed</Badge>
           </div>
           <Sparkline seed="sniper" change={2.4} height={56} className="mt-5" />
-          <div className="mt-5 flex items-center justify-between gap-4">
+          <div className="mt-5 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
             <p className="numeric text-xs text-muted-foreground">
               Session P&L <span className="text-positive">{formatSigned(3.42)}</span>
             </p>

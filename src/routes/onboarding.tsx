@@ -48,7 +48,7 @@ function Onboarding() {
       return setError("Choose a username with 3–24 letters, numbers, or underscores.");
     if (!dob || age < 18) return setError("You must be at least 18 to use this account.");
     setBusy(true);
-    const { error: updateError } = await supabase
+    const { data: updatedProfile, error: updateError } = await supabase
       .from("profiles")
       .update({
         first_name: firstName.trim(),
@@ -58,9 +58,11 @@ function Onboarding() {
         onboarding_completed: true,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", session.user.id);
+      .eq("id", session.user.id)
+      .select("id")
+      .maybeSingle();
     setBusy(false);
-    if (updateError) {
+    if (updateError || !updatedProfile) {
       setError("We could not save your details. Please check the fields and try again.");
       return;
     }

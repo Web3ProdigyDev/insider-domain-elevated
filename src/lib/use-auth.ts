@@ -124,7 +124,7 @@ export function useRequireMember({ adminOnly = false, allowIncomplete = false } 
     if (adminOnly && user.role !== "admin") {
       void navigate({ to: "/", replace: true });
     }
-  }, [ready, user, navigate, adminOnly, pathname]);
+  }, [ready, user, navigate, adminOnly, allowIncomplete, pathname]);
 
   const allowed =
     !!user &&

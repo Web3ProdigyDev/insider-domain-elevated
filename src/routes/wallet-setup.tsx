@@ -237,6 +237,16 @@ function WalletSetup() {
           </form>
         )}
       </Card>
+      <p className="text-center text-xs text-muted-foreground">
+        Need to come back later?{" "}
+        <button
+          type="button"
+          className="text-gold underline-offset-4 hover:underline"
+          onClick={() => void navigate({ to: "/" })}
+        >
+          Skip for now
+        </button>
+      </p>
     </AuthShell>
   );
 }

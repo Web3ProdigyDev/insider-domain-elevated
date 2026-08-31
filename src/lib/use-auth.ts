@@ -43,19 +43,27 @@ export function useAuth() {
     surname: string | null;
     username: string | null;
   } | null>(null);
+  const [profileLoading, setProfileLoading] = React.useState(true);
   React.useEffect(() => {
     let active = true;
     void supabase.auth.getSession().then(async ({ data }) => {
       if (!active) return;
       setSession(data.session);
       if (data.session) {
+        setProfileLoading(true);
         const { data: row } = await supabase
           .from("profiles")
           .select("role,onboarding_completed,dob,first_name,surname,username")
           .eq("id", data.session.user.id)
           .maybeSingle();
-        if (active) setProfile(row);
-      } else setProfile(null);
+        if (active) {
+          setProfile(row);
+          setProfileLoading(false);
+        }
+      } else {
+        setProfile(null);
+        setProfileLoading(false);
+      }
     });
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, next) => active && setSession(next),
@@ -94,7 +102,8 @@ export function useAuth() {
         createdAt: authUser.created_at,
       } as MemberRecord)
     : null;
-  return { user, ready: session !== undefined, session };
+  const ready = session !== undefined && !profileLoading;
+  return { user, ready, session };
 }
 
 /**

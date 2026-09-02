@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import type { Session } from "@supabase/supabase-js";
 
 import { createClient } from "./supabase/client";
@@ -46,28 +46,43 @@ export function useAuth() {
   const [profileLoading, setProfileLoading] = React.useState(true);
   React.useEffect(() => {
     let active = true;
-    void supabase.auth.getSession().then(async ({ data }) => {
-      if (!active) return;
-      setSession(data.session);
-      if (data.session) {
-        setProfileLoading(true);
-        const { data: row } = await supabase
-          .from("profiles")
-          .select("role,onboarding_completed,dob,first_name,surname,username")
-          .eq("id", data.session.user.id)
-          .maybeSingle();
-        if (active) {
-          setProfile(row);
-          setProfileLoading(false);
-        }
-      } else {
+    const loadProfile = async (nextSession: Session | null) => {
+      if (!nextSession) {
         setProfile(null);
         setProfileLoading(false);
+        return;
       }
+      setProfileLoading(true);
+      const { data: row, error } = await supabase
+        .from("profiles")
+        .select("role,onboarding_completed,dob,first_name,surname,username")
+        .eq("id", nextSession.user.id)
+        .maybeSingle();
+      if (active) {
+        if (error) console.warn("[v0] profile load failed", error);
+        setProfile(row);
+        setProfileLoading(false);
+      }
+    };
+    void supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (!active) return;
+        setSession(data.session);
+        return loadProfile(data.session);
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        console.warn("[v0] auth session load failed", error);
+        setSession(null);
+        setProfile(null);
+        setProfileLoading(false);
+      });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, next) => {
+      if (!active) return;
+      setSession(next);
+      void loadProfile(next);
     });
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, next) => active && setSession(next),
-    );
     return () => {
       active = false;
       listener.subscription.unsubscribe();
@@ -114,8 +129,6 @@ export function useAuth() {
 export function useRequireMember({ adminOnly = false, allowIncomplete = false } = {}) {
   const { user, ready } = useAuth();
   const navigate = useNavigate();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-
   React.useEffect(() => {
     if (!ready) return;
     if (!user) {
@@ -133,7 +146,7 @@ export function useRequireMember({ adminOnly = false, allowIncomplete = false } 
     if (adminOnly && user.role !== "admin") {
       void navigate({ to: "/", replace: true });
     }
-  }, [ready, user, navigate, adminOnly, allowIncomplete, pathname]);
+  }, [ready, user, navigate, adminOnly, allowIncomplete]);
 
   const allowed =
     !!user &&

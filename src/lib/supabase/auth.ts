@@ -48,5 +48,11 @@ export async function verifyOtp(email: string, token: string) {
 }
 
 export async function signOut() {
-  return createClient().auth.signOut();
+  const supabase = createClient();
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    console.warn("[v0] Supabase sign out failed; clearing local session", error);
+    await supabase.auth.signOut({ scope: "local" });
+  }
+  return { error: error ?? null };
 }

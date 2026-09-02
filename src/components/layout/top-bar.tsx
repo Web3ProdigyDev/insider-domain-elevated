@@ -1,12 +1,21 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { Bell, Settings } from "lucide-react";
+import { Bell, LogOut, Settings } from "lucide-react";
 
 import { useQuery } from "@tanstack/react-query";
 
 import { cn } from "@/lib/utils";
 import { getNotifications } from "@/lib/notification.functions";
+import { signOut } from "@/lib/supabase/auth";
 import { useAuth } from "@/lib/use-auth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function TopBar({
   title,
@@ -63,13 +72,37 @@ export function TopBar({
           ) : null}
         </Link>
 
-        <Link
-          to="/settings"
-          aria-label="Settings and profile"
-          className="grid size-9 place-items-center rounded-full border border-gold/30 bg-gold-muted text-[0.6875rem] tracking-tight text-gold transition-colors duration-300 ease-[var(--ease-luxe)] hover:bg-gold/20"
-        >
-          {initials}
-        </Link>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label="Open account menu"
+              className="grid size-9 place-items-center rounded-full border border-gold/30 bg-gold-muted text-[0.6875rem] tracking-tight text-gold transition-colors duration-300 ease-[var(--ease-luxe)] hover:bg-gold/20"
+            >
+              {initials}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel className="truncate">{user?.email ?? "Account"}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link to="/settings">
+                <Settings className="size-4" />
+                Settings
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => {
+                void signOut().finally(() => {
+                  window.location.assign("/auth");
+                });
+              }}
+            >
+              <LogOut className="size-4" />
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <Link
           to="/settings"

@@ -18,6 +18,10 @@ export function BrandMark({
       height={size}
       className={cn("shrink-0 rounded-xl object-contain", className)}
       style={{ width: size, height: size }}
+      onError={(event) => {
+        event.currentTarget.onerror = null;
+        event.currentTarget.src = "/favicon.svg";
+      }}
     />
   );
 }

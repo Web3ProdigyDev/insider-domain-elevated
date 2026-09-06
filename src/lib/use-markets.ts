@@ -16,6 +16,17 @@ export function useMarkets() {
   });
 
   const coins = useLivePrices(query.data);
+  const orderedCoins = React.useMemo(
+    () =>
+      [...coins].sort((a, b) => {
+        const aSol = a.symbol.toUpperCase() === "SOL";
+        const bSol = b.symbol.toUpperCase() === "SOL";
+        if (aSol && !bSol) return -1;
+        if (!aSol && bSol) return 1;
+        return 0;
+      }),
+    [coins],
+  );
 
   const byId = React.useMemo(() => {
     const map = new Map<string, MarketCoin>();
@@ -24,7 +35,7 @@ export function useMarkets() {
   }, [coins]);
 
   return {
-    coins,
+    coins: orderedCoins,
     byId,
     isLoading: query.isLoading,
     isError: query.isError,

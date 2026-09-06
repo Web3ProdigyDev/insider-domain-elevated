@@ -1,7 +1,8 @@
 import { ArrowDownLeft, ArrowUpRight, Plus, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency, type Transaction } from "@/lib/placeholder-data";
+import { formatCurrency } from "@/lib/format";
+import type { Transaction } from "@/lib/placeholder-data";
 
 const icons = {
   buy: ArrowDownLeft,

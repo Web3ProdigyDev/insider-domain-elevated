@@ -1,11 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  ArrowUpRight,
-  ArrowDownLeft,
-  Plus,
-  Repeat,
-  Crosshair,
-} from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { ArrowUpRight, ArrowDownLeft, Plus, Repeat, Crosshair } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
@@ -19,8 +14,11 @@ import { SectionHeader } from "@/components/common/section-header";
 import { QuickActions } from "@/components/common/quick-actions";
 import { Sparkline } from "@/components/common/sparkline";
 import { AllocationBar } from "@/components/common/allocation-bar";
-import { transactions, demoMember, formatSigned } from "@/lib/placeholder-data";
+import { formatSigned } from "@/lib/format";
 import { useMarkets, usePortfolio } from "@/lib/use-markets";
+import { useAuth } from "@/lib/use-auth";
+import { getWalletData } from "@/lib/wallet.functions";
+import { useQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -42,8 +40,62 @@ export const Route = createFileRoute("/")({
 });
 
 function Overview() {
+  const { user, ready } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (ready && !user) void navigate({ to: "/auth", replace: true });
+  }, [ready, user, navigate]);
+
+  if (!ready || !user) return null;
+  return <OverviewContent user={user} />;
+}
+
+function GetStarted() {
+  return (
+    <AppShell
+      eyebrow="Private exchange"
+      title="Get started"
+      action={
+        <Button size="sm" asChild>
+          <Link to="/auth/signup">Create account</Link>
+        </Button>
+      }
+    >
+      <Card padding="lg" variant="raised">
+        <div className="max-w-xl space-y-5">
+          <Badge variant="gold">Invitation only</Badge>
+          <h2 className="text-3xl font-medium tracking-[var(--tracking-tightest)] text-foreground">
+            A calmer way to hold, trade, and move digital assets.
+          </h2>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Insider Domain is an internal exchange experience. Create an account with your
+            invitation, confirm your email, and set up your private wallet before entering the desk.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild>
+              <Link to="/auth/signup">
+                Get started <ArrowUpRight />
+              </Link>
+            </Button>
+            <Button variant="secondary" asChild>
+              <Link to="/auth">Already a member</Link>
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </AppShell>
+  );
+}
+
+function OverviewContent({ user }: { user: ReturnType<typeof useAuth>["user"] }) {
   const { positions, balance, change24h, changeValue, isLoading } = usePortfolio();
   const { coins } = useMarkets();
+  const walletQuery = useQuery({
+    queryKey: ["wallet-data"],
+    queryFn: () => getWalletData(),
+    retry: false,
+  });
 
   const movers = [...coins]
     .slice(0, 100)
@@ -52,7 +104,7 @@ function Overview() {
 
   return (
     <AppShell
-      eyebrow={`${demoMember.tier} member`}
+      eyebrow={user ? `${user.firstName} · member` : "Member overview"}
       title="Overview"
       action={
         <Button size="sm" asChild>
@@ -101,7 +153,7 @@ function Overview() {
           title="Positions"
           action={
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/portfolio">
+              <Link to="/wallet">
                 All <ArrowUpRight />
               </Link>
             </Button>
@@ -135,20 +187,20 @@ function Overview() {
       <section className="mt-10">
         <SectionHeader title="Sniper AI" />
         <Card padding="lg" variant="raised">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <Crosshair className="size-4 text-gold" strokeWidth={1.75} />
                 <p className="text-sm text-foreground">Autonomous execution</p>
               </div>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                Scanning liquidity across 300 instruments. Simulated entries only.
+                Scanning live market conditions across supported instruments.
               </p>
             </div>
             <Badge variant="gold">Armed</Badge>
           </div>
           <Sparkline seed="sniper" change={2.4} height={56} className="mt-5" />
-          <div className="mt-5 flex items-center justify-between gap-4">
+          <div className="mt-5 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
             <p className="numeric text-xs text-muted-foreground">
               Session P&L <span className="text-positive">{formatSigned(3.42)}</span>
             </p>
@@ -164,16 +216,32 @@ function Overview() {
           title="Recent activity"
           action={
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/portfolio">
+              <Link to="/wallet">
                 All <ArrowUpRight />
               </Link>
             </Button>
           }
         />
         <div className="space-y-3">
-          {transactions.slice(0, 3).map((transaction) => (
-            <TransactionCard key={transaction.id} transaction={transaction} />
+          {(walletQuery.data?.activity ?? []).slice(0, 3).map((transaction) => (
+            <TransactionCard
+              key={transaction.id}
+              transaction={{
+                id: transaction.id,
+                type: transaction.type as "buy" | "sell" | "deposit" | "withdrawal",
+                asset: transaction.assetId,
+                amount: Number(transaction.amount),
+                value: Number(transaction.amount),
+                date: transaction.createdAt.toLocaleDateString(),
+                status: transaction.status as "settled" | "pending" | "failed",
+              }}
+            />
           ))}
+          {!walletQuery.isLoading && !walletQuery.data?.activity?.length ? (
+            <Card padding="md">
+              <p className="text-sm text-muted-foreground">No account activity yet.</p>
+            </Card>
+          ) : null}
         </div>
       </section>
     </AppShell>

@@ -1,9 +1,21 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { Bell, Settings } from "lucide-react";
+import { Bell, LogOut, Settings } from "lucide-react";
+
+import { useQuery } from "@tanstack/react-query";
 
 import { cn } from "@/lib/utils";
-import { notifications, demoMember } from "@/lib/placeholder-data";
+import { getNotifications } from "@/lib/notification.functions";
+import { signOut } from "@/lib/supabase/auth";
+import { useAuth } from "@/lib/use-auth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function TopBar({
   title,
@@ -16,11 +28,18 @@ export function TopBar({
   action?: ReactNode | undefined;
   className?: string | undefined;
 }) {
-  const unread = notifications.filter((n) => n.unread).length;
-  const initials = demoMember.name
+  const { user } = useAuth();
+  const notificationsQuery = useQuery({
+    queryKey: ["notifications"],
+    queryFn: () => getNotifications(),
+    retry: false,
+    enabled: Boolean(user),
+  });
+  const unread = notificationsQuery.data?.filter((n) => !n.read).length ?? 0;
+  const initials = (user?.firstName || user?.surname || user?.email || "U")
     .split(/[\s.]+/)
     .filter(Boolean)
-    .map((p) => p[0])
+    .map((part) => part[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();
@@ -28,7 +47,7 @@ export function TopBar({
   return (
     <header
       className={cn(
-        "sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border bg-background/80 px-5 py-4 backdrop-blur-xl lg:px-10 lg:py-6",
+        "sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 border-b border-border bg-background/80 px-4 py-3 backdrop-blur-xl sm:px-5 sm:py-4 lg:px-10 lg:py-6",
         className,
       )}
     >
@@ -53,13 +72,37 @@ export function TopBar({
           ) : null}
         </Link>
 
-        <Link
-          to="/settings"
-          aria-label="Settings and profile"
-          className="grid size-9 place-items-center rounded-full border border-gold/30 bg-gold-muted text-[0.6875rem] tracking-tight text-gold transition-colors duration-300 ease-[var(--ease-luxe)] hover:bg-gold/20"
-        >
-          {initials}
-        </Link>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label="Open account menu"
+              className="grid size-9 place-items-center rounded-full border border-gold/30 bg-gold-muted text-[0.6875rem] tracking-tight text-gold transition-colors duration-300 ease-[var(--ease-luxe)] hover:bg-gold/20"
+            >
+              {initials}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel className="truncate">{user?.email ?? "Account"}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link to="/settings">
+                <Settings className="size-4" />
+                Settings
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => {
+                void signOut().finally(() => {
+                  window.location.assign("/auth");
+                });
+              }}
+            >
+              <LogOut className="size-4" />
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <Link
           to="/settings"

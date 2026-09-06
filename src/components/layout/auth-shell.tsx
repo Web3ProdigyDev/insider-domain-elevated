@@ -1,7 +1,5 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import mark from "@/assets/insider-domain-mark.png.asset.json";
-
 /** The Insider Domain monogram. One implementation, used everywhere. */
 export function BrandMark({
   size = 40,
@@ -11,14 +9,24 @@ export function BrandMark({
   className?: string | undefined;
 }) {
   return (
-    <img
-      src={mark.url}
-      alt="Insider Domain"
-      width={size}
-      height={size}
-      className={cn("shrink-0 rounded-xl object-contain", className)}
+    <div
+      role="img"
+      aria-label="Insider Domain"
+      className={cn(
+        "grid shrink-0 place-items-center rounded-xl border border-gold/30 bg-gold-muted text-gold",
+        className,
+      )}
       style={{ width: size, height: size }}
-    />
+    >
+      <svg
+        viewBox="0 0 32 32"
+        aria-hidden="true"
+        className="size-3/5 fill-none stroke-current"
+        strokeWidth="2"
+      >
+        <path d="M8 7h16M8 16h16M8 25h16M12 7v18M20 7v18" />
+      </svg>
+    </div>
   );
 }
 
@@ -38,7 +46,7 @@ export function AuthShell({
 }) {
   return (
     <div
-      className="flex min-h-screen w-full flex-col items-center justify-center bg-background px-5 py-12"
+      className="flex min-h-screen w-full flex-col items-center justify-center bg-background px-4 py-8 sm:px-5 sm:py-12"
       style={{
         paddingTop: "max(3rem, env(safe-area-inset-top))",
         paddingBottom: "max(3rem, env(safe-area-inset-bottom))",

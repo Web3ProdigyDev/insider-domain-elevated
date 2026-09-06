@@ -6,8 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { notify } from "@/lib/notify";
-import { signIn } from "@/lib/auth-store";
-import { useAuth } from "@/lib/use-auth";
+import { signInWithPassword } from "@/lib/supabase/auth";
 
 export const Route = createFileRoute("/auth/")({
   head: () => ({
@@ -29,30 +28,24 @@ export const Route = createFileRoute("/auth/")({
 
 function SignIn() {
   const navigate = useNavigate();
-  const { user, ready } = useAuth();
-  const [identifier, setIdentifier] = React.useState("");
+  const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
-
-  React.useEffect(() => {
-    if (!ready || !user) return;
-    if (!user.emailVerified) void navigate({ to: "/auth/verify", replace: true });
-    else if (!user.onboardingCompleted) void navigate({ to: "/onboarding", replace: true });
-    else void navigate({ to: "/", replace: true });
-  }, [ready, user, navigate]);
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const result = signIn(identifier, password);
-    if (!result.ok) {
-      setError(result.error);
+  const [busy, setBusy] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (busy) return;
+    setError("");
+    setBusy(true);
+    const result = await signInWithPassword(email, password);
+    if (result.error) {
+      setError("Invalid email or password, or confirm your email first.");
+      setBusy(false);
       return;
     }
-    setError("");
-    notify.success("Welcome back", `Signed in as ${result.value.firstName}.`);
-    if (!result.value.emailVerified) void navigate({ to: "/auth/verify" });
-    else if (!result.value.onboardingCompleted) void navigate({ to: "/onboarding" });
-    else void navigate({ to: "/" });
+    notify.success("Welcome back", "Your secure session is active.");
+    void navigate({ to: "/" });
   };
 
   return (
@@ -72,29 +65,38 @@ function SignIn() {
       <Card padding="lg">
         <form className="space-y-5" onSubmit={submit}>
           <Input
-            label="Email or username"
-            autoComplete="username"
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
-            placeholder="a.marchetti"
+            label="Email address"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="you@example.com"
           />
           <Input
             label="Password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             autoComplete="current-password"
+            trailing={
+              <button
+                type="button"
+                className="text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setShowPassword((visible) => !visible)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            }
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="Your password"
             {...(error ? { error } : {})}
           />
-          <Button type="submit" full>
-            Sign in
+          <Button type="submit" full disabled={!email.includes("@") || password.length < 8 || busy}>
+            {busy ? "Signing in…" : "Sign in"}
           </Button>
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <Link to="/auth/recover" className="transition-colors hover:text-foreground">
-              Forgot password
-            </Link>
-            <span className="numeric">Demo · a.marchetti / insider</span>
-          </div>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            New members must confirm their email before signing in.
+          </p>
         </form>
       </Card>
     </AuthShell>

@@ -13,6 +13,20 @@ import { Toaster } from "@/components/ui/sonner";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
+function BootLoading() {
+  return (
+    <div className="grid min-h-screen place-items-center bg-background">
+      <div className="flex flex-col items-center gap-3">
+        <div
+          className="size-8 animate-spin rounded-full border-2 border-border border-t-gold"
+          aria-label="Loading"
+        />
+        <p className="text-eyebrow">Insider Domain</p>
+      </div>
+    </div>
+  );
+}
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -113,6 +127,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
+  pendingComponent: BootLoading,
 });
 
 function RootShell({ children }: { children: ReactNode }) {

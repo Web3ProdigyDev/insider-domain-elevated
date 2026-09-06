@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { MarketingShell, Crumbs } from "@/components/marketing/marketing-shell";
 
-const URL = "https://insider-domain-elevated.lovable.app/privacy";
+const SITE_URL = import.meta.env.VITE_SITE_URL || "https://insider-domain-elevated.lovable.app";
+const URL = `${SITE_URL}/privacy`;
 
 export const Route = createFileRoute("/privacy")({
   head: () => ({

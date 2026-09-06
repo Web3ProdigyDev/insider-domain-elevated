@@ -1,12 +1,14 @@
+import * as React from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, Check } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { EmptyState } from "@/components/common/empty-state";
+import { SkeletonList } from "@/components/common/skeletons";
 import { Button } from "@/components/ui/button";
 import { notify } from "@/lib/notify";
-import { useSim } from "@/lib/use-sim";
-import { markAllNotificationsRead, markNotificationRead } from "@/lib/sim-store";
+import { getNotifications, markAllNotificationsRead } from "@/lib/notification.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/notifications")({
@@ -15,7 +17,8 @@ export const Route = createFileRoute("/notifications")({
       { title: "Notifications — Insider Domain" },
       {
         name: "description",
-        content: "Quiet, typeset notices: assistant reviews, invitations, funding and system notes.",
+        content:
+          "Quiet, typeset notices: assistant reviews, invitations, funding and system notes.",
       },
       { property: "og:title", content: "Notifications — Insider Domain" },
       {
@@ -23,10 +26,10 @@ export const Route = createFileRoute("/notifications")({
         content: "Assistant reviews, invitations, funding and system notes in one quiet place.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://insider-domain-elevated.lovable.app/notifications" },
+      { property: "og:url", content: `${import.meta.env.VITE_SITE_URL || "https://insider-domain-elevated.lovable.app"}/notifications` },
     ],
     links: [
-      { rel: "canonical", href: "https://insider-domain-elevated.lovable.app/notifications" },
+      { rel: "canonical", href: `${import.meta.env.VITE_SITE_URL || "https://insider-domain-elevated.lovable.app"}/notifications` },
     ],
   }),
   component: Notifications,
@@ -41,9 +44,16 @@ function when(at: number) {
 }
 
 function Notifications() {
-  const { notifications } = useSim();
   const navigate = useNavigate();
-  const unread = notifications.filter((n) => !n.read).length;
+  const queryClient = useQueryClient();
+  const notificationsQuery = useQuery({
+    queryKey: ["notifications"],
+    queryFn: () => getNotifications(),
+    retry: false,
+  });
+  const notifications = notificationsQuery.data ?? [];
+  const unread = notifications.filter((item) => !item.read).length;
+  const [markingRead, setMarkingRead] = React.useState(false);
 
   return (
     <AppShell
@@ -53,27 +63,35 @@ function Notifications() {
         <Button
           variant="ghost"
           size="sm"
-          disabled={!unread}
-          onClick={() => {
-            markAllNotificationsRead();
-            notify.message("All notices marked read");
+          disabled={!unread || markingRead}
+          onClick={async () => {
+            setMarkingRead(true);
+            try {
+              await markAllNotificationsRead();
+              await queryClient.invalidateQueries({ queryKey: ["notifications"] });
+              notify.message("Notifications updated", "All notices are marked as read.");
+            } finally {
+              setMarkingRead(false);
+            }
           }}
         >
-          <Check /> Mark all read
+          <Check /> {markingRead ? "Marking read…" : "Mark all read"}
         </Button>
       }
     >
-      {notifications.length ? (
+      {notificationsQuery.isLoading ? (
+        <SkeletonList rows={5} />
+      ) : notifications.length ? (
         <div className="space-y-3">
           {notifications.map((n) => (
             <button
               key={n.id}
               type="button"
               onClick={() => {
-                markNotificationRead(n.id);
+                notify.message("Notice opened", n.title);
                 void navigate({ to: n.to });
               }}
-              className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-4 rounded-2xl border border-border bg-card px-5 py-4 text-left transition-colors duration-300 ease-[var(--ease-luxe)] hover:border-border-strong hover:bg-surface-raised"
+              className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-2xl border border-border bg-card px-4 py-4 sm:gap-4 sm:px-5 text-left transition-colors duration-300 ease-[var(--ease-luxe)] hover:border-border-strong hover:bg-surface-raised"
             >
               <span
                 className={cn(

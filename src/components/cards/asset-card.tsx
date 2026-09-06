@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
-import { formatSigned } from "@/lib/placeholder-data";
+import { formatSigned } from "@/lib/format";
 import { formatPrice } from "@/components/cards/coin-card";
 import { CoinLogo } from "@/components/common/coin-logo";
 import type { Position } from "@/lib/use-markets";
@@ -35,15 +35,13 @@ export function AssetCard({
       <span className="min-w-0">
         <span className="block truncate text-sm text-foreground">{position.name}</span>
         <span className="numeric block truncate text-xs text-muted-foreground">
-          {position.price ? formatPrice(position.price) : "—"} ·{" "}
-          {position.amount.toLocaleString()} {position.symbol}
+          {position.price ? formatPrice(position.price) : "—"} · {position.amount.toLocaleString()}{" "}
+          {position.symbol}
         </span>
       </span>
       <span className="shrink-0 text-right">
         <span className="numeric block text-sm text-foreground">{usd(position.value)}</span>
-        <span
-          className={cn("numeric block text-xs", positive ? "text-positive" : "text-negative")}
-        >
+        <span className={cn("numeric block text-xs", positive ? "text-positive" : "text-negative")}>
           {formatSigned(position.change24h)}
         </span>
       </span>

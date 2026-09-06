@@ -2,11 +2,28 @@ import { Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+type QuickActionTo =
+  | "/"
+  | "/assistant"
+  | "/circle"
+  | "/deposit"
+  | "/markets"
+  | "/messages"
+  | "/notifications"
+  | "/receive"
+  | "/settings"
+  | "/trading"
+  | "/transfer"
+  | "/wallet"
+  | "/withdraw"
+  | "/asset/$id"
+  | "/transfer/$assetId";
+
 export type QuickAction = {
   label: string;
   icon: LucideIcon;
-  to?: string;
-  params?: Record<string, string>;
+  to?: QuickActionTo;
+  params?: { id?: string; assetId?: string };
   onClick?: () => void;
   accent?: boolean;
 };
@@ -51,14 +68,7 @@ export function QuickActions({
 
         if (action.to) {
           return (
-            <Link
-              key={action.label}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              to={action.to as any}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              params={action.params as any}
-              className={cls}
-            >
+            <Link key={action.label} to={action.to} params={action.params} className={cls}>
               {inner}
             </Link>
           );

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -7,6 +7,7 @@ import { SearchBar } from "@/components/common/search-bar";
 import { CoinCard } from "@/components/cards/coin-card";
 import { AssetCard } from "@/components/cards/asset-card";
 import { EmptyState } from "@/components/common/empty-state";
+import { SkeletonList } from "@/components/common/skeletons";
 import {
   SegmentedTabs,
   SegmentedTabsContent,
@@ -39,6 +40,7 @@ export const Route = createFileRoute("/markets")({
 function Markets() {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
+  const [view, setView] = useState<"all" | "held" | "gainers">("all");
 
   const { coins, isLoading, isError } = useMarkets();
   const { positions } = usePortfolio();
@@ -54,7 +56,15 @@ function Markets() {
   const visible = filtered.slice((current - 1) * PER_PAGE, current * PER_PAGE);
 
   return (
-    <AppShell eyebrow="Live" title="Markets">
+    <AppShell
+      eyebrow="Live"
+      title="Markets"
+      action={
+        <Button size="sm" asChild>
+          <Link to="/wallet">View wallet</Link>
+        </Button>
+      }
+    >
       <SearchBar
         value={query}
         onValueChange={(v) => {
@@ -64,7 +74,11 @@ function Markets() {
         placeholder="Search 300 instruments"
       />
 
-      <SegmentedTabs defaultValue="all" className="mt-6">
+      <SegmentedTabs
+        value={view}
+        onValueChange={(value) => setView(value as typeof view)}
+        className="mt-6"
+      >
         <SegmentedTabsList>
           <SegmentedTabsTrigger value="all">All</SegmentedTabsTrigger>
           <SegmentedTabsTrigger value="held">Held</SegmentedTabsTrigger>
@@ -88,7 +102,7 @@ function Markets() {
             />
           ) : visible.length ? (
             <>
-              <div className="space-y-3">
+              <div className="flex max-h-[52vh] flex-col gap-3 overflow-y-auto overscroll-contain pr-1">
                 {visible.map((coin) => (
                   <CoinCard key={coin.id} coin={coin} />
                 ))}
@@ -110,7 +124,7 @@ function Markets() {
         </SegmentedTabsContent>
 
         <SegmentedTabsContent value="held">
-          <div className="space-y-3">
+          <div className="flex max-h-[52vh] flex-col gap-3 overflow-y-auto overscroll-contain pr-1">
             {positions.map((position) => (
               <AssetCard key={position.id} position={position} />
             ))}
@@ -118,7 +132,7 @@ function Markets() {
         </SegmentedTabsContent>
 
         <SegmentedTabsContent value="gainers">
-          <div className="space-y-3">
+          <div className="flex max-h-[52vh] flex-col gap-3 overflow-y-auto overscroll-contain pr-1">
             {[...coins]
               .sort((a, b) => b.change24h - a.change24h)
               .slice(0, 20)

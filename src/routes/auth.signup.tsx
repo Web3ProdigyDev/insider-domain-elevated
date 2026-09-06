@@ -1,137 +1,54 @@
 import * as React from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DateOfBirthPicker } from "@/components/common/date-of-birth-picker";
+import { Button } from "@/components/ui/button";
 import { notify } from "@/lib/notify";
-import { signUp, isValidInvitation, referrerFor } from "@/lib/auth-store";
-import { AGE_CONFIG, calculateAge } from "@/lib/age";
+import { signUpWithPassword } from "@/lib/supabase/auth";
 
 export const Route = createFileRoute("/auth/signup")({
   head: () => ({
     meta: [
       { title: "Create membership — Insider Domain" },
-      {
-        name: "description",
-        content: "Register your Insider Domain membership using an invitation code.",
-      },
-      { property: "og:title", content: "Create membership — Insider Domain" },
-      {
-        property: "og:description",
-        content: "Register your Insider Domain membership using an invitation code.",
-      },
+      { name: "description", content: "Create a private Insider Domain membership." },
     ],
   }),
   component: SignUpRoute,
 });
 
-type Fields = {
-  surname: string;
-  firstName: string;
-  middleName: string;
-  username: string;
-  email: string;
-  password: string;
-  confirm: string;
-  dob: string;
-  invitationCode: string;
-};
-
-const emptyFields: Fields = {
-  surname: "",
-  firstName: "",
-  middleName: "",
-  username: "",
-  email: "",
-  password: "",
-  confirm: "",
-  dob: "",
-  invitationCode: "",
-};
-
-const DRAFT_KEY = "insider-domain.signup-draft.v1";
-
 function SignUpRoute() {
-  const navigate = useNavigate();
-  const [fields, setFields] = React.useState<Fields>(emptyFields);
-  const [errors, setErrors] = React.useState<Partial<Record<keyof Fields, string>>>({});
-
-  React.useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(DRAFT_KEY);
-      if (raw) setFields({ ...emptyFields, ...(JSON.parse(raw) as Partial<Fields>) });
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  const set = (key: keyof Fields, value: string) => {
-    setFields((prev) => {
-      const next = { ...prev, [key]: value };
-      try {
-        window.localStorage.setItem(DRAFT_KEY, JSON.stringify({ ...next, password: "", confirm: "" }));
-      } catch {
-        /* ignore */
-      }
-      return next;
-    });
-  };
-
-  const validate = () => {
-    const next: Partial<Record<keyof Fields, string>> = {};
-    if (!fields.surname.trim()) next.surname = "Required";
-    if (!fields.firstName.trim()) next.firstName = "Required";
-    if (fields.username.trim().length < 3) next.username = "At least 3 characters";
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(fields.email.trim())) next.email = "Enter a valid email";
-    if (fields.password.length < 8) next.password = "At least 8 characters";
-    if (fields.password !== fields.confirm) next.confirm = "Passwords do not match";
-    if (!fields.dob) next.dob = "Select your date of birth";
-    else if (calculateAge(fields.dob) < AGE_CONFIG.minimumAge)
-      next.dob = `Membership requires age ${AGE_CONFIG.minimumAge} or above`;
-    if (!isValidInvitation(fields.invitationCode))
-      next.invitationCode = "Format: ID-0000-ABCD";
-    setErrors(next);
-    return Object.keys(next).length === 0;
-  };
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-    const result = signUp({
-      surname: fields.surname,
-      firstName: fields.firstName,
-      middleName: fields.middleName,
-      username: fields.username,
-      email: fields.email,
-      password: fields.password,
-      dob: fields.dob,
-      invitationCode: fields.invitationCode,
-    });
-    if (!result.ok) {
-      setErrors({ email: result.error });
+  const [email, setEmail] = React.useState("");
+  const [name, setName] = React.useState("");
+  const [invitation, setInvitation] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [error, setError] = React.useState("");
+  const [submitted, setSubmitted] = React.useState(false);
+  const [busy, setBusy] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
+  const validInvitation = /^ID-\d{4}-[A-Z]{4}$/i.test(invitation.trim());
+  const ready =
+    name.trim().length >= 2 && email.includes("@") && password.length >= 8 && validInvitation;
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!ready || busy) return;
+    setError("");
+    setBusy(true);
+    const result = await signUpWithPassword({ email, password, name });
+    if (result.error) {
+      setError("We could not create that membership. Check your details and try again.");
+      setBusy(false);
       return;
     }
-    try {
-      window.localStorage.removeItem(DRAFT_KEY);
-    } catch {
-      /* ignore */
-    }
-    notify.success("Membership created", "Verify your email to continue.");
-    void navigate({ to: "/auth/verify" });
+    setSubmitted(true);
+    notify.success("Check your inbox", "Confirm your email to activate membership.");
   };
-
-  const referrer = isValidInvitation(fields.invitationCode)
-    ? referrerFor(fields.invitationCode)
-    : null;
 
   return (
     <AuthShell
       eyebrow="Invitation required"
       title="Create your membership"
-      description="Your details are reviewed once, then kept private to your account."
+      description="Verify your email, then secure your wallet in a private setup flow."
       footer={
         <>
           Already a member?{" "}
@@ -142,79 +59,69 @@ function SignUpRoute() {
       }
     >
       <Card padding="lg">
-        <form className="space-y-5" onSubmit={submit} noValidate>
-          <div className="grid gap-5 sm:grid-cols-2">
-            <Input
-              label="Surname"
-              value={fields.surname}
-              onChange={(e) => set("surname", e.target.value)}
-              {...(errors.surname ? { error: errors.surname } : {})}
-            />
-            <Input
-              label="First name"
-              value={fields.firstName}
-              onChange={(e) => set("firstName", e.target.value)}
-              {...(errors.firstName ? { error: errors.firstName } : {})}
-            />
-          </div>
-
+        <form className="space-y-5" onSubmit={submit}>
+          {submitted ? (
+            <div className="rounded-2xl border border-gold/20 bg-gold-muted/40 p-4 text-sm leading-relaxed text-muted-foreground">
+              We sent a confirmation link to <span className="text-foreground">{email}</span>.
+              Confirm it, then sign in to continue.
+            </div>
+          ) : null}
           <Input
-            label="Middle name (optional)"
-            value={fields.middleName}
-            onChange={(e) => set("middleName", e.target.value)}
+            label="Full name"
+            autoComplete="name"
+            value={name}
+            onChange={(event) => {
+              setName(event.target.value);
+              setError("");
+            }}
+            placeholder="Your name"
           />
-
-          <Input
-            label="Username"
-            value={fields.username}
-            onChange={(e) => set("username", e.target.value)}
-            {...(errors.username ? { error: errors.username } : {})}
-          />
-
-          <Input
-            label="Email"
-            type="email"
-            autoComplete="email"
-            value={fields.email}
-            onChange={(e) => set("email", e.target.value)}
-            {...(errors.email ? { error: errors.email } : {})}
-          />
-
-          <div className="grid gap-5 sm:grid-cols-2">
-            <Input
-              label="Password"
-              type="password"
-              autoComplete="new-password"
-              value={fields.password}
-              onChange={(e) => set("password", e.target.value)}
-              {...(errors.password ? { error: errors.password } : {})}
-            />
-            <Input
-              label="Confirm password"
-              type="password"
-              autoComplete="new-password"
-              value={fields.confirm}
-              onChange={(e) => set("confirm", e.target.value)}
-              {...(errors.confirm ? { error: errors.confirm } : {})}
-            />
-          </div>
-
-          <div>
-            <DateOfBirthPicker value={fields.dob} onChange={(iso) => set("dob", iso)} />
-            {errors.dob ? <p className="mt-1.5 text-xs text-negative">{errors.dob}</p> : null}
-          </div>
-
           <Input
             label="Invitation code"
-            value={fields.invitationCode}
-            onChange={(e) => set("invitationCode", e.target.value.toUpperCase())}
+            value={invitation}
+            onChange={(event) => {
+              setInvitation(event.target.value.toUpperCase());
+              setError("");
+            }}
             placeholder="ID-2291-VELA"
-            {...(errors.invitationCode ? { error: errors.invitationCode } : {})}
-            {...(referrer ? { hint: `Referred by ${referrer}` } : {})}
+            {...(invitation && !validInvitation ? { error: "Format: ID-0000-ABCD" } : {})}
           />
-
-          <Button type="submit" full>
-            Create membership
+          <Input
+            label="Email address"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(event) => {
+              setEmail(event.target.value);
+              setError("");
+            }}
+            placeholder="you@example.com"
+          />
+          <Input
+            label="Password"
+            type={showPassword ? "text" : "password"}
+            autoComplete="new-password"
+            trailing={
+              <button
+                type="button"
+                className="text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setShowPassword((visible) => !visible)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            }
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="At least 8 characters"
+          />
+          {error ? <p className="text-xs text-negative">{error}</p> : null}
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Your invitation is checked before we create your account. Email confirmation is required
+            before access.
+          </p>
+          <Button type="submit" full disabled={!ready || submitted || busy}>
+            {submitted ? "Confirmation sent" : busy ? "Creating membership…" : "Create membership"}
           </Button>
         </form>
       </Card>

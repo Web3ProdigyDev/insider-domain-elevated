@@ -35,9 +35,7 @@ export function PostCard({
   };
 
   return (
-    <article
-      className={cn("rounded-2xl border border-border bg-card px-5 py-5", className)}
-    >
+    <article className={cn("rounded-2xl border border-border bg-card px-5 py-5", className)}>
       <header className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4">
         <span className="grid size-10 shrink-0 place-items-center rounded-full border border-border text-xs tracking-tight text-muted-foreground">
           {initials(post.author)}

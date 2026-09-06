@@ -1,10 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { Shield } from "lucide-react";
+import { useAuth } from "@/lib/use-auth";
 import { cn } from "@/lib/utils";
 import { navItems, utilityNavItems } from "./nav-items";
-import { demoMember } from "@/lib/placeholder-data";
 
 export function AppSidebar({ className }: { className?: string }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { user } = useAuth();
   const isActive = (to: string) => (to === "/" ? pathname === "/" : pathname.startsWith(to));
 
   return (
@@ -39,20 +41,16 @@ export function AppSidebar({ className }: { className?: string }) {
             <SidebarLink key={item.to} item={item} active={isActive(item.to)} />
           ))}
         </nav>
+        {user?.role === "admin" ? (
+          <div className="mt-8">
+            <p className="text-eyebrow mb-2 px-3">Oversight</p>
+            <SidebarLink
+              item={{ label: "Members", to: "/admin", icon: Shield }}
+              active={isActive("/admin")}
+            />
+          </div>
+        ) : null}
       </div>
-
-      <Link
-        to="/settings"
-        className="flex min-w-0 items-center gap-3 rounded-xl border border-border px-3 py-3 transition-colors duration-300 ease-[var(--ease-luxe)] hover:border-border-strong hover:bg-sidebar-accent/60"
-      >
-        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-gold-muted text-[0.7rem] text-gold">
-          AM
-        </span>
-        <span className="min-w-0">
-          <span className="block truncate text-sm text-foreground">{demoMember.name}</span>
-          <span className="text-eyebrow">{demoMember.tier}</span>
-        </span>
-      </Link>
     </aside>
   );
 }

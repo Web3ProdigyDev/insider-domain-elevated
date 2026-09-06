@@ -185,6 +185,122 @@
   letter-spacing: -0.01em;
 }
 
+@keyframes companion-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(2deg);
+  }
+}
+
+@keyframes companion-scan {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scaleX(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+.ai-companion {
+  position: relative;
+  display: grid;
+  min-height: 150px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 1.5rem;
+  background: linear-gradient(145deg, var(--surface-raised), var(--surface));
+  color: var(--muted-foreground);
+}
+
+.ai-companion::before {
+  content: "";
+  position: absolute;
+  width: 96px;
+  height: 96px;
+  border: 1px solid color-mix(in oklab, var(--gold) 25%, transparent);
+  border-radius: 999px;
+}
+
+.ai-companion-active::before {
+  animation: companion-scan 2s ease-in-out infinite;
+  box-shadow: 0 0 36px color-mix(in oklab, var(--gold) 18%, transparent);
+}
+
+.ai-companion-face {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 76px;
+  height: 62px;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 22px 22px 28px 28px;
+  background: var(--card);
+  box-shadow: var(--shadow-soft);
+  animation: companion-float 4s ease-in-out infinite;
+}
+
+.ai-companion-eye {
+  width: 7px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--gold);
+}
+
+.ai-companion-mouth {
+  position: absolute;
+  bottom: 14px;
+  width: 18px;
+  height: 5px;
+  border-bottom: 1px solid var(--muted-foreground);
+  border-radius: 50%;
+}
+
+.ai-companion-signal {
+  position: absolute;
+  right: calc(50% - 55px);
+  top: calc(50% - 48px);
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  color: var(--gold);
+}
+
+.ai-companion-signal svg {
+  width: 16px;
+  height: 16px;
+}
+
+.ai-companion-label {
+  position: absolute;
+  bottom: 14px;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.ai-companion-active .ai-companion-label {
+  color: var(--gold);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-companion-face,
+  .ai-companion-active::before {
+    animation: none;
+  }
+}
+
 @layer base {
   * {
     border-color: var(--color-border);

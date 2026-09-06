@@ -1,0 +1,58 @@
+import { createClient } from "./client";
+
+export async function signUpWithPassword(input: { email: string; password: string; name: string }) {
+  const supabase = createClient();
+  return supabase.auth.signUp({
+    email: input.email.trim().toLowerCase(),
+    password: input.password,
+    options: {
+      data: { full_name: input.name.trim() },
+      emailRedirectTo:
+        import.meta.env.VITE_SUPABASE_REDIRECT_URL ||
+        `${import.meta.env.VITE_SITE_URL || window.location.origin}/auth/callback`,
+    },
+  });
+}
+
+export async function signInWithPassword(email: string, password: string) {
+  return createClient().auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+}
+
+export async function resendConfirmation(email: string) {
+  return createClient().auth.resend({
+    type: "signup",
+    email: email.trim().toLowerCase(),
+    options: {
+      emailRedirectTo:
+        import.meta.env.VITE_SUPABASE_REDIRECT_URL ||
+        `${import.meta.env.VITE_SITE_URL || window.location.origin}/auth/callback`,
+    },
+  });
+}
+
+export async function sendOtp(email: string) {
+  const supabase = createClient();
+  return supabase.auth.signInWithOtp({
+    email: email.trim().toLowerCase(),
+    options: { shouldCreateUser: false },
+  });
+}
+
+export async function verifyOtp(email: string, token: string) {
+  const supabase = createClient();
+  return supabase.auth.verifyOtp({
+    email: email.trim().toLowerCase(),
+    token: token.trim(),
+    type: "email",
+  });
+}
+
+export async function signOut() {
+  const supabase = createClient();
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    console.warn("[v0] Supabase sign out failed; clearing local session", error);
+    await supabase.auth.signOut({ scope: "local" });
+  }
+  return { error: error ?? null };
+}

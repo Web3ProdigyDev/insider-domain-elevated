@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
-import { formatSigned } from "@/lib/placeholder-data";
+import { formatSigned } from "@/lib/format";
 import { CoinLogo } from "@/components/common/coin-logo";
 import type { MarketCoin } from "@/lib/markets.functions";
 
@@ -55,9 +55,7 @@ export function CoinCard({
         <span className="numeric block text-sm tabular-nums text-foreground">
           {formatPrice(coin.price)}
         </span>
-        <span
-          className={cn("numeric block text-xs", positive ? "text-positive" : "text-negative")}
-        >
+        <span className={cn("numeric block text-xs", positive ? "text-positive" : "text-negative")}>
           {formatSigned(coin.change24h)}
         </span>
       </span>

@@ -5,8 +5,6 @@ import { AuthShell } from "@/components/layout/auth-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { notify } from "@/lib/notify";
-import { resetPassword, verificationCodeFor } from "@/lib/auth-store";
 
 export const Route = createFileRoute("/auth/recover")({
   head: () => ({
@@ -31,29 +29,27 @@ function Recover() {
   const [password, setPassword] = React.useState("");
   const [confirm, setConfirm] = React.useState("");
   const [error, setError] = React.useState("");
-
-  const expected = email ? verificationCodeFor(email) : "";
+  const [busy, setBusy] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
 
   const request = (e: React.FormEvent) => {
     e.preventDefault();
+    if (busy) return;
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) {
       setError("Enter a valid email");
       return;
     }
-    setError("");
-    setStage("reset");
-    notify.message("Recovery code issued", "Simulated delivery — the code is shown on screen.");
+    setBusy(true);
+    setError("Password reset delivery is not configured yet.");
+    setBusy(false);
   };
 
   const reset = (e: React.FormEvent) => {
     e.preventDefault();
-    if (code.trim() !== expected) return setError("That recovery code does not match.");
-    if (password.length < 8) return setError("Password must be at least 8 characters.");
-    if (password !== confirm) return setError("Passwords do not match.");
-    const result = resetPassword(email, password);
-    if (!result.ok) return setError(result.error);
-    notify.success("Password updated", "Sign in with your new password.");
-    void navigate({ to: "/auth" });
+    if (busy) return;
+    setBusy(true);
+    setError("Password reset delivery is not configured yet.");
+    setBusy(false);
   };
 
   return (
@@ -77,15 +73,12 @@ function Recover() {
               onChange={(e) => setEmail(e.target.value)}
               {...(error ? { error } : {})}
             />
-            <Button type="submit" full>
-              Send recovery code
+            <Button type="submit" full disabled={busy}>
+              {busy ? "Preparing recovery…" : "Send recovery code"}
             </Button>
           </form>
         ) : (
           <form className="space-y-5" onSubmit={reset}>
-            <p className="rounded-2xl border border-gold/25 bg-gold-muted px-4 py-3 text-sm text-gold">
-              Simulated code: <span className="numeric tracking-[0.3em]">{expected}</span>
-            </p>
             <Input
               label="Recovery code"
               inputMode="numeric"
@@ -95,19 +88,29 @@ function Recover() {
             />
             <Input
               label="New password"
-              type="password"
+              type={showPassword ? "text" : "password"}
+              trailing={
+                <button
+                  type="button"
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              }
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
             <Input
               label="Confirm new password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               {...(error ? { error } : {})}
             />
-            <Button type="submit" full>
-              Update password
+            <Button type="submit" full disabled={busy}>
+              {busy ? "Updating password…" : "Update password"}
             </Button>
           </form>
         )}

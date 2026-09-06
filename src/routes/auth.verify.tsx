@@ -6,8 +6,7 @@ import { AuthShell } from "@/components/layout/auth-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { notify } from "@/lib/notify";
-import { verifyEmail, verificationCodeFor, signOut } from "@/lib/auth-store";
+import { signOut } from "@/lib/supabase/auth";
 import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/auth/verify")({
@@ -30,6 +29,7 @@ function Verify() {
   const { user, ready } = useAuth();
   const [code, setCode] = React.useState("");
   const [error, setError] = React.useState("");
+  const [busy, setBusy] = React.useState(false);
 
   React.useEffect(() => {
     if (!ready) return;
@@ -41,31 +41,26 @@ function Verify() {
 
   if (!user) return null;
 
-  const expected = verificationCodeFor(user.email);
-
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (code.trim() !== expected) {
-      setError("That code does not match.");
-      return;
-    }
-    verifyEmail(user.id);
-    notify.success("Email verified", "Your access review is next.");
-    void navigate({ to: "/onboarding" });
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    await new Promise((resolve) => window.setTimeout(resolve, 350));
+    setError("Email verification delivery is not configured yet.");
+    setBusy(false);
   };
 
   return (
     <AuthShell
       eyebrow="Verification"
       title="Confirm your email"
-      description={`We sent a six-digit code to ${user.email}. This environment is simulated, so the code is shown below.`}
+      description={`We sent a confirmation link to ${user.email}. Confirm it to unlock your account.`}
     >
       <Card padding="lg">
         <div className="mb-6 flex items-center gap-3 rounded-2xl border border-gold/25 bg-gold-muted px-4 py-3">
           <MailCheck className="size-4 shrink-0 text-gold" strokeWidth={1.75} />
-          <p className="text-sm text-gold">
-            Simulated code: <span className="numeric tracking-[0.3em]">{expected}</span>
-          </p>
+          <p className="text-sm text-gold">Check your inbox for a secure confirmation link.</p>
         </div>
 
         <form className="space-y-5" onSubmit={submit}>
@@ -81,15 +76,15 @@ function Verify() {
             placeholder="000000"
             {...(error ? { error } : {})}
           />
-          <Button type="submit" full>
-            Verify and continue
+          <Button type="submit" full disabled={busy}>
+            {busy ? "Checking code…" : "Verify and continue"}
           </Button>
           <Button
             type="button"
             variant="ghost"
             full
             onClick={() => {
-              signOut();
+              void signOut();
               void navigate({ to: "/auth" });
             }}
           >

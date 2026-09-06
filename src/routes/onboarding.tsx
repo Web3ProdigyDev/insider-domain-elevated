@@ -48,69 +48,79 @@ function Onboarding() {
       return setError("Choose a username with 3–24 letters, numbers, or underscores.");
     if (!dob || age < 18) return setError("You must be at least 18 to use this account.");
     setBusy(true);
-    const { data: updatedProfile, error: updateError } = await supabase
-      .from("profiles")
-      .update({
+    try {
+      const profilePayload = {
+        id: session.user.id,
         first_name: firstName.trim(),
         surname: surname.trim(),
         username: username.trim().toLowerCase(),
         dob,
         onboarding_completed: true,
         updated_at: new Date().toISOString(),
-      })
-      .eq("id", session.user.id)
-      .select("id")
-      .maybeSingle();
-    setBusy(false);
-    if (updateError || !updatedProfile) {
-      console.error("[v0] onboarding profile update failed", {
-        error: updateError
-          ? {
-              code: updateError.code,
-              message: updateError.message,
-              details: updateError.details,
-              hint: updateError.hint,
-            }
-          : null,
-        returnedProfile: updatedProfile,
+      };
+      const { data: updatedProfile, error: updateError } = await supabase
+        .from("profiles")
+        .upsert(profilePayload, { onConflict: "id" })
+        .select()
+        .maybeSingle();
+      if (updateError || !updatedProfile) {
+        console.error("[v0] onboarding profile upsert failed", {
+          error: updateError
+            ? {
+                code: updateError.code,
+                message: updateError.message,
+                details: updateError.details,
+                hint: updateError.hint,
+              }
+            : null,
+          returnedProfile: updatedProfile,
+          userId: session.user.id,
+        });
+        if (!updateError && !updatedProfile) {
+          console.error("[v0] onboarding profile upsert returned zero rows with no error");
+        }
+        setError("We could not save your details. Please check the fields and try again.");
+        return;
+      }
+      if (inviteCode.trim()) {
+        const { data: redeemed, error: redeemError } = await supabase.rpc("redeem_invite_code", {
+          code: inviteCode.trim(),
+          user_id: session.user.id,
+        });
+        if (redeemError) {
+          console.error("[v0] invite code redemption failed", {
+            error: {
+              code: redeemError.code,
+              message: redeemError.message,
+              details: redeemError.details,
+              hint: redeemError.hint,
+            },
+            returnedValue: redeemed,
+            userId: session.user.id,
+          });
+          setInviteNotice(
+            "That invite code was invalid or unavailable. You can continue as a member.",
+          );
+        } else if (!redeemed) {
+          console.warn("[v0] invite code redemption returned false", {
+            returnedValue: redeemed,
+            userId: session.user.id,
+          });
+          setInviteNotice(
+            "That invite code was invalid or unavailable. You can continue as a member.",
+          );
+        }
+      }
+      void navigate({ to: "/wallet-setup", replace: true });
+    } catch (error: unknown) {
+      console.error("[v0] onboarding submission threw unexpectedly", {
+        error,
         userId: session.user.id,
       });
-      if (!updateError && !updatedProfile) {
-        console.error("[v0] onboarding profile update returned zero rows with no error");
-      }
       setError("We could not save your details. Please check the fields and try again.");
-      return;
+    } finally {
+      setBusy(false);
     }
-    if (inviteCode.trim()) {
-      const { data: redeemed, error: redeemError } = await supabase.rpc("redeem_invite_code", {
-        code: inviteCode.trim(),
-        user_id: session.user.id,
-      });
-      if (redeemError) {
-        console.error("[v0] invite code redemption failed", {
-          error: {
-            code: redeemError.code,
-            message: redeemError.message,
-            details: redeemError.details,
-            hint: redeemError.hint,
-          },
-          returnedValue: redeemed,
-          userId: session.user.id,
-        });
-        setInviteNotice(
-          "That invite code was invalid or unavailable. You can continue as a member.",
-        );
-      } else if (!redeemed) {
-        console.warn("[v0] invite code redemption returned false", {
-          returnedValue: redeemed,
-          userId: session.user.id,
-        });
-        setInviteNotice(
-          "That invite code was invalid or unavailable. You can continue as a member.",
-        );
-      }
-    }
-    void navigate({ to: "/wallet-setup", replace: true });
   };
 
   if (!ready || !user || !allowed || !session) return null;

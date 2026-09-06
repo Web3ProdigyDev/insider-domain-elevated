@@ -1,190 +1,160 @@
-import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, ArrowDownLeft, ArrowUpRight, Plus, Minus } from "lucide-react";
+import { ArrowLeft, WalletCards } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 import { AppShell } from "@/components/layout/app-shell";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/common/empty-state";
+import { SkeletonCard, SkeletonList } from "@/components/common/skeletons";
 import { Badge } from "@/components/ui/badge";
-import { SectionHeader } from "@/components/common/section-header";
-import { CoinLogo } from "@/components/common/coin-logo";
-import { Sparkline } from "@/components/common/sparkline";
-import { QuickActions } from "@/components/common/quick-actions";
-import { TransactionCard } from "@/components/cards/transaction-card";
-import { TradeSheet, type TradeMode } from "@/components/trade/trade-sheet";
-import { formatPrice, formatCompact } from "@/components/cards/coin-card";
-import { formatSigned } from "@/lib/format";
-import { getWalletData } from "@/lib/wallet.functions";
-import { useQuery } from "@tanstack/react-query";
-import { useMarkets } from "@/lib/use-markets";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { getMemberDetail } from "@/lib/admin.functions";
+import { useRequireMember } from "@/lib/use-auth";
 
-export const Route = createFileRoute("/asset/$id")({
-  head: () => ({
-    meta: [
-      { title: "Asset — Insider Domain" },
-      {
-        name: "description",
-        content: "Live price, holdings, and order actions for one instrument.",
-      },
-      { property: "og:title", content: "Asset — Insider Domain" },
-      {
-        property: "og:description",
-        content: "Live price, holdings, and order actions for one instrument.",
-      },
-    ],
-  }),
-  component: AssetDetail,
-});
+export const Route = createFileRoute("/admin/$userId")({ component: AdminMemberDetail });
 
-function AssetDetail() {
-  const { id } = Route.useParams();
-  const { byId, isLoading } = useMarkets();
-  const walletQuery = useQuery({
-    queryKey: ["wallet-data"],
-    queryFn: () => getWalletData(),
+function AdminMemberDetail() {
+  const { userId } = Route.useParams();
+  const { ready, allowed } = useRequireMember({ adminOnly: true });
+  const detailQuery = useQuery({
+    queryKey: ["admin-member", userId],
+    queryFn: () => getMemberDetail(userId),
+    enabled: ready && allowed,
     retry: false,
   });
-  const [mode, setMode] = useState<TradeMode | null>(null);
-
-  const coin = byId.get(id);
-  const balanceRow = walletQuery.data?.balances.find((row) => row.assetId === id);
-  const symbol = coin?.symbol ?? id.toUpperCase();
-  const name = coin?.name ?? id;
-  const price = coin?.price ?? 0;
-  const change = coin?.change24h ?? 0;
-  const positive = change >= 0;
-  const amount = Number(balanceRow?.amount ?? 0);
-
-  const related = (walletQuery.data?.activity ?? []).filter((t) => t.assetId === id);
-
-  return (
-    <AppShell eyebrow={amount > 0 ? "Held position" : "Instrument"} title={name}>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <Link
-          to="/markets"
-          className="inline-flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-3.5" strokeWidth={1.75} /> Back to markets
-        </Link>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>Operations:</span>
-          <span>buy · sell · send · receive</span>
+  if (!ready || !allowed) return null;
+  if (detailQuery.isLoading)
+    return (
+      <AppShell eyebrow="Admin" title="Member detail">
+        <SkeletonCard />
+        <div className="mt-6">
+          <SkeletonList rows={4} />
         </div>
-      </div>
-
-      <Card padding="lg" variant="raised">
-        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-start sm:gap-4">
-          <div className="flex min-w-0 items-center gap-3">
-            <CoinLogo src={coin?.image} symbol={symbol} size={44} />
-            <div className="min-w-0">
-              <p className="truncate text-sm text-foreground">{name}</p>
-              <p className="text-eyebrow mt-1">{symbol}</p>
+      </AppShell>
+    );
+  if (detailQuery.isError || !detailQuery.data)
+    return (
+      <AppShell eyebrow="Admin" title="Member unavailable">
+        <EmptyState
+          icon={<WalletCards />}
+          title="Member unavailable"
+          description="This member could not be loaded."
+        />
+      </AppShell>
+    );
+  const { profile, balances, transactions } = detailQuery.data;
+  const name = [profile.first_name, profile.surname].filter(Boolean).join(" ") || "Unnamed member";
+  return (
+    <AppShell
+      eyebrow="Admin"
+      title={name}
+      description={profile.email || (profile.username ? `@${profile.username}` : "Member detail")}
+      action={
+        <Button variant="ghost" size="sm" asChild>
+          <Link to="/admin">
+            <ArrowLeft /> Back to members
+          </Link>
+        </Button>
+      }
+    >
+      <div className="flex flex-col gap-8">
+        <section className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <p className="text-eyebrow">Email</p>
+            <p className="mt-3 truncate text-sm text-foreground">
+              {profile.email || "Not available"}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <p className="text-eyebrow">Role</p>
+            <div className="mt-3">
+              <Badge variant={profile.role === "admin" ? "default" : "outline"}>
+                {profile.role}
+              </Badge>
             </div>
           </div>
-          <Badge variant={positive ? "positive" : "negative"}>{formatSigned(change)}</Badge>
-        </div>
-
-        <p className="numeric mt-6 text-3xl tracking-[var(--tracking-tightest)] text-foreground sm:text-4xl">
-          {isLoading ? "—" : formatPrice(price)}
-        </p>
-        <p className="mt-1.5 text-xs text-muted-foreground">Live mid, refreshed continuously</p>
-
-        <div className="mt-6 rounded-xl border border-border bg-surface-raised/50 p-3">
-          <div className="mb-2 flex items-center justify-between text-[0.65rem] uppercase tracking-[0.16em] text-muted-foreground">
-            <span>Live chart</span>
-            <span>1D</span>
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <p className="text-eyebrow">Onboarding</p>
+            <p className="mt-3 text-sm text-foreground">
+              {profile.onboarding_completed ? "Completed" : "Pending"}
+            </p>
           </div>
-          <Sparkline seed={id} change={change} height={92} />
-        </div>
-      </Card>
-
-      <QuickActions
-        className="mt-4"
-        actions={[
-          { label: "Buy", icon: Plus, onClick: () => setMode("buy"), accent: true },
-          { label: "Sell", icon: Minus, onClick: () => setMode("sell") },
-          { label: "Send", icon: ArrowUpRight, onClick: () => setMode("send") },
-          { label: "Receive", icon: ArrowDownLeft, onClick: () => setMode("receive") },
-        ]}
-      />
-
-      {amount > 0 ? (
-        <section className="mt-10">
-          <SectionHeader title="Your position" />
-          <Card padding="lg">
-            <dl className="space-y-4">
-              <Row label="Holdings">{`${amount.toLocaleString()} ${symbol}`}</Row>
-              <Row label="Market value">{formatPrice(amount * price)}</Row>
-            </dl>
-          </Card>
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <p className="text-eyebrow">Joined</p>
+            <p className="mt-3 text-sm text-foreground">
+              {new Date(profile.created_at).toLocaleDateString()}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <p className="text-eyebrow">Member ID</p>
+            <code className="mt-3 block truncate text-xs text-muted-foreground">{profile.id}</code>
+          </div>
         </section>
-      ) : null}
-
-      <section className="mt-10">
-        <SectionHeader title="Market" />
-        <Card padding="lg">
-          <dl className="space-y-4">
-            <Row label="24h change">
-              <span className={cn(positive ? "text-positive" : "text-negative")}>
-                {formatSigned(change)}
-              </span>
-            </Row>
-            <Row label="Market cap">{formatCompact(coin?.marketCap ?? 0)}</Row>
-            <Row label="24h volume">{formatCompact(coin?.volume24h ?? 0)}</Row>
-            <Row label="Rank">{coin ? `#${coin.rank}` : "—"}</Row>
-          </dl>
-        </Card>
-      </section>
-
-      {related.length ? (
-        <section className="mt-10">
-          <SectionHeader title="Activity" />
-          <div className="space-y-3">
-            {related.map((t) => (
-              <TransactionCard
-                key={t.id}
-                transaction={{
-                  id: t.id,
-                  type: t.type as "buy" | "sell" | "deposit" | "withdrawal",
-                  asset: symbol,
-                  amount: Number(t.amount),
-                  value: Number(t.amount),
-                  date: t.createdAt.toLocaleDateString(),
-                  status: t.status as "settled" | "pending" | "failed",
-                }}
+        <section>
+          <h2 className="text-lg font-medium text-foreground">Wallet balances</h2>
+          {balances.length ? (
+            <div className="mt-4 flex flex-col gap-3">
+              {balances.map((balance) => (
+                <div
+                  key={balance.id}
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-4 sm:px-5"
+                >
+                  <span className="text-sm text-foreground">{balance.asset_id}</span>
+                  <span className="numeric text-sm text-foreground">{balance.amount}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-4">
+              <EmptyState
+                icon={<WalletCards />}
+                title="No balances yet"
+                description="This member has no recorded wallet balances."
               />
-            ))}
-          </div>
+            </div>
+          )}
         </section>
-      ) : null}
-
-      <div className="mt-10 flex gap-3">
-        <Button full onClick={() => setMode("buy")}>
-          Buy {symbol}
-        </Button>
-        <Button variant="secondary" full onClick={() => setMode("sell")}>
-          Sell
-        </Button>
+        <section>
+          <h2 className="text-lg font-medium text-foreground">Transaction history</h2>
+          {transactions.length ? (
+            <div className="mt-4 overflow-x-auto rounded-2xl border border-border">
+              <table className="w-full min-w-[640px] text-left text-sm">
+                <thead className="border-b border-border bg-surface">
+                  <tr>
+                    <th className="px-5 py-3 font-medium text-muted-foreground">Type</th>
+                    <th className="px-5 py-3 font-medium text-muted-foreground">Asset</th>
+                    <th className="px-5 py-3 font-medium text-muted-foreground">Amount</th>
+                    <th className="px-5 py-3 font-medium text-muted-foreground">Status</th>
+                    <th className="px-5 py-3 font-medium text-muted-foreground">Created</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.map((transaction) => (
+                    <tr key={transaction.id} className="border-b border-border last:border-0">
+                      <td className="px-5 py-4 text-foreground">{transaction.type}</td>
+                      <td className="px-5 py-4 text-muted-foreground">{transaction.asset_id}</td>
+                      <td className="px-5 py-4 numeric text-foreground">{transaction.amount}</td>
+                      <td className="px-5 py-4">
+                        <Badge variant="outline">{transaction.status}</Badge>
+                      </td>
+                      <td className="px-5 py-4 text-muted-foreground">
+                        {new Date(transaction.created_at).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="mt-4">
+              <EmptyState
+                icon={<WalletCards />}
+                title="No transactions yet"
+                description="This member has no recorded transaction history."
+              />
+            </div>
+          )}
+        </section>
       </div>
-
-      <TradeSheet
-        mode={mode ?? "buy"}
-        open={mode !== null}
-        onOpenChange={(open) => !open && setMode(null)}
-        symbol={symbol}
-        name={name}
-        price={price}
-      />
     </AppShell>
-  );
-}
-
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between gap-4">
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="numeric truncate text-sm text-foreground">{children}</dd>
-    </div>
   );
 }

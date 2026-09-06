@@ -14,6 +14,11 @@ export type Wallet = {
   secretKey: Uint8Array;
 };
 
+/** Returned by createWallet/importWallet, which also hand back the mnemonic
+ * so the caller can display it once for backup. Type-only addition — no
+ * change to createWallet/importWallet's runtime behavior. */
+export type WalletWithMnemonic = Wallet & { mnemonic: string };
+
 function logVault(event: string, details?: unknown) {
   if (import.meta.env.DEV) console.info(`[v0] wallet vault: ${event}`, details ?? "");
 }

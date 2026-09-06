@@ -49,7 +49,10 @@ function Settings() {
           id: user?.id ?? "self",
           name: user ? `${user.firstName} ${user.surname}`.trim() : "Account",
           handle: user?.username ?? "member",
-          tier: "Member",
+          // Not backed by real data yet — profiles only track admin/member
+          // `role`, which is a different concept from membership tier. Using
+          // a valid, neutral placeholder until a real tier field exists.
+          tier: "Private",
           since: user?.createdAt ?? new Date().toISOString(),
         }}
       />

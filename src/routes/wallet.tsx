@@ -81,7 +81,7 @@ function Wallet() {
                       : "No wallet activity yet"}
               </p>
             </div>
-            <Badge className="ml-auto" variant="secondary">
+            <Badge className="ml-auto" variant={walletQuery.isError ? "negative" : "positive"}>
               {walletQuery.isError ? "Unavailable" : "Live"}
             </Badge>
           </div>
@@ -162,20 +162,20 @@ function Wallet() {
             </>
           ) : (
             <>
-              <Card padding="md">
+              <Card padding="default">
                 <p className="text-eyebrow">Portfolio value</p>
                 <p className="numeric mt-2 text-2xl text-foreground">
                   ${balance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                 </p>
               </Card>
-              <Card padding="md">
+              <Card padding="default">
                 <p className="text-eyebrow">24h movement</p>
                 <p className="numeric mt-2 text-2xl text-foreground">
                   {change24h >= 0 ? "+" : ""}
                   {change24h.toFixed(2)}%
                 </p>
               </Card>
-              <Card padding="md">
+              <Card padding="default">
                 <p className="text-eyebrow">Assets held</p>
                 <p className="numeric mt-2 text-2xl text-foreground">
                   {positions.filter((position) => position.amount > 0).length}
@@ -188,7 +188,7 @@ function Wallet() {
           <p className="text-eyebrow">Balances</p>
           <div className="mt-3 flex max-h-[52vh] flex-col gap-2 overflow-y-auto overscroll-contain pr-1">
             {Object.keys(balances).length === 0 ? (
-              <Card padding="md" className="border-dashed">
+              <Card padding="default" className="border-dashed">
                 <p className="text-sm text-foreground">Your wallet is ready for its first asset.</p>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                   Deposit funds to see balances and activity appear here.
@@ -236,7 +236,7 @@ function Wallet() {
           </div>
           <div className="mt-3 flex flex-col gap-2">
             {transactions.length === 0 ? (
-              <Card padding="md" className="border-dashed">
+              <Card padding="default" className="border-dashed">
                 <p className="text-sm text-foreground">No activity yet.</p>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                   Completed deposits, transfers, and withdrawals will appear here.

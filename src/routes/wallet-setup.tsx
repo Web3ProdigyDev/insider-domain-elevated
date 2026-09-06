@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { notify } from "@/lib/notify";
 import { createClient } from "@/lib/supabase/client";
-import { createWallet, importWallet, type Wallet } from "@/lib/wallet-vault";
+import { createWallet, importWallet, type WalletWithMnemonic } from "@/lib/wallet-vault";
 import { useRequireMember } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/wallet-setup")({
@@ -25,7 +25,7 @@ function WalletSetup() {
   const [error, setError] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [recoveryPhrase, setRecoveryPhrase] = React.useState("");
-  const [createdWallet, setCreatedWallet] = React.useState<Wallet | null>(null);
+  const [createdWallet, setCreatedWallet] = React.useState<WalletWithMnemonic | null>(null);
   const [phraseConfirmed, setPhraseConfirmed] = React.useState(false);
   const [showMaterial, setShowMaterial] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);

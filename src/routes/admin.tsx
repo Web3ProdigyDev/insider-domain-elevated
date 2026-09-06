@@ -90,10 +90,10 @@ function AdminMembers() {
         ) : inviteQuery.data?.length ? (
           <div className="flex flex-col gap-3">
             {inviteQuery.data.map((invite) => (
-              <Card key={invite.id} padding="md">
+              <Card key={invite.id} padding="default">
                 <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-end">
                   <code className="text-sm text-foreground">{invite.code}</code>
-                  <Badge variant={invite.role === "admin" ? "gold" : "secondary"}>
+                  <Badge variant={invite.role === "admin" ? "gold" : "outline"}>
                     {invite.role}
                   </Badge>
                   <span className="text-xs text-muted-foreground">
@@ -141,10 +141,10 @@ function AdminMembers() {
                     </p>
                   )}
                 </div>
-                <Badge variant={member.role === "admin" ? "default" : "secondary"}>
+                <Badge variant={member.role === "admin" ? "default" : "outline"}>
                   {member.role}
                 </Badge>
-                <Badge variant={member.onboarding_completed ? "secondary" : "outline"}>
+                <Badge variant={member.onboarding_completed ? "positive" : "outline"}>
                   {member.onboarding_completed ? "Onboarded" : "Pending"}
                 </Badge>
                 <time className="text-xs text-muted-foreground" dateTime={member.created_at}>

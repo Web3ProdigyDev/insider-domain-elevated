@@ -111,7 +111,7 @@ function Circle() {
           <section className="mt-10">
             <SectionHeader title="Introduced by you" />
             <div className="space-y-3">
-              <Card padding="md">
+              <Card padding="default">
                 <p className="text-sm text-muted-foreground">
                   No member directory is configured yet.
                 </p>

@@ -8,12 +8,14 @@ import { useRequireMember } from "@/lib/use-auth";
 export function AppShell({
   title,
   eyebrow,
+  description,
   action,
   children,
   className,
 }: {
   title: string;
   eyebrow?: string | undefined;
+  description?: string | undefined;
   action?: ReactNode | undefined;
   children: ReactNode;
   className?: string | undefined;
@@ -26,6 +28,11 @@ export function AppShell({
       <AppSidebar />
       <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
         <TopBar title={title} eyebrow={eyebrow} action={action} />
+        {description ? (
+          <p className="mx-auto w-full max-w-5xl px-4 pt-3 text-xs leading-relaxed text-muted-foreground sm:px-5 lg:px-10">
+            {description}
+          </p>
+        ) : null}
         <main
           className={cn(
             "mx-auto w-full max-w-5xl flex-1 px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-5 sm:px-5 sm:pt-6 lg:px-10 lg:pb-16 lg:pt-8",

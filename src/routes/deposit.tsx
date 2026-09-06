@@ -1,6 +1,7 @@
 import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Bitcoin, ChevronRight } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Bitcoin, ChevronRight, Copy } from "lucide-react";
+import QRCode from "qrcode";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { Card } from "@/components/ui/card";
@@ -13,6 +14,7 @@ import { EmptyState } from "@/components/common/empty-state";
 import { useMarkets } from "@/lib/use-markets";
 import { fundingEligibility } from "@/lib/age";
 import { useAuth } from "@/lib/use-auth";
+import { hasVault, loadVault } from "@/lib/wallet-vault";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/deposit")({
@@ -33,25 +35,24 @@ export const Route = createFileRoute("/deposit")({
   component: Deposit,
 });
 
+type Step = 1 | 2 | 3;
+
+function StepBack({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="mb-4 inline-flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
+    >
+      <ArrowLeft className="size-3.5" strokeWidth={1.75} /> {label}
+    </button>
+  );
+}
+
 function Deposit() {
   const { user } = useAuth();
   const { coins } = useMarkets();
   const eligibility = fundingEligibility(user?.dob ?? "1990-01-01");
-  const [method, setMethod] = React.useState<"crypto">("crypto");
-  const [query, setQuery] = React.useState("");
-  const [selected, setSelected] = React.useState("bitcoin");
-
-  const options = React.useMemo(() => {
-    const base = coins.length ? coins : [];
-    const q = query.trim().toLowerCase();
-    const list = q
-      ? base.filter((c) => c.name.toLowerCase().includes(q) || c.symbol.toLowerCase().includes(q))
-      : base;
-    return list.slice(0, 40);
-  }, [coins, query]);
-
-  const coin = coins.find((c) => c.id === selected);
-  const network = coin?.name ?? "Native network";
 
   const methods = [
     {
@@ -62,53 +63,129 @@ function Deposit() {
     },
   ].filter((m) => eligibility.methods.includes(m.id));
 
+  const [step, setStep] = React.useState<Step>(1);
+  const [method, setMethod] = React.useState<"crypto">("crypto");
+  const [query, setQuery] = React.useState("");
+  const [selectedId, setSelectedId] = React.useState<string | null>(null);
+
+  // Only one funding method exists today, so step 1 auto-advances to asset
+  // selection instead of making the member click through a single option.
+  React.useEffect(() => {
+    if (step === 1 && methods.length <= 1) setStep(2);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [methods.length]);
+
+  // Default to SOL — this vault is Solana-only, so an arbitrary top-of-feed
+  // asset (previously "bitcoin") is never the right default.
+  const solCoin = coins.find((c) => c.symbol.toUpperCase() === "SOL");
+  const selected = selectedId ?? solCoin?.id ?? "solana";
+  const coin = coins.find((c) => c.id === selected) ?? solCoin;
+  const isSolanaAsset = (coin?.symbol ?? "").toUpperCase() === "SOL";
+
+  const options = React.useMemo(() => {
+    const base = coins.length ? coins : [];
+    const q = query.trim().toLowerCase();
+    const list = q
+      ? base.filter((c) => c.name.toLowerCase().includes(q) || c.symbol.toLowerCase().includes(q))
+      : base;
+    return list.slice(0, 40);
+  }, [coins, query]);
+
+  // Local wallet vault status — checked once, reused across step 3 renders.
+  const [vaultAddress, setVaultAddress] = React.useState<string | null>(null);
+  const [vaultChecked, setVaultChecked] = React.useState(false);
+  const [vaultError, setVaultError] = React.useState<string | null>(null);
+  const [qr, setQr] = React.useState("");
+  const [copied, setCopied] = React.useState(false);
+
+  React.useEffect(() => {
+    void hasVault()
+      .then(async (exists) => {
+        setVaultAddress(exists ? ((await loadVault())?.address ?? null) : null);
+        setVaultChecked(true);
+      })
+      .catch((error: unknown) => {
+        console.error("[v0] deposit vault status failed", error);
+        setVaultError("Local vault status unavailable");
+        setVaultChecked(true);
+      });
+  }, []);
+
+  React.useEffect(() => {
+    if (!vaultAddress) {
+      setQr("");
+      return;
+    }
+    let cancelled = false;
+    void QRCode.toDataURL(vaultAddress, { margin: 1, width: 220 })
+      .then((url: string) => {
+        if (!cancelled) setQr(url);
+      })
+      .catch(() => {
+        if (!cancelled) setQr("");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [vaultAddress]);
+
   return (
     <AppShell eyebrow="Funding" title="Deposit">
-      <Link
-        to="/"
-        className="mb-6 inline-flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="size-3.5" strokeWidth={1.75} /> Back to overview
-      </Link>
+      {step === 1 && (
+        <Link
+          to="/"
+          className="mb-6 inline-flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="size-3.5" strokeWidth={1.75} /> Back to overview
+        </Link>
+      )}
 
-      <SectionHeader title="Method" />
-      <div className="space-y-3">
-        {methods.map((m) => (
-          <button
-            key={m.id}
-            type="button"
-            onClick={() => setMethod(m.id)}
-            className={cn(
-              "flex w-full items-center gap-4 rounded-2xl border bg-card px-5 py-4 text-left transition-colors duration-300 ease-[var(--ease-luxe)]",
-              method === m.id
-                ? "border-gold/40 bg-surface-raised"
-                : "border-border hover:border-border-strong hover:bg-surface-raised",
-            )}
-          >
-            <span
-              className={cn(
-                "grid size-9 shrink-0 place-items-center rounded-full border",
-                method === m.id
-                  ? "border-gold/30 bg-gold-muted text-gold"
-                  : "border-border text-muted-foreground",
-              )}
-            >
-              <m.icon className="size-4" strokeWidth={1.75} />
-            </span>
-            <span className="min-w-0">
-              <span className="block truncate text-sm text-foreground">{m.label}</span>
-              <span className="block truncate text-xs text-muted-foreground">{m.note}</span>
-            </span>
-            <ChevronRight
-              className="ml-auto size-4 shrink-0 text-muted-foreground"
-              strokeWidth={1.75}
-            />
-          </button>
-        ))}
-      </div>
+      {step === 1 && (
+        <>
+          <SectionHeader title="Method" />
+          <div className="space-y-3">
+            {methods.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => {
+                  setMethod(m.id);
+                  setStep(2);
+                }}
+                className={cn(
+                  "flex w-full items-center gap-4 rounded-2xl border bg-card px-5 py-4 text-left transition-colors duration-300 ease-[var(--ease-luxe)]",
+                  method === m.id
+                    ? "border-gold/40 bg-surface-raised"
+                    : "border-border hover:border-border-strong hover:bg-surface-raised",
+                )}
+              >
+                <span
+                  className={cn(
+                    "grid size-9 shrink-0 place-items-center rounded-full border",
+                    method === m.id
+                      ? "border-gold/30 bg-gold-muted text-gold"
+                      : "border-border text-muted-foreground",
+                  )}
+                >
+                  <m.icon className="size-4" strokeWidth={1.75} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-sm text-foreground">{m.label}</span>
+                  <span className="block truncate text-xs text-muted-foreground">{m.note}</span>
+                </span>
+                <ChevronRight
+                  className="ml-auto size-4 shrink-0 text-muted-foreground"
+                  strokeWidth={1.75}
+                />
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
-      {method === "crypto" && (
-        <section className="mt-10">
+      {step === 2 && (
+        <section>
+          <StepBack label="Back" onClick={() => setStep(1)} />
           <SectionHeader title="Asset" />
           <SearchBar
             value={query}
@@ -116,13 +193,16 @@ function Deposit() {
             placeholder="Search asset or ticker"
             className="mb-4"
           />
-          <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
+          <div className="max-h-[28rem] space-y-2 overflow-y-auto pr-1">
             {options.length ? (
               options.map((c) => (
                 <button
                   key={c.id}
                   type="button"
-                  onClick={() => setSelected(c.id)}
+                  onClick={() => {
+                    setSelectedId(c.id);
+                    setStep(3);
+                  }}
                   className={cn(
                     "flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors duration-300 ease-[var(--ease-luxe)]",
                     selected === c.id
@@ -135,14 +215,25 @@ function Deposit() {
                     <span className="block truncate text-sm text-foreground">{c.name}</span>
                     <span className="block text-xs text-muted-foreground">{c.symbol}</span>
                   </span>
+                  {c.symbol.toUpperCase() === "SOL" ? (
+                    <Badge variant="gold" className="ml-auto">
+                      Native
+                    </Badge>
+                  ) : null}
                 </button>
               ))
             ) : (
               <EmptyState title="No match" description="Try a different name or ticker." />
             )}
           </div>
+        </section>
+      )}
 
-          <Card padding="lg" className="mt-6">
+      {step === 3 && (
+        <section>
+          <StepBack label="Back" onClick={() => setStep(2)} />
+          <SectionHeader title="Deposit address" />
+          <Card padding="lg">
             <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
               <div className="flex min-w-0 items-center gap-3">
                 <CoinLogo src={coin?.image} symbol={coin?.symbol ?? "—"} size={36} />
@@ -150,21 +241,82 @@ function Deposit() {
                   <p className="truncate text-sm text-foreground">
                     {coin?.name ?? "Select an asset"}
                   </p>
-                  <p className="text-xs text-muted-foreground">{network}</p>
+                  <p className="text-xs text-muted-foreground">{coin?.symbol ?? ""}</p>
                 </div>
               </div>
-              <Badge variant="secondary">Not configured</Badge>
+              {vaultChecked && vaultAddress ? (
+                <Badge variant={isSolanaAsset ? "gold" : "negative"}>
+                  {isSolanaAsset ? "Supported" : "Not supported"}
+                </Badge>
+              ) : null}
             </div>
-            <div className="mt-6 rounded-xl border border-border bg-surface-raised/50 p-4">
-              <p className="text-sm text-foreground">Deposit address unavailable</p>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                A verified address for {coin?.symbol ?? "this asset"} on {network} has not been
-                configured for this account.
-              </p>
+
+            <div className="mt-6">
+              {!vaultChecked ? (
+                <p className="text-xs text-muted-foreground">Checking local vault…</p>
+              ) : vaultError ? (
+                <p className="text-xs text-negative" role="status">
+                  {vaultError}
+                </p>
+              ) : !vaultAddress ? (
+                <div className="rounded-xl border border-border bg-surface-raised/50 p-4">
+                  <p className="text-sm text-foreground">
+                    Set up your wallet to get a deposit address
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                    Create an encrypted local vault on this device before depositing.
+                  </p>
+                  <Button className="mt-4" size="sm" asChild>
+                    <Link to="/wallet-setup">Set up wallet</Link>
+                  </Button>
+                </div>
+              ) : isSolanaAsset ? (
+                <div className="rounded-xl border border-gold/25 bg-gold-muted/40 p-4">
+                  <p className="text-sm text-foreground">Your Solana deposit address</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <code className="min-w-0 break-all text-xs text-foreground">
+                      {vaultAddress}
+                    </code>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="ml-auto"
+                      onClick={() => {
+                        void navigator.clipboard.writeText(vaultAddress).then(() => {
+                          setCopied(true);
+                          window.setTimeout(() => setCopied(false), 1400);
+                        });
+                      }}
+                      aria-label="Copy deposit address"
+                    >
+                      <Copy /> {copied ? "Copied" : "Copy"}
+                    </Button>
+                  </div>
+                  {qr ? (
+                    <img
+                      src={qr}
+                      alt="QR code for your Solana deposit address"
+                      className="mx-auto mt-5 size-44 rounded-lg"
+                    />
+                  ) : null}
+                  <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
+                    Only send SOL or Solana-based (SPL) assets to this address. Never send funds
+                    until the asset, network, and destination address are verified.
+                  </p>
+                </div>
+              ) : (
+                <div className="rounded-xl border border-negative/30 bg-negative/5 p-4">
+                  <div className="flex items-center gap-2 text-negative">
+                    <AlertTriangle className="size-4" strokeWidth={1.75} />
+                    <p className="text-sm font-medium">Not available on this wallet</p>
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                    SOL and Solana-based assets are supported for deposit. {coin?.name ?? "This asset"}{" "}
+                    isn&apos;t available on this wallet.
+                  </p>
+                </div>
+              )}
             </div>
-            <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-              Never send funds until the asset, network, and destination address are verified.
-            </p>
           </Card>
         </section>
       )}

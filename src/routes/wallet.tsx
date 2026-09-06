@@ -11,7 +11,6 @@ import { useMarkets, usePortfolio } from "@/lib/use-markets";
 import { getWalletData } from "@/lib/wallet.functions";
 import { useQuery } from "@tanstack/react-query";
 import { hasVault, loadVault } from "@/lib/wallet-vault";
-import { Connection, clusterApiUrl, PublicKey } from "@solana/web3.js";
 
 export const Route = createFileRoute("/wallet")({ component: Wallet });
 function Wallet() {
@@ -41,6 +40,7 @@ function Wallet() {
     enabled: Boolean(vaultAddress),
     queryFn: async () => {
       if (!vaultAddress) return null;
+      const { Connection, clusterApiUrl, PublicKey } = await import("@solana/web3.js");
       const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
       const lamports = await connection.getBalance(new PublicKey(vaultAddress));
       return lamports / 1_000_000_000;

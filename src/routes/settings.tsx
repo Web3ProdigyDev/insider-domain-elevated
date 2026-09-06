@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Bell, Shield, LogOut, ChevronRight, Trash2 } from "lucide-react";
+import { Bell, Shield, LogOut, ChevronRight, Trash2, UserPlus } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { MemberCard } from "@/components/cards/member-card";
@@ -84,6 +84,14 @@ function Settings() {
       <section className="mt-10">
         <SectionHeader title="Preferences" />
         <div className="space-y-3">
+          <Link
+            to="/invites"
+            className="flex items-center gap-4 rounded-2xl border border-border bg-card px-5 py-4 transition-colors duration-300 ease-[var(--ease-luxe)] hover:border-border-strong hover:bg-surface-raised"
+          >
+            <UserPlus className="size-4 text-gold" strokeWidth={1.75} />
+            <span className="text-sm text-foreground">Invite members</span>
+            <ChevronRight className="ml-auto size-4 text-muted-foreground" strokeWidth={1.75} />
+          </Link>
           <Link
             to="/notifications"
             className="flex items-center gap-4 rounded-2xl border border-border bg-card px-5 py-4 transition-colors duration-300 ease-[var(--ease-luxe)] hover:border-border-strong hover:bg-surface-raised"

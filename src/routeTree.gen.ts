@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AssistantRouteImport } from './routes/assistant'
 import { Route as CircleRouteImport } from './routes/circle'
 import { Route as DepositRouteImport } from './routes/deposit'
+import { Route as InvitesRouteImport } from './routes/invites'
 import { Route as MarketsRouteImport } from './routes/markets'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as NotificationsRouteImport } from './routes/notifications'
@@ -57,6 +58,11 @@ const CircleRoute = CircleRouteImport.update({
 const DepositRoute = DepositRouteImport.update({
   id: '/deposit',
   path: '/deposit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InvitesRoute = InvitesRouteImport.update({
+  id: '/invites',
+  path: '/invites',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MarketsRoute = MarketsRouteImport.update({
@@ -161,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/assistant': typeof AssistantRoute
   '/circle': typeof CircleRoute
   '/deposit': typeof DepositRoute
+  '/invites': typeof InvitesRoute
   '/markets': typeof MarketsRoute
   '/messages': typeof MessagesRoute
   '/notifications': typeof NotificationsRoute
@@ -187,6 +194,7 @@ export interface FileRoutesByTo {
   '/assistant': typeof AssistantRoute
   '/circle': typeof CircleRoute
   '/deposit': typeof DepositRoute
+  '/invites': typeof InvitesRoute
   '/markets': typeof MarketsRoute
   '/messages': typeof MessagesRoute
   '/notifications': typeof NotificationsRoute
@@ -214,6 +222,7 @@ export interface FileRoutesById {
   '/assistant': typeof AssistantRoute
   '/circle': typeof CircleRoute
   '/deposit': typeof DepositRoute
+  '/invites': typeof InvitesRoute
   '/markets': typeof MarketsRoute
   '/messages': typeof MessagesRoute
   '/notifications': typeof NotificationsRoute
@@ -242,6 +251,7 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/circle'
     | '/deposit'
+    | '/invites'
     | '/markets'
     | '/messages'
     | '/notifications'
@@ -268,6 +278,7 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/circle'
     | '/deposit'
+    | '/invites'
     | '/markets'
     | '/messages'
     | '/notifications'
@@ -294,6 +305,7 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/circle'
     | '/deposit'
+    | '/invites'
     | '/markets'
     | '/messages'
     | '/notifications'
@@ -321,6 +333,7 @@ export interface RootRouteChildren {
   AssistantRoute: typeof AssistantRoute
   CircleRoute: typeof CircleRoute
   DepositRoute: typeof DepositRoute
+  InvitesRoute: typeof InvitesRoute
   MarketsRoute: typeof MarketsRoute
   MessagesRoute: typeof MessagesRoute
   NotificationsRoute: typeof NotificationsRoute
@@ -375,6 +388,13 @@ declare module '@tanstack/react-router' {
       path: '/deposit'
       fullPath: '/deposit'
       preLoaderRoute: typeof DepositRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invites': {
+      id: '/invites'
+      path: '/invites'
+      fullPath: '/invites'
+      preLoaderRoute: typeof InvitesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/markets': {
@@ -541,6 +561,7 @@ const rootRouteChildren: RootRouteChildren = {
   AssistantRoute: AssistantRoute,
   CircleRoute: CircleRoute,
   DepositRoute: DepositRoute,
+  InvitesRoute: InvitesRoute,
   MarketsRoute: MarketsRoute,
   MessagesRoute: MessagesRoute,
   NotificationsRoute: NotificationsRoute,

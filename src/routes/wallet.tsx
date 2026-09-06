@@ -11,6 +11,7 @@ import { useMarkets, usePortfolio } from "@/lib/use-markets";
 import { getWalletData } from "@/lib/wallet.functions";
 import { useQuery } from "@tanstack/react-query";
 import { hasVault, loadVault } from "@/lib/wallet-vault";
+import { Connection, clusterApiUrl, PublicKey } from "@solana/web3.js";
 
 export const Route = createFileRoute("/wallet")({ component: Wallet });
 function Wallet() {
@@ -34,6 +35,18 @@ function Wallet() {
     queryKey: ["wallet-data"],
     queryFn: () => getWalletData(),
     retry: false,
+  });
+  const solBalanceQuery = useQuery({
+    queryKey: ["solana-devnet-balance", vaultAddress],
+    enabled: Boolean(vaultAddress),
+    queryFn: async () => {
+      if (!vaultAddress) return null;
+      const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+      const lamports = await connection.getBalance(new PublicKey(vaultAddress));
+      return lamports / 1_000_000_000;
+    },
+    retry: 1,
+    staleTime: 30_000,
   });
   const wallet = walletQuery.data;
   const balances = Object.fromEntries(
@@ -80,7 +93,7 @@ function Wallet() {
                 {vaultError}
               </p>
             ) : vaultAddress ? (
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex w-full flex-wrap items-center gap-3">
                 <span className="text-xs text-muted-foreground">Public address</span>
                 <code className="truncate text-xs text-foreground">
                   {vaultAddress.slice(0, 6)}…{vaultAddress.slice(-4)}
@@ -99,6 +112,16 @@ function Wallet() {
                 >
                   <Copy /> {copied ? "Copied" : "Copy"}
                 </Button>
+                <div className="basis-full flex items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
+                  <span>Devnet SOL</span>
+                  <span className="numeric text-foreground">
+                    {solBalanceQuery.isLoading
+                      ? "Loading…"
+                      : solBalanceQuery.isError
+                        ? "Unavailable"
+                        : `${solBalanceQuery.data?.toFixed(4) ?? "0.0000"} SOL`}
+                  </span>
+                </div>
               </div>
             ) : (
               <div className="flex flex-wrap items-center justify-between gap-3">

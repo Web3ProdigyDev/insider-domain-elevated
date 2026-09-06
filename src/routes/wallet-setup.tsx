@@ -7,33 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { notify } from "@/lib/notify";
 import { createClient } from "@/lib/supabase/client";
+import { createWallet, importWallet, type Wallet } from "@/lib/wallet-vault";
 import { useRequireMember } from "@/lib/use-auth";
-import { Wallet } from "ethers";
 
 export const Route = createFileRoute("/wallet-setup")({
   head: () => ({ meta: [{ title: "Secure your wallet — Insider Domain" }] }),
   component: WalletSetup,
 });
-
-async function saveVault(wallet: Wallet, password: string) {
-  const encrypted = await wallet.encrypt(password);
-  const database = await new Promise<IDBDatabase>((resolve, reject) => {
-    const request = indexedDB.open("insider-domain-vault", 1);
-    request.onupgradeneeded = () => request.result.createObjectStore("vault");
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-  await new Promise<void>((resolve, reject) => {
-    const request = database
-      .transaction("vault", "readwrite")
-      .objectStore("vault")
-      .put({ address: wallet.address, encrypted }, "primary");
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
-  });
-  database.close();
-  return wallet.address;
-}
 
 function WalletSetup() {
   const navigate = useNavigate();
@@ -90,18 +70,14 @@ function WalletSetup() {
     try {
       const wallet =
         createdWallet ??
-        (mode === "create"
-          ? Wallet.createRandom()
-          : material.trim().split(/\s+/).length >= 12
-            ? Wallet.fromPhrase(material.trim())
-            : new Wallet(material.trim()));
+        (mode === "create" ? await createWallet(password) : await importWallet(material, password));
       if (mode === "create" && !createdWallet) {
         setCreatedWallet(wallet);
-        setRecoveryPhrase(wallet.mnemonic?.phrase ?? "");
+        setRecoveryPhrase(wallet.mnemonic);
         setBusy(false);
         return;
       }
-      const address = await saveVault(wallet, password);
+      const address = wallet.address;
       notify.success(
         "Wallet secured",
         `Your wallet ${address.slice(0, 8)}…${address.slice(-6)} is encrypted on this device.`,
@@ -119,7 +95,7 @@ function WalletSetup() {
     <AuthShell
       eyebrow="Private setup"
       title="Secure your wallet"
-      description="Choose how to begin. Key material is encrypted in this browser and never uploaded to Insider Domain."
+      description="Choose how to begin. Solana key material is encrypted in this browser and never uploaded to Insider Domain."
     >
       <Card padding="lg">
         {mode === "choose" ? (
@@ -143,7 +119,7 @@ function WalletSetup() {
               <Upload className="mb-8 size-5 text-gold transition-transform group-hover:-translate-y-1" />
               <p className="text-sm text-foreground">Import wallet</p>
               <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                Use a seed phrase or private key already in your care.
+                Use a Solana seed phrase already in your care.
               </p>
             </button>
           </div>
@@ -177,7 +153,7 @@ function WalletSetup() {
             ) : null}
             {mode === "import" ? (
               <Input
-                label="Seed phrase or private key"
+                label="Solana recovery phrase"
                 type={showMaterial ? "text" : "password"}
                 autoComplete="off"
                 value={material}
@@ -192,7 +168,7 @@ function WalletSetup() {
                   </button>
                 }
                 onChange={(event) => setMaterial(event.target.value)}
-                placeholder="Enter wallet material"
+                placeholder="Enter 12-word Solana phrase"
               />
             ) : (
               <div className="rounded-2xl border border-border bg-surface p-4 text-sm text-muted-foreground">

@@ -63,6 +63,21 @@ function Onboarding() {
       .maybeSingle();
     setBusy(false);
     if (updateError || !updatedProfile) {
+      console.error("[v0] onboarding profile update failed", {
+        error: updateError
+          ? {
+              code: updateError.code,
+              message: updateError.message,
+              details: updateError.details,
+              hint: updateError.hint,
+            }
+          : null,
+        returnedProfile: updatedProfile,
+        userId: session.user.id,
+      });
+      if (!updateError && !updatedProfile) {
+        console.error("[v0] onboarding profile update returned zero rows with no error");
+      }
       setError("We could not save your details. Please check the fields and try again.");
       return;
     }

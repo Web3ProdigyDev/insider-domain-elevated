@@ -86,7 +86,25 @@ function Onboarding() {
         code: inviteCode.trim(),
         user_id: session.user.id,
       });
-      if (redeemError || !redeemed) {
+      if (redeemError) {
+        console.error("[v0] invite code redemption failed", {
+          error: {
+            code: redeemError.code,
+            message: redeemError.message,
+            details: redeemError.details,
+            hint: redeemError.hint,
+          },
+          returnedValue: redeemed,
+          userId: session.user.id,
+        });
+        setInviteNotice(
+          "That invite code was invalid or unavailable. You can continue as a member.",
+        );
+      } else if (!redeemed) {
+        console.warn("[v0] invite code redemption returned false", {
+          returnedValue: redeemed,
+          userId: session.user.id,
+        });
         setInviteNotice(
           "That invite code was invalid or unavailable. You can continue as a member.",
         );

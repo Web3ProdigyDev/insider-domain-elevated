@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { getMemberDetail } from "@/lib/admin.functions";
 import { useRequireMember } from "@/lib/use-auth";
 
-export const Route = createFileRoute("/admin/$userId")({ component: AdminMemberDetail });
+export const Route = createFileRoute("/asset/$id")({ component: AdminMemberDetail });
 
 function AdminMemberDetail() {
   const { userId } = Route.useParams();

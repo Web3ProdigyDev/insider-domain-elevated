@@ -83,8 +83,13 @@ function WalletSetup() {
         `Your wallet ${address.slice(0, 8)}…${address.slice(-6)} is encrypted on this device.`,
       );
       void navigate({ to: "/" });
-    } catch {
-      setError("That wallet material could not be imported. Check it and try again.");
+    } catch (err) {
+      console.error("[v0] wallet setup failed", { mode, error: err });
+      setError(
+        mode === "create"
+          ? "Your wallet could not be generated. Please try again."
+          : "That wallet material could not be imported. Check it and try again.",
+      );
     } finally {
       setBusy(false);
     }

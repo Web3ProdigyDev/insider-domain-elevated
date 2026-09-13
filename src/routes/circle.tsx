@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { Users } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { MemberCard } from "@/components/cards/member-card";
 import { PostCard } from "@/components/cards/post-card";
 import { SectionHeader } from "@/components/common/section-header";
+import { EmptyState } from "@/components/common/empty-state";
 import { Modal } from "@/components/common/modal";
 import {
   SegmentedTabs,
@@ -88,14 +90,22 @@ function Circle() {
           </Card>
 
           <div className="mt-8 space-y-3">
-            {posts.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                onToggleLike={toggleLike}
-                onComment={addComment}
+            {posts.length ? (
+              posts.map((post) => (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  onToggleLike={toggleLike}
+                  onComment={addComment}
+                />
+              ))
+            ) : (
+              <EmptyState
+                icon={<Users />}
+                title="No posts yet"
+                description="Notes shared by members of the circle will appear here."
               />
-            ))}
+            )}
           </div>
         </SegmentedTabsContent>
 
@@ -111,11 +121,11 @@ function Circle() {
           <section className="mt-10">
             <SectionHeader title="Introduced by you" />
             <div className="space-y-3">
-              <Card padding="default">
-                <p className="text-sm text-muted-foreground">
-                  No member directory is configured yet.
-                </p>
-              </Card>
+              <EmptyState
+                icon={<Users />}
+                title="No member directory yet"
+                description="Members you introduce to the circle will be listed here."
+              />
             </div>
           </section>
         </SegmentedTabsContent>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { MessageCircle, Send } from "lucide-react";
+import { EmptyState } from "@/components/common/empty-state";
 import { AppShell } from "@/components/layout/app-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -90,9 +91,12 @@ function Messages() {
               </form>
             </>
           ) : (
-            <div className="m-auto text-center text-sm text-muted-foreground">
-              No conversations yet.
-            </div>
+            <EmptyState
+              icon={<MessageCircle />}
+              title="No conversations yet"
+              description="Direct messages with the desk and other members will appear here."
+              className="m-auto border-none py-0"
+            />
           )}
         </Card>
       </div>

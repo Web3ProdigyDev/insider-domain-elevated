@@ -1,160 +1,189 @@
+import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, WalletCards } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft, TrendingDown, TrendingUp } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { EmptyState } from "@/components/common/empty-state";
-import { SkeletonCard, SkeletonList } from "@/components/common/skeletons";
+import { Skeleton, SkeletonCard } from "@/components/common/skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getMemberDetail } from "@/lib/admin.functions";
-import { useRequireMember } from "@/lib/use-auth";
+import { SectionHeader } from "@/components/common/section-header";
+import { Sparkline } from "@/components/common/sparkline";
+import { CoinLogo } from "@/components/common/coin-logo";
+import { TradeSheet, type TradeMode } from "@/components/trade/trade-sheet";
+import { formatPrice, formatCompact } from "@/components/cards/coin-card";
+import { formatSigned } from "@/lib/format";
+import { useMarkets, usePortfolio, type Position } from "@/lib/use-markets";
+import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/asset/$id")({ component: AdminMemberDetail });
+export const Route = createFileRoute("/asset/$id")({
+  head: ({ params }) => ({
+    meta: [
+      { title: `${params.id} — Insider Domain` },
+      {
+        name: "description",
+        content: "Live price, performance and holdings for this instrument.",
+      },
+    ],
+  }),
+  component: AssetDetail,
+});
 
-function AdminMemberDetail() {
-  const { userId } = Route.useParams();
-  const { ready, allowed } = useRequireMember({ adminOnly: true });
-  const detailQuery = useQuery({
-    queryKey: ["admin-member", userId],
-    queryFn: () => getMemberDetail(userId),
-    enabled: ready && allowed,
-    retry: false,
-  });
-  if (!ready || !allowed) return null;
-  if (detailQuery.isLoading)
+function Stat({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5">
+      <p className="text-eyebrow">{label}</p>
+      <p className="numeric mt-3 text-sm text-foreground">{children}</p>
+    </div>
+  );
+}
+
+function AssetDetail() {
+  const { id } = Route.useParams();
+  const { byId, isLoading, isError } = useMarkets();
+  const { positions } = usePortfolio();
+
+  const coin = byId.get(id);
+  const position = positions.find((p: Position) => p.id === id);
+  const held = (position?.amount ?? 0) > 0;
+
+  const [sheet, setSheet] = React.useState<TradeMode | null>(null);
+
+  if (isLoading) {
     return (
-      <AppShell eyebrow="Admin" title="Member detail">
+      <AppShell eyebrow="Instrument" title="Loading…">
         <SkeletonCard />
-        <div className="mt-6">
-          <SkeletonList rows={4} />
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 rounded-2xl" />
+          ))}
         </div>
       </AppShell>
     );
-  if (detailQuery.isError || !detailQuery.data)
+  }
+
+  if (isError || !coin) {
     return (
-      <AppShell eyebrow="Admin" title="Member unavailable">
+      <AppShell eyebrow="Instrument" title="Not found">
         <EmptyState
-          icon={<WalletCards />}
-          title="Member unavailable"
-          description="This member could not be loaded."
+          title="Instrument not found"
+          description="This asset couldn't be loaded. It may not be listed, or live pricing is temporarily unavailable."
+          action={
+            <Button asChild size="sm">
+              <Link to="/markets">Back to markets</Link>
+            </Button>
+          }
         />
       </AppShell>
     );
-  const { profile, balances, transactions } = detailQuery.data;
-  const name = [profile.first_name, profile.surname].filter(Boolean).join(" ") || "Unnamed member";
+  }
+
+  const positive = coin.change24h >= 0;
+
   return (
     <AppShell
-      eyebrow="Admin"
-      title={name}
-      description={profile.email || (profile.username ? `@${profile.username}` : "Member detail")}
+      eyebrow="Instrument"
+      title={coin.name}
       action={
         <Button variant="ghost" size="sm" asChild>
-          <Link to="/admin">
-            <ArrowLeft /> Back to members
+          <Link to="/markets">
+            <ArrowLeft /> Markets
           </Link>
         </Button>
       }
     >
       <div className="flex flex-col gap-8">
-        <section className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <p className="text-eyebrow">Email</p>
-            <p className="mt-3 truncate text-sm text-foreground">
-              {profile.email || "Not available"}
-            </p>
+        <section className="rounded-2xl border border-border bg-card p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-4">
+              <CoinLogo src={coin.image} symbol={coin.symbol} size={44} />
+              <div className="min-w-0">
+                <p className="truncate text-sm text-foreground">{coin.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {coin.symbol} · Rank #{coin.rank}
+                </p>
+              </div>
+            </div>
+            {held ? <Badge variant="gold">Held</Badge> : null}
           </div>
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <p className="text-eyebrow">Role</p>
-            <div className="mt-3">
-              <Badge variant={profile.role === "admin" ? "default" : "outline"}>
-                {profile.role}
-              </Badge>
+
+          <div className="mt-6 flex items-end justify-between gap-4">
+            <div>
+              <p className="numeric text-3xl tracking-tight text-foreground">
+                {formatPrice(coin.price)}
+              </p>
+              <p
+                className={cn(
+                  "numeric mt-1 inline-flex items-center gap-1 text-sm",
+                  positive ? "text-positive" : "text-negative",
+                )}
+              >
+                {positive ? (
+                  <TrendingUp className="size-3.5" strokeWidth={1.75} />
+                ) : (
+                  <TrendingDown className="size-3.5" strokeWidth={1.75} />
+                )}
+                {formatSigned(coin.change24h)} · 24h
+              </p>
             </div>
           </div>
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <p className="text-eyebrow">Onboarding</p>
-            <p className="mt-3 text-sm text-foreground">
-              {profile.onboarding_completed ? "Completed" : "Pending"}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <p className="text-eyebrow">Joined</p>
-            <p className="mt-3 text-sm text-foreground">
-              {new Date(profile.created_at).toLocaleDateString()}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <p className="text-eyebrow">Member ID</p>
-            <code className="mt-3 block truncate text-xs text-muted-foreground">{profile.id}</code>
+
+          <Sparkline
+            seed={`asset-${coin.id}`}
+            change={coin.change24h}
+            height={96}
+            className="mt-6"
+          />
+        </section>
+
+        {held && position ? (
+          <section>
+            <SectionHeader title="Your position" />
+            <div className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card px-5 py-4">
+              <div>
+                <p className="numeric text-sm text-foreground">
+                  {position.amount.toLocaleString()} {coin.symbol}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {(position.weight * 100).toFixed(1)}% of portfolio
+                </p>
+              </div>
+              <p className="numeric text-sm text-foreground">{formatPrice(position.value)}</p>
+            </div>
+          </section>
+        ) : null}
+
+        <section>
+          <SectionHeader title="Market stats" />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <Stat label="Market cap">{formatCompact(coin.marketCap)}</Stat>
+            <Stat label="24h volume">{formatCompact(coin.volume24h)}</Stat>
+            <Stat label="Rank">#{coin.rank}</Stat>
           </div>
         </section>
-        <section>
-          <h2 className="text-lg font-medium text-foreground">Wallet balances</h2>
-          {balances.length ? (
-            <div className="mt-4 flex flex-col gap-3">
-              {balances.map((balance) => (
-                <div
-                  key={balance.id}
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-4 sm:px-5"
-                >
-                  <span className="text-sm text-foreground">{balance.asset_id}</span>
-                  <span className="numeric text-sm text-foreground">{balance.amount}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="mt-4">
-              <EmptyState
-                icon={<WalletCards />}
-                title="No balances yet"
-                description="This member has no recorded wallet balances."
-              />
-            </div>
-          )}
-        </section>
-        <section>
-          <h2 className="text-lg font-medium text-foreground">Transaction history</h2>
-          {transactions.length ? (
-            <div className="mt-4 overflow-x-auto rounded-2xl border border-border">
-              <table className="w-full min-w-[640px] text-left text-sm">
-                <thead className="border-b border-border bg-surface">
-                  <tr>
-                    <th className="px-5 py-3 font-medium text-muted-foreground">Type</th>
-                    <th className="px-5 py-3 font-medium text-muted-foreground">Asset</th>
-                    <th className="px-5 py-3 font-medium text-muted-foreground">Amount</th>
-                    <th className="px-5 py-3 font-medium text-muted-foreground">Status</th>
-                    <th className="px-5 py-3 font-medium text-muted-foreground">Created</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactions.map((transaction) => (
-                    <tr key={transaction.id} className="border-b border-border last:border-0">
-                      <td className="px-5 py-4 text-foreground">{transaction.type}</td>
-                      <td className="px-5 py-4 text-muted-foreground">{transaction.asset_id}</td>
-                      <td className="px-5 py-4 numeric text-foreground">{transaction.amount}</td>
-                      <td className="px-5 py-4">
-                        <Badge variant="outline">{transaction.status}</Badge>
-                      </td>
-                      <td className="px-5 py-4 text-muted-foreground">
-                        {new Date(transaction.created_at).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="mt-4">
-              <EmptyState
-                icon={<WalletCards />}
-                title="No transactions yet"
-                description="This member has no recorded transaction history."
-              />
-            </div>
-          )}
+
+        <section className="flex gap-3">
+          <Button full onClick={() => setSheet("buy")}>
+            Buy {coin.symbol}
+          </Button>
+          <Button full variant="secondary" disabled={!held} onClick={() => setSheet("sell")}>
+            Sell {coin.symbol}
+          </Button>
         </section>
       </div>
+
+      {sheet ? (
+        <TradeSheet
+          mode={sheet}
+          open={sheet !== null}
+          onOpenChange={(open) => {
+            if (!open) setSheet(null);
+          }}
+          symbol={coin.symbol}
+          name={coin.name}
+          price={coin.price}
+        />
+      ) : null}
     </AppShell>
   );
 }

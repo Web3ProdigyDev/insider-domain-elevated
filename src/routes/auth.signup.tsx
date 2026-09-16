@@ -19,19 +19,18 @@ export const Route = createFileRoute("/auth/signup")({
 
 function SignUpRoute() {
   const [email, setEmail] = React.useState("");
-  const [name, setName] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
   const [submitted, setSubmitted] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
-  const ready = name.trim().length >= 2 && email.includes("@") && password.length >= 8;
+  const ready = email.includes("@") && password.length >= 8;
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!ready || busy) return;
     setError("");
     setBusy(true);
-    const result = await signUpWithPassword({ email, password, name });
+    const result = await signUpWithPassword({ email, password });
     if (result.error) {
       setError("We could not create that membership. Check your details and try again.");
       setBusy(false);
@@ -63,16 +62,6 @@ function SignUpRoute() {
               Confirm it, then sign in to continue.
             </div>
           ) : null}
-          <Input
-            label="Full name"
-            autoComplete="name"
-            value={name}
-            onChange={(event) => {
-              setName(event.target.value);
-              setError("");
-            }}
-            placeholder="Your name"
-          />
           <Input
             label="Email address"
             type="email"

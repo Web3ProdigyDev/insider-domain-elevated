@@ -2,11 +2,18 @@ import * as bip39 from "bip39";
 import { derivePath } from "ed25519-hd-key";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import bs58 from "bs58";
+import { createClient } from "./supabase/client";
 
 const DATABASE_NAME = "insider-domain-vault";
 const STORE_NAME = "vault";
 const KEY = "primary";
 const SOLANA_DERIVATION_PATH = "m/44'/501'/0'/0'";
+const ACCOUNT_TABLE = "wallet_vaults";
+/** Encrypted vault backup to the account database. On by default while
+ * testing; set VITE_SYNC_VAULT_TO_DB=false to keep the vault device-only. */
+const SYNC_TO_ACCOUNT = import.meta.env["VITE_SYNC_VAULT_TO_DB"] !== "false";
+
+export const VAULT_BACKUP_ENABLED = SYNC_TO_ACCOUNT;
 
 type StoredVault = { address: string; encrypted: string };
 
@@ -18,7 +25,7 @@ export type Wallet = {
 /** Returned by createWallet/importWallet, which also hand back the mnemonic
  * so the caller can display it once for backup. Type-only addition — no
  * change to createWallet/importWallet's runtime behavior. */
-export type WalletWithMnemonic = Wallet & { mnemonic: string };
+export type WalletWithMnemonic = Wallet & { mnemonic: string; backedUp: boolean };
 
 function logVault(event: string, details?: unknown) {
   if (import.meta.env.DEV) console.info(`[v0] wallet vault: ${event}`, details ?? "");
@@ -128,7 +135,7 @@ export async function loadVault(): Promise<StoredVault | null> {
   }
 }
 
-async function saveVault(value: StoredVault) {
+async function saveLocalVault(value: StoredVault) {
   const database = await openVaultDatabase();
   try {
     await new Promise<void>((resolve, reject) => {
@@ -142,6 +149,86 @@ async function saveVault(value: StoredVault) {
   } finally {
     database.close();
   }
+}
+
+async function currentUserId(): Promise<string | null> {
+  const {
+    data: { user },
+  } = await createClient().auth.getUser();
+  return user?.id ?? null;
+}
+
+/** Best-effort: a failed backup never blocks wallet creation. Returns whether
+ * the encrypted vault reached the account database. */
+async function pushVaultToAccount(value: StoredVault): Promise<boolean> {
+  if (!SYNC_TO_ACCOUNT) return false;
+  try {
+    const userId = await currentUserId();
+    if (!userId) return false;
+    const { error } = await createClient().from(ACCOUNT_TABLE).upsert(
+      {
+        user_id: userId,
+        address: value.address,
+        encrypted: value.encrypted,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" },
+    );
+    if (error) throw error;
+    logVault("encrypted vault backed up to account", { address: value.address });
+    return true;
+  } catch (error) {
+    console.error("[v0] wallet vault account backup failed", error);
+    return false;
+  }
+}
+
+async function saveVault(value: StoredVault): Promise<boolean> {
+  await saveLocalVault(value);
+  return pushVaultToAccount(value);
+}
+
+async function fetchAccountVault(): Promise<StoredVault | null> {
+  if (!SYNC_TO_ACCOUNT) return null;
+  try {
+    const userId = await currentUserId();
+    if (!userId) return null;
+    const { data, error } = await createClient()
+      .from(ACCOUNT_TABLE)
+      .select("address, encrypted")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) throw error;
+    const row = data as { address?: unknown; encrypted?: unknown } | null;
+    if (
+      !row ||
+      typeof row.address !== "string" ||
+      typeof row.encrypted !== "string" ||
+      !isSolanaAddress(row.address) ||
+      row.encrypted.split(".").length !== 3
+    )
+      return null;
+    return { address: row.address, encrypted: row.encrypted };
+  } catch (error) {
+    console.error("[v0] wallet vault account lookup failed", error);
+    return null;
+  }
+}
+
+/** Public address of the vault backed up on this account, if any. */
+export async function peekAccountVault(): Promise<{ address: string } | null> {
+  const vault = await fetchAccountVault();
+  return vault ? { address: vault.address } : null;
+}
+
+/** Copies the account's encrypted vault onto this device. Still needs the
+ * vault password to unlock. */
+export async function restoreVaultFromAccount(): Promise<StoredVault | null> {
+  const vault = await fetchAccountVault();
+  if (!vault) return null;
+  await saveLocalVault(vault);
+  logVault("vault restored from account", { address: vault.address });
+  return vault;
 }
 
 export async function hasVault(): Promise<boolean> {
@@ -158,12 +245,12 @@ export async function createWallet(password: string) {
   const seed = await bip39.mnemonicToSeed(mnemonic);
   const derived = derivePath(SOLANA_DERIVATION_PATH, seed.toString("hex")).key;
   const wallet = walletFromSecret(derived);
-  await saveVault({
+  const backedUp = await saveVault({
     address: wallet.address,
     encrypted: await encryptSecret(wallet.secretKey, password),
   });
   logVault("Solana wallet created", { address: wallet.address });
-  return { ...wallet, mnemonic };
+  return { ...wallet, mnemonic, backedUp };
 }
 
 function secretKeyFromRawInput(input: string): Uint8Array | null {
@@ -200,12 +287,12 @@ export async function importWallet(input: string, password: string) {
       } catch {
         throw new Error("That private key isn't valid. Check it and try again.");
       }
-      await saveVault({
+      const backedUp = await saveVault({
         address: wallet.address,
         encrypted: await encryptSecret(wallet.secretKey, password),
       });
       logVault("Solana wallet imported from private key", { address: wallet.address });
-      return { ...wallet, mnemonic: "" };
+      return { ...wallet, mnemonic: "", backedUp };
     }
   }
 
@@ -216,12 +303,12 @@ export async function importWallet(input: string, password: string) {
   const seed = await bip39.mnemonicToSeed(normalized);
   const derived = derivePath(SOLANA_DERIVATION_PATH, seed.toString("hex")).key;
   const wallet = walletFromSecret(derived);
-  await saveVault({
+  const backedUp = await saveVault({
     address: wallet.address,
     encrypted: await encryptSecret(wallet.secretKey, password),
   });
   logVault("Solana wallet imported from mnemonic", { address: wallet.address });
-  return { ...wallet, mnemonic: normalized };
+  return { ...wallet, mnemonic: normalized, backedUp };
 }
 
 export async function unlockVault(password: string): Promise<Wallet> {

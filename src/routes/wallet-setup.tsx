@@ -7,7 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { notify } from "@/lib/notify";
 import { createClient } from "@/lib/supabase/client";
-import { createWallet, importWallet, type WalletWithMnemonic } from "@/lib/wallet-vault";
+import {
+  createWallet,
+  importWallet,
+  VAULT_BACKUP_ENABLED,
+  type WalletWithMnemonic,
+} from "@/lib/wallet-vault";
 import { useRequireMember } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/wallet-setup")({
@@ -80,7 +85,7 @@ function WalletSetup() {
       const address = wallet.address;
       notify.success(
         "Wallet secured",
-        `Your wallet ${address.slice(0, 8)}…${address.slice(-6)} is encrypted on this device.`,
+        `Your wallet ${address.slice(0, 8)}…${address.slice(-6)} is encrypted on this device${wallet.backedUp ? " and backed up to your account" : ""}.`,
       );
       void navigate({ to: "/" });
     } catch (err) {
@@ -100,7 +105,7 @@ function WalletSetup() {
     <AuthShell
       eyebrow="Private setup"
       title="Secure your wallet"
-      description="Choose how to begin. Solana key material is encrypted in this browser and never uploaded to Insider Domain."
+      description="Choose how to begin. Your wallet is encrypted in this browser before anything is saved, and your vault password never leaves this device."
     >
       <Card padding="lg">
         {mode === "choose" ? (
@@ -124,7 +129,7 @@ function WalletSetup() {
               <Upload className="mb-8 size-5 text-gold transition-transform group-hover:-translate-y-1" />
               <p className="text-sm text-foreground">Import wallet</p>
               <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                Use a Solana seed phrase already in your care.
+                Use a Solana recovery phrase or private key you already hold.
               </p>
             </button>
           </div>
@@ -132,7 +137,9 @@ function WalletSetup() {
           <form onSubmit={submit} className="space-y-5">
             <div className="flex items-center gap-3 rounded-2xl border border-gold/20 bg-gold-muted/40 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
               <LockKeyhole className="size-4 shrink-0 text-gold" />
-              Only an encrypted vault is saved in IndexedDB on this device.
+              {VAULT_BACKUP_ENABLED
+                ? "Only an encrypted vault is saved: on this device, and as a backup on your account."
+                : "Only an encrypted vault is saved in IndexedDB on this device."}
             </div>
             {recoveryPhrase ? (
               <div className="rounded-2xl border border-gold/30 bg-gold-muted/50 p-4">
@@ -174,7 +181,6 @@ function WalletSetup() {
                   </button>
                 }
                 onChange={(event) => setMaterial(event.target.value)}
-                placeholder="Enter 12-word Solana phrase"
               />
             ) : (
               <div className="rounded-2xl border border-border bg-surface p-4 text-sm text-muted-foreground">

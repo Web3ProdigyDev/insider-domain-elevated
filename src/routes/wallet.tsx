@@ -10,7 +10,9 @@ import { SkeletonCard } from "@/components/common/skeletons";
 import { useMarkets, usePortfolio } from "@/lib/use-markets";
 import { getWalletData } from "@/lib/wallet.functions";
 import { useQuery } from "@tanstack/react-query";
-import { hasVault, loadVault } from "@/lib/wallet-vault";
+import { OnchainAssets } from "@/components/wallet/onchain-assets";
+import { notify } from "@/lib/notify";
+import { hasVault, loadVault, peekAccountVault, restoreVaultFromAccount } from "@/lib/wallet-vault";
 
 export const Route = createFileRoute("/wallet")({ component: Wallet });
 function Wallet() {
@@ -18,35 +20,51 @@ function Wallet() {
   const [vaultChecked, setVaultChecked] = useState(false);
   const [copied, setCopied] = useState(false);
   const [vaultError, setVaultError] = useState<string | null>(null);
+  const [accountBackup, setAccountBackup] = useState<{ address: string } | null>(null);
+  const [restoring, setRestoring] = useState(false);
   useEffect(() => {
-    void hasVault()
-      .then(async (exists) => {
-        setVaultAddress(exists ? ((await loadVault())?.address ?? null) : null);
-        setVaultChecked(true);
-      })
-      .catch((error: unknown) => {
+    let active = true;
+    void (async () => {
+      try {
+        const exists = await hasVault();
+        const address = exists ? ((await loadVault())?.address ?? null) : null;
+        if (!active) return;
+        setVaultAddress(address);
+        if (!address) {
+          const backup = await peekAccountVault();
+          if (active) setAccountBackup(backup);
+        }
+      } catch (error: unknown) {
         console.error("[v0] wallet vault status failed", error);
-        setVaultError("Local vault status unavailable");
-        setVaultChecked(true);
-      });
+        if (active) setVaultError("Local vault status unavailable");
+      } finally {
+        if (active) setVaultChecked(true);
+      }
+    })();
+    return () => {
+      active = false;
+    };
   }, []);
+  const restoreFromAccount = async () => {
+    if (restoring) return;
+    setRestoring(true);
+    try {
+      const vault = await restoreVaultFromAccount();
+      if (!vault) throw new Error("No backup found");
+      setVaultAddress(vault.address);
+      setAccountBackup(null);
+      notify.success("Wallet restored", "Use your vault password to unlock it when needed.");
+    } catch (error: unknown) {
+      console.error("[v0] wallet vault restore failed", error);
+      notify.error("Could not restore wallet", "Try again in a moment.");
+    } finally {
+      setRestoring(false);
+    }
+  };
   const walletQuery = useQuery({
     queryKey: ["wallet-data"],
     queryFn: () => getWalletData(),
     retry: false,
-  });
-  const solBalanceQuery = useQuery({
-    queryKey: ["solana-devnet-balance", vaultAddress],
-    enabled: Boolean(vaultAddress),
-    queryFn: async () => {
-      if (!vaultAddress) return null;
-      const { Connection, clusterApiUrl, PublicKey } = await import("@solana/web3.js");
-      const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
-      const lamports = await connection.getBalance(new PublicKey(vaultAddress));
-      return lamports / 1_000_000_000;
-    },
-    retry: 1,
-    staleTime: 30_000,
   });
   const wallet = walletQuery.data;
   const balances = Object.fromEntries(
@@ -112,28 +130,33 @@ function Wallet() {
                 >
                   <Copy /> {copied ? "Copied" : "Copy"}
                 </Button>
-                <div className="basis-full flex items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
-                  <span>Devnet SOL</span>
-                  <span className="numeric text-foreground">
-                    {solBalanceQuery.isLoading
-                      ? "Loading…"
-                      : solBalanceQuery.isError
-                        ? "Unavailable"
-                        : `${solBalanceQuery.data?.toFixed(4) ?? "0.0000"} SOL`}
-                  </span>
-                </div>
               </div>
             ) : (
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-sm text-foreground">No local wallet vault</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Set up a wallet on this device to create an encrypted local vault.
+                    {accountBackup
+                      ? `An encrypted backup of ${accountBackup.address.slice(0, 6)}…${accountBackup.address.slice(-4)} is saved on your account.`
+                      : "Set up a wallet on this device to create an encrypted local vault."}
                   </p>
                 </div>
-                <Button size="sm" asChild>
-                  <Link to="/wallet-setup">Set up wallet</Link>
-                </Button>
+                <div className="flex gap-2">
+                  {accountBackup ? (
+                    <Button
+                      size="sm"
+                      disabled={restoring}
+                      onClick={() => void restoreFromAccount()}
+                    >
+                      {restoring ? "Restoring…" : "Restore wallet"}
+                    </Button>
+                  ) : null}
+                  <Button size="sm" variant={accountBackup ? "secondary" : "primary"} asChild>
+                    <Link to="/wallet-setup">
+                      {accountBackup ? "Use a different wallet" : "Set up wallet"}
+                    </Link>
+                  </Button>
+                </div>
               </div>
             )}
           </div>
@@ -153,6 +176,7 @@ function Wallet() {
             </Button>
           </div>
         </Card>
+        {vaultAddress ? <OnchainAssets address={vaultAddress} /> : null}
         <section className="grid gap-3 sm:grid-cols-3" aria-label="Portfolio summary">
           {walletQuery.isLoading ? (
             <>
@@ -185,7 +209,7 @@ function Wallet() {
           )}
         </section>
         <section>
-          <p className="text-eyebrow">Balances</p>
+          <p className="text-eyebrow">Account balances</p>
           <div className="mt-3 flex max-h-[52vh] flex-col gap-2 overflow-y-auto overscroll-contain pr-1">
             {Object.keys(balances).length === 0 ? (
               <Card padding="default" className="border-dashed">

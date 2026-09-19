@@ -54,8 +54,8 @@ function WalletSetup() {
     event.preventDefault();
     if (busy) return;
     setError("");
-    if (password.length < 12 || /^\d+$/.test(password)) {
-      setError("Use at least 12 characters and include more than numbers.");
+    if (password.length < 8 || /^\d+$/.test(password)) {
+      setError("Use at least 8 characters and include more than numbers.");
       return;
     }
     if (recoveryPhrase && !phraseConfirmed) {
@@ -198,7 +198,7 @@ function WalletSetup() {
               autoComplete="new-password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="12+ characters"
+              placeholder="8+ characters"
             />
             <Input
               label="Confirm vault password"

@@ -1,6 +1,6 @@
 import * as bip39 from "bip39";
 import { derivePath } from "ed25519-hd-key";
-import { Keypair } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 
 const DATABASE_NAME = "insider-domain-vault";
 const STORE_NAME = "vault";
@@ -21,6 +21,14 @@ export type WalletWithMnemonic = Wallet & { mnemonic: string };
 
 function logVault(event: string, details?: unknown) {
   if (import.meta.env.DEV) console.info(`[v0] wallet vault: ${event}`, details ?? "");
+}
+
+function isSolanaAddress(value: string): boolean {
+  try {
+    return new PublicKey(value).toBase58() === value;
+  } catch {
+    return false;
+  }
 }
 
 function bytesToBase64(bytes: Uint8Array) {
@@ -99,6 +107,13 @@ export async function loadVault(): Promise<StoredVault | null> {
       const request = database.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).get(KEY);
       request.onsuccess = () => {
         const vault = (request.result as StoredVault | undefined) ?? null;
+        if (vault && !isSolanaAddress(vault.address)) {
+          logVault("stale/incompatible vault ignored (not a Solana address)", {
+            address: vault.address,
+          });
+          resolve(null);
+          return;
+        }
         logVault(
           vault ? "vault found" : "vault empty",
           vault ? { address: vault.address } : undefined,

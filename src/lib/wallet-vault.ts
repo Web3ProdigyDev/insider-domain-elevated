@@ -1,6 +1,7 @@
 import * as bip39 from "bip39";
 import { derivePath } from "ed25519-hd-key";
 import { Keypair, PublicKey } from "@solana/web3.js";
+import bs58 from "bs58";
 
 const DATABASE_NAME = "insider-domain-vault";
 const STORE_NAME = "vault";
@@ -165,9 +166,53 @@ export async function createWallet(password: string) {
   return { ...wallet, mnemonic };
 }
 
-export async function importWallet(mnemonic: string, password: string) {
-  const normalized = mnemonic.trim().toLowerCase().replace(/\s+/g, " ");
-  if (!(await bip39.validateMnemonic(normalized))) throw new Error("Invalid recovery phrase.");
+function secretKeyFromRawInput(input: string): Uint8Array | null {
+  const trimmed = input.trim();
+  if (trimmed.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed) && parsed.every((n) => Number.isInteger(n))) {
+        return Uint8Array.from(parsed as number[]);
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  }
+  try {
+    const decoded = bs58.decode(trimmed);
+    return decoded.length ? decoded : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function importWallet(input: string, password: string) {
+  const trimmed = input.trim();
+  const looksLikePhrase = trimmed.includes(" ");
+
+  if (!looksLikePhrase) {
+    const secretKey = secretKeyFromRawInput(trimmed);
+    if (secretKey) {
+      let wallet: Wallet;
+      try {
+        wallet = walletFromSecret(secretKey);
+      } catch {
+        throw new Error("That private key isn't valid. Check it and try again.");
+      }
+      await saveVault({
+        address: wallet.address,
+        encrypted: await encryptSecret(wallet.secretKey, password),
+      });
+      logVault("Solana wallet imported from private key", { address: wallet.address });
+      return { ...wallet, mnemonic: "" };
+    }
+  }
+
+  const normalized = trimmed.toLowerCase().replace(/\s+/g, " ");
+  if (!(await bip39.validateMnemonic(normalized))) {
+    throw new Error("That recovery phrase or private key isn't valid. Check it and try again.");
+  }
   const seed = await bip39.mnemonicToSeed(normalized);
   const derived = derivePath(SOLANA_DERIVATION_PATH, seed.toString("hex")).key;
   const wallet = walletFromSecret(derived);
@@ -175,7 +220,7 @@ export async function importWallet(mnemonic: string, password: string) {
     address: wallet.address,
     encrypted: await encryptSecret(wallet.secretKey, password),
   });
-  logVault("Solana wallet imported", { address: wallet.address });
+  logVault("Solana wallet imported from mnemonic", { address: wallet.address });
   return { ...wallet, mnemonic: normalized };
 }
 

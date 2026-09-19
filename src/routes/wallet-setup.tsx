@@ -158,10 +158,11 @@ function WalletSetup() {
             ) : null}
             {mode === "import" ? (
               <Input
-                label="Solana recovery phrase"
+                label="Recovery phrase or private key"
                 type={showMaterial ? "text" : "password"}
                 autoComplete="off"
                 value={material}
+                placeholder="12/24-word phrase, base58 key, or [byte,array]"
                 trailing={
                   <button
                     type="button"

@@ -103,7 +103,7 @@ function SetupAssistant({ onActivate }: { onActivate: () => void }) {
           <AICompanion state="idle" />
         </div>
         <div className="mt-6 flex items-start gap-3 border-t border-border pt-5">
-          <Badge variant="secondary">Simulation only</Badge>
+          <Badge variant="outline">Simulation only</Badge>
           <p className="text-xs leading-relaxed text-muted-foreground">
             Copying records a simulated position only. No real funds or trades move.
           </p>
@@ -153,7 +153,7 @@ function SetupAssistant({ onActivate }: { onActivate: () => void }) {
       <Card padding="lg">
         <div className="flex items-center justify-between">
           <h2 className="text-sm text-foreground">Active simulated positions</h2>
-          <Badge variant="secondary">{trades.length}</Badge>
+          <Badge variant="default">{trades.length}</Badge>
         </div>
         {trades.length === 0 ? (
           <p className="mt-4 text-xs text-muted-foreground">No simulated positions yet.</p>

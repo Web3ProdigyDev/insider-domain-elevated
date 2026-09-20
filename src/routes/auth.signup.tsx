@@ -19,22 +19,18 @@ export const Route = createFileRoute("/auth/signup")({
 
 function SignUpRoute() {
   const [email, setEmail] = React.useState("");
-  const [name, setName] = React.useState("");
-  const [invitation, setInvitation] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
   const [submitted, setSubmitted] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
-  const validInvitation = /^ID-\d{4}-[A-Z]{4}$/i.test(invitation.trim());
-  const ready =
-    name.trim().length >= 2 && email.includes("@") && password.length >= 8 && validInvitation;
+  const ready = email.includes("@") && password.length >= 8;
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!ready || busy) return;
     setError("");
     setBusy(true);
-    const result = await signUpWithPassword({ email, password, name });
+    const result = await signUpWithPassword({ email, password });
     if (result.error) {
       setError("We could not create that membership. Check your details and try again.");
       setBusy(false);
@@ -46,7 +42,7 @@ function SignUpRoute() {
 
   return (
     <AuthShell
-      eyebrow="Invitation required"
+      eyebrow="Private membership"
       title="Create your membership"
       description="Verify your email, then secure your wallet in a private setup flow."
       footer={
@@ -66,26 +62,6 @@ function SignUpRoute() {
               Confirm it, then sign in to continue.
             </div>
           ) : null}
-          <Input
-            label="Full name"
-            autoComplete="name"
-            value={name}
-            onChange={(event) => {
-              setName(event.target.value);
-              setError("");
-            }}
-            placeholder="Your name"
-          />
-          <Input
-            label="Invitation code"
-            value={invitation}
-            onChange={(event) => {
-              setInvitation(event.target.value.toUpperCase());
-              setError("");
-            }}
-            placeholder="ID-2291-VELA"
-            {...(invitation && !validInvitation ? { error: "Format: ID-0000-ABCD" } : {})}
-          />
           <Input
             label="Email address"
             type="email"
@@ -117,8 +93,8 @@ function SignUpRoute() {
           />
           {error ? <p className="text-xs text-negative">{error}</p> : null}
           <p className="text-xs leading-relaxed text-muted-foreground">
-            Your invitation is checked before we create your account. Email confirmation is required
-            before access.
+            Email confirmation is required before access. If you hold an invitation code, you'll
+            enter it during setup after confirming your email.
           </p>
           <Button type="submit" full disabled={!ready || submitted || busy}>
             {submitted ? "Confirmation sent" : busy ? "Creating membership…" : "Create membership"}

@@ -1,12 +1,11 @@
 import { createClient } from "./client";
 
-export async function signUpWithPassword(input: { email: string; password: string; name: string }) {
+export async function signUpWithPassword(input: { email: string; password: string }) {
   const supabase = createClient();
   return supabase.auth.signUp({
     email: input.email.trim().toLowerCase(),
     password: input.password,
     options: {
-      data: { full_name: input.name.trim() },
       emailRedirectTo:
         import.meta.env.VITE_SUPABASE_REDIRECT_URL ||
         `${import.meta.env.VITE_SITE_URL || window.location.origin}/auth/callback`,

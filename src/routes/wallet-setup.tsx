@@ -7,7 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { notify } from "@/lib/notify";
 import { createClient } from "@/lib/supabase/client";
-import { createWallet, importWallet, type Wallet } from "@/lib/wallet-vault";
+import {
+  createWallet,
+  importWallet,
+  VAULT_BACKUP_ENABLED,
+  type WalletWithMnemonic,
+} from "@/lib/wallet-vault";
 import { useRequireMember } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/wallet-setup")({
@@ -25,7 +30,7 @@ function WalletSetup() {
   const [error, setError] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [recoveryPhrase, setRecoveryPhrase] = React.useState("");
-  const [createdWallet, setCreatedWallet] = React.useState<Wallet | null>(null);
+  const [createdWallet, setCreatedWallet] = React.useState<WalletWithMnemonic | null>(null);
   const [phraseConfirmed, setPhraseConfirmed] = React.useState(false);
   const [showMaterial, setShowMaterial] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
@@ -54,8 +59,8 @@ function WalletSetup() {
     event.preventDefault();
     if (busy) return;
     setError("");
-    if (password.length < 12 || /^\d+$/.test(password)) {
-      setError("Use at least 12 characters and include more than numbers.");
+    if (password.length < 8 || /^\d+$/.test(password)) {
+      setError("Use at least 8 characters and include more than numbers.");
       return;
     }
     if (recoveryPhrase && !phraseConfirmed) {
@@ -80,11 +85,16 @@ function WalletSetup() {
       const address = wallet.address;
       notify.success(
         "Wallet secured",
-        `Your wallet ${address.slice(0, 8)}…${address.slice(-6)} is encrypted on this device.`,
+        `Your wallet ${address.slice(0, 8)}…${address.slice(-6)} is encrypted on this device${wallet.backedUp ? " and backed up to your account" : ""}.`,
       );
       void navigate({ to: "/" });
-    } catch {
-      setError("That wallet material could not be imported. Check it and try again.");
+    } catch (err) {
+      console.error("[v0] wallet setup failed", { mode, error: err });
+      setError(
+        mode === "create"
+          ? "Your wallet could not be generated. Please try again."
+          : "That wallet material could not be imported. Check it and try again.",
+      );
     } finally {
       setBusy(false);
     }
@@ -95,7 +105,7 @@ function WalletSetup() {
     <AuthShell
       eyebrow="Private setup"
       title="Secure your wallet"
-      description="Choose how to begin. Solana key material is encrypted in this browser and never uploaded to Insider Domain."
+      description="Choose how to begin. Your wallet is encrypted in this browser before anything is saved, and your vault password never leaves this device."
     >
       <Card padding="lg">
         {mode === "choose" ? (
@@ -119,7 +129,7 @@ function WalletSetup() {
               <Upload className="mb-8 size-5 text-gold transition-transform group-hover:-translate-y-1" />
               <p className="text-sm text-foreground">Import wallet</p>
               <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                Use a Solana seed phrase already in your care.
+                Use a Solana recovery phrase or private key you already hold.
               </p>
             </button>
           </div>
@@ -127,7 +137,9 @@ function WalletSetup() {
           <form onSubmit={submit} className="space-y-5">
             <div className="flex items-center gap-3 rounded-2xl border border-gold/20 bg-gold-muted/40 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
               <LockKeyhole className="size-4 shrink-0 text-gold" />
-              Only an encrypted vault is saved in IndexedDB on this device.
+              {VAULT_BACKUP_ENABLED
+                ? "Only an encrypted vault is saved: on this device, and as a backup on your account."
+                : "Only an encrypted vault is saved in IndexedDB on this device."}
             </div>
             {recoveryPhrase ? (
               <div className="rounded-2xl border border-gold/30 bg-gold-muted/50 p-4">
@@ -153,10 +165,11 @@ function WalletSetup() {
             ) : null}
             {mode === "import" ? (
               <Input
-                label="Solana recovery phrase"
+                label="Recovery phrase or private key"
                 type={showMaterial ? "text" : "password"}
                 autoComplete="off"
                 value={material}
+                placeholder="12/24-word phrase, base58 key, or [byte,array]"
                 trailing={
                   <button
                     type="button"
@@ -168,7 +181,6 @@ function WalletSetup() {
                   </button>
                 }
                 onChange={(event) => setMaterial(event.target.value)}
-                placeholder="Enter 12-word Solana phrase"
               />
             ) : (
               <div className="rounded-2xl border border-border bg-surface p-4 text-sm text-muted-foreground">
@@ -192,7 +204,7 @@ function WalletSetup() {
               autoComplete="new-password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="12+ characters"
+              placeholder="8+ characters"
             />
             <Input
               label="Confirm vault password"

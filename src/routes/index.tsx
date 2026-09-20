@@ -238,7 +238,7 @@ function OverviewContent({ user }: { user: ReturnType<typeof useAuth>["user"] })
             />
           ))}
           {!walletQuery.isLoading && !walletQuery.data?.activity?.length ? (
-            <Card padding="md">
+            <Card padding="default">
               <p className="text-sm text-muted-foreground">No account activity yet.</p>
             </Card>
           ) : null}

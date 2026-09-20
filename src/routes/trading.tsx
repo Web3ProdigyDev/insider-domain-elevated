@@ -16,6 +16,7 @@ import {
   SegmentedTabsTrigger,
 } from "@/components/common/segmented-tabs";
 import { TradeLogCard, type TradeLogEntry } from "@/components/cards/trade-log-card";
+import { SkeletonList } from "@/components/common/skeletons";
 import { formatSigned } from "@/lib/format";
 import { notify } from "@/lib/notify";
 import { useMarkets } from "@/lib/use-markets";
@@ -139,7 +140,9 @@ function Trading() {
         </SegmentedTabsList>
 
         <SegmentedTabsContent value="live">
-          {log.length ? (
+          {isLoading ? (
+            <SkeletonList rows={4} />
+          ) : log.length ? (
             <div className="space-y-3">
               {log.map((entry) => (
                 <TradeLogCard key={entry.id} entry={entry} />
@@ -148,9 +151,7 @@ function Trading() {
           ) : (
             <EmptyState
               icon={<Crosshair />}
-              title={
-                isLoading ? "Connecting to the tape" : armed ? "Waiting for a setup" : "Desk idle"
-              }
+              title={armed ? "Waiting for a setup" : "Desk idle"}
               description={
                 armed
                   ? "Executions will appear here as conditions are met."

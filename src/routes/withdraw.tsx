@@ -12,12 +12,17 @@ import { useMarkets } from "@/lib/use-markets";
 import { recordWalletTransaction } from "@/lib/wallet.functions";
 import { hasVault, unlockVault } from "@/lib/wallet-vault";
 
-export const Route = createFileRoute("/withdraw")({ component: Withdraw });
+export const Route = createFileRoute("/withdraw")({
+  validateSearch: (search: Record<string, unknown>): { asset?: string } =>
+    typeof search["asset"] === "string" && search["asset"] ? { asset: search["asset"] } : {},
+  component: Withdraw,
+});
 function Withdraw() {
+  const { asset: presetAsset } = Route.useSearch();
   const { coins } = useMarkets();
   const [amount, setAmount] = useState("");
   const [address, setAddress] = useState("");
-  const [assetId, setAssetId] = useState("bitcoin");
+  const [assetId, setAssetId] = useState(presetAsset ?? "bitcoin");
   const [reviewing, setReviewing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [vaultExists, setVaultExists] = useState(false);

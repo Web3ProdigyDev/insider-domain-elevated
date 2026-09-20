@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { RefreshCw } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { ChevronRight, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,14 +14,11 @@ import { CoinLogo } from "@/components/common/coin-logo";
 import { SolanaLogo } from "@/components/common/solana-logo";
 import { SkeletonCard } from "@/components/common/skeletons";
 import { useMarkets } from "@/lib/use-markets";
-import { fetchSolanaHoldings, type TokenHolding } from "@/lib/solana-assets";
+import { formatTokenAmount, holdingsQueryOptions, type TokenHolding } from "@/lib/solana-assets";
 import { isCustomRpc, useSolanaNetwork } from "@/lib/solana-network";
+import { cn } from "@/lib/utils";
 
 const COLLAPSED_UNKNOWN_TOKENS = 5;
-
-function formatAmount(value: number) {
-  return value.toLocaleString(undefined, { maximumFractionDigits: value >= 1 ? 4 : 8 });
-}
 
 function formatUsd(value: number) {
   return `$${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
@@ -36,15 +34,19 @@ function AssetRow({
   subtitle,
   amountLabel,
   valueLabel,
+  assetId,
 }: {
   logo: React.ReactNode;
   name: string;
   subtitle: string;
   amountLabel: string;
   valueLabel: string;
+  /** Market id of the asset; when set the row opens its detail page. */
+  assetId?: string | undefined;
 }) {
-  return (
-    <div className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3">
+  const base = "flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3";
+  const content = (
+    <>
       {logo}
       <span className="min-w-0">
         <span className="block truncate text-sm text-foreground">{name}</span>
@@ -54,7 +56,18 @@ function AssetRow({
         <span className="numeric block text-sm text-foreground">{amountLabel}</span>
         <span className="numeric block text-xs text-muted-foreground">{valueLabel}</span>
       </span>
-    </div>
+      {assetId ? <ChevronRight className="size-4 shrink-0 text-muted-foreground" /> : null}
+    </>
+  );
+  if (!assetId) return <div className={base}>{content}</div>;
+  return (
+    <Link
+      to="/asset/$id"
+      params={{ id: assetId }}
+      className={cn(base, "transition-colors hover:border-border-strong hover:bg-surface-raised")}
+    >
+      {content}
+    </Link>
   );
 }
 
@@ -64,13 +77,7 @@ export function OnchainAssets({ address }: { address: string }) {
   const [showAll, setShowAll] = React.useState(false);
   const isMainnet = network === "mainnet";
 
-  const query = useQuery({
-    queryKey: ["solana-holdings", network, address],
-    queryFn: () => fetchSolanaHoldings(address, network),
-    retry: 1,
-    staleTime: 30_000,
-    refetchInterval: 60_000,
-  });
+  const query = useQuery(holdingsQueryOptions(address, network));
 
   const solPrice = byId.get("solana")?.price;
   const holdings = query.data;
@@ -88,10 +95,11 @@ export function OnchainAssets({ address }: { address: string }) {
     return (
       <AssetRow
         key={token.mint}
+        assetId={coin ? coin.id : undefined}
         logo={<CoinLogo src={coin?.image} symbol={token.known?.symbol ?? "?"} size={32} />}
         name={token.known?.name ?? "Unknown token"}
         subtitle={token.known ? token.known.symbol : shortMint(token.mint)}
-        amountLabel={`${formatAmount(token.amount)}${token.known ? ` ${token.known.symbol}` : ""}`}
+        amountLabel={`${formatTokenAmount(token.amount)}${token.known ? ` ${token.known.symbol}` : ""}`}
         valueLabel={
           isMainnet ? (usd !== null ? formatUsd(usd) : "Price unavailable") : "Test token"
         }
@@ -164,10 +172,11 @@ export function OnchainAssets({ address }: { address: string }) {
       ) : (
         <div className="flex flex-col gap-2">
           <AssetRow
+            assetId="solana"
             logo={<SolanaLogo size={32} />}
             name="Solana"
             subtitle="SOL"
-            amountLabel={`${formatAmount(holdings?.sol ?? 0)} SOL`}
+            amountLabel={`${formatTokenAmount(holdings?.sol ?? 0)} SOL`}
             valueLabel={
               isMainnet
                 ? solPrice

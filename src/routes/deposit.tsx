@@ -18,6 +18,8 @@ import { hasVault, loadVault } from "@/lib/wallet-vault";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/deposit")({
+  validateSearch: (search: Record<string, unknown>): { asset?: string } =>
+    typeof search["asset"] === "string" && search["asset"] ? { asset: search["asset"] } : {},
   head: () => ({
     meta: [
       { title: "Deposit — Insider Domain" },
@@ -50,6 +52,7 @@ function StepBack({ label, onClick }: { label: string; onClick: () => void }) {
 }
 
 function Deposit() {
+  const { asset: presetAsset } = Route.useSearch();
   const { user } = useAuth();
   const { coins } = useMarkets();
   const eligibility = fundingEligibility(user?.dob ?? "1990-01-01");
@@ -63,10 +66,10 @@ function Deposit() {
     },
   ].filter((m) => eligibility.methods.includes(m.id));
 
-  const [step, setStep] = React.useState<Step>(1);
+  const [step, setStep] = React.useState<Step>(presetAsset && methods.length > 0 ? 3 : 1);
   const [method, setMethod] = React.useState<"crypto">("crypto");
   const [query, setQuery] = React.useState("");
-  const [selectedId, setSelectedId] = React.useState<string | null>(null);
+  const [selectedId, setSelectedId] = React.useState<string | null>(presetAsset ?? null);
 
   // Only one funding method exists today, so step 1 auto-advances to asset
   // selection instead of making the member click through a single option.
@@ -311,8 +314,8 @@ function Deposit() {
                     <p className="text-sm font-medium">Not available on this wallet</p>
                   </div>
                   <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                    SOL and Solana-based assets are supported for deposit. {coin?.name ?? "This asset"}{" "}
-                    isn&apos;t available on this wallet.
+                    SOL and Solana-based assets are supported for deposit.{" "}
+                    {coin?.name ?? "This asset"} isn&apos;t available on this wallet.
                   </p>
                 </div>
               )}

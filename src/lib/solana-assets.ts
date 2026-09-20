@@ -1,3 +1,4 @@
+import { queryOptions } from "@tanstack/react-query";
 import { rpcUrl, type SolanaNetwork } from "./solana-network";
 
 const TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
@@ -128,4 +129,29 @@ export async function fetchSolanaHoldings(
     });
 
   return { sol: lamports / 1_000_000_000, tokens };
+}
+
+/** One query definition shared by the wallet page and the asset page, so both
+ * read the same cache entry. */
+export function holdingsQueryOptions(address: string, network: SolanaNetwork) {
+  return queryOptions({
+    queryKey: ["solana-holdings", network, address],
+    queryFn: () => fetchSolanaHoldings(address, network),
+    retry: 1,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  });
+}
+
+export function formatTokenAmount(value: number) {
+  return value.toLocaleString(undefined, { maximumFractionDigits: value >= 1 ? 4 : 8 });
+}
+
+/** Amount of a market asset (CoinGecko id) held on-chain. Native SOL for
+ * "solana", otherwise the sum of matching known SPL tokens. */
+export function holdingFor(holdings: SolanaHoldings, coinId: string): number {
+  if (coinId === "solana") return holdings.sol;
+  return holdings.tokens
+    .filter((token) => token.known?.coingeckoId === coinId)
+    .reduce((sum, token) => sum + token.amount, 0);
 }

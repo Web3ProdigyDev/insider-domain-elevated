@@ -14,7 +14,7 @@ import { EmptyState } from "@/components/common/empty-state";
 import { useMarkets } from "@/lib/use-markets";
 import { fundingEligibility } from "@/lib/age";
 import { useAuth } from "@/lib/use-auth";
-import { hasVault, loadVault } from "@/lib/wallet-vault";
+import { hasVault, loadVault } from "@/lib/wallet-vault-store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/deposit")({

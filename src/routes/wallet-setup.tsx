@@ -7,12 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { notify } from "@/lib/notify";
 import { createClient } from "@/lib/supabase/client";
-import {
-  createWallet,
-  importWallet,
-  VAULT_BACKUP_ENABLED,
-  type WalletWithMnemonic,
-} from "@/lib/wallet-vault";
+import { createWallet, importWallet, type WalletWithMnemonic } from "@/lib/wallet-vault";
+import { VAULT_BACKUP_ENABLED } from "@/lib/wallet-vault-store";
 import { useRequireMember } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/wallet-setup")({

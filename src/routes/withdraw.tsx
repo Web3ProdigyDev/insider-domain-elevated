@@ -14,7 +14,8 @@ import { useVaultAddress } from "@/lib/use-vault-address";
 import { useSolanaNetwork } from "@/lib/solana-network";
 import { useQuery } from "@tanstack/react-query";
 import { recordWalletTransaction } from "@/lib/wallet.functions";
-import { hasVault, unlockVault } from "@/lib/wallet-vault";
+import { hasVault } from "@/lib/wallet-vault-store";
+import { unlockVault } from "@/lib/wallet-vault";
 
 export const Route = createFileRoute("/withdraw")({
   validateSearch: (search: Record<string, unknown>): { asset?: string } =>

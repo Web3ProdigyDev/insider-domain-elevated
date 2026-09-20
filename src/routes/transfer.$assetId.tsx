@@ -11,7 +11,8 @@ import { SectionHeader } from "@/components/common/section-header";
 import { notify } from "@/lib/notify";
 import { usePortfolio } from "@/lib/use-markets";
 import { recordWalletTransaction } from "@/lib/wallet.functions";
-import { hasVault, unlockVault } from "@/lib/wallet-vault";
+import { hasVault } from "@/lib/wallet-vault-store";
+import { unlockVault } from "@/lib/wallet-vault";
 
 export const Route = createFileRoute("/transfer/$assetId")({ component: TransferDetails });
 function TransferDetails() {

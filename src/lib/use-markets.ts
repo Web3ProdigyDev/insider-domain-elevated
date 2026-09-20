@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 
 import { getMarketCoins, type MarketCoin } from "./markets.functions";
 import { getWalletData } from "./wallet.functions";
-import { useLivePrices } from "./use-live-prices";
 import { solFirst } from "./sort-assets";
 
 /** Shared live-market access. One query, one cache, used by every screen. */
@@ -11,22 +10,19 @@ export function useMarkets() {
   const query = useQuery({
     queryKey: ["market-coins"],
     queryFn: () => getMarketCoins(),
-    refetchInterval: 15_000,
-    staleTime: 10_000,
+    refetchInterval: 30_000,
+    staleTime: 30_000,
     retry: 2,
   });
 
-  const coins = useLivePrices(query.data);
-  const orderedCoins = React.useMemo(
-    () => solFirst(coins, (coin) => coin.symbol),
-    [coins],
-  );
+  const coins = query.data ?? [];
+  const orderedCoins = React.useMemo(() => solFirst(coins, (coin) => coin.symbol), [coins]);
 
   const byId = React.useMemo(() => {
     const map = new Map<string, MarketCoin>();
-    for (const coin of coins) map.set(coin.id, coin);
+    for (const coin of orderedCoins) map.set(coin.id, coin);
     return map;
-  }, [coins]);
+  }, [orderedCoins]);
 
   return {
     coins: orderedCoins,

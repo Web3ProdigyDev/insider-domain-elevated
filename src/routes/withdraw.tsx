@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ArrowUpFromLine, Check, ChevronRight } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Card } from "@/components/ui/card";
@@ -9,6 +9,10 @@ import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { notify } from "@/lib/notify";
 import { useMarkets } from "@/lib/use-markets";
+import { holdingsQueryOptions, holdingFor, formatTokenAmount } from "@/lib/solana-assets";
+import { useVaultAddress } from "@/lib/use-vault-address";
+import { useSolanaNetwork } from "@/lib/solana-network";
+import { useQuery } from "@tanstack/react-query";
 import { recordWalletTransaction } from "@/lib/wallet.functions";
 import { hasVault, unlockVault } from "@/lib/wallet-vault";
 
@@ -19,7 +23,14 @@ export const Route = createFileRoute("/withdraw")({
 });
 function Withdraw() {
   const { asset: presetAsset } = Route.useSearch();
+  const navigate = useNavigate();
   const { coins } = useMarkets();
+  const [network] = useSolanaNetwork();
+  const { address: vaultAddress } = useVaultAddress();
+  const holdingsQuery = useQuery({
+    ...holdingsQueryOptions(vaultAddress ?? "", network),
+    enabled: Boolean(vaultAddress),
+  });
   const [amount, setAmount] = useState("");
   const [address, setAddress] = useState("");
   const [assetId, setAssetId] = useState(presetAsset ?? "bitcoin");
@@ -32,6 +43,7 @@ function Withdraw() {
     void hasVault().then(setVaultExists);
   }, []);
   const asset = coins.find((coin) => coin.id === assetId) ?? coins[0];
+  const available = holdingsQuery.data && asset ? holdingFor(holdingsQuery.data, asset.id) : null;
   const validate = () => {
     if (!(Number(amount) > 0)) {
       notify.error("Enter an amount", "Withdrawals need a positive amount.");
@@ -126,44 +138,64 @@ function Withdraw() {
                   <p className="text-xs text-muted-foreground">{address}</p>
                 </div>
               </div>
-              <p className="mt-5 text-sm text-negative">This can&apos;t be undone.</p>
             </div>
             <div className="flex gap-3">
               <Button variant="secondary" full disabled={busy} onClick={() => setReviewing(false)}>
                 Back
               </Button>
               <Button full disabled={busy || (vaultExists && !vaultPassword)} onClick={confirm}>
-                {busy ? "Sending withdrawal…" : "Confirm withdrawal"} {!busy ? <Check /> : null}
+                {busy ? "Submitting request…" : "Submit request"} {!busy ? <Check /> : null}
               </Button>
             </div>
           </div>
         ) : (
           <div className="mt-8 flex flex-col gap-5">
-            <div className="flex flex-col gap-2">
-              <span className="text-sm text-foreground">Asset</span>
-              <div className="flex max-h-64 flex-col gap-2 overflow-y-auto">
-                {coins.map((coin) => (
-                  <button
-                    key={coin.id}
-                    type="button"
-                    onClick={() => setAssetId(coin.id)}
-                    className={cn(
-                      "flex items-center gap-3 rounded-2xl border px-4 py-3 text-left",
-                      asset?.id === coin.id
-                        ? "border-gold/40 bg-surface-raised"
-                        : "border-border bg-card hover:border-border-strong",
-                    )}
-                  >
-                    <CoinLogo src={coin.image} symbol={coin.symbol} size={28} />
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm text-foreground">{coin.name}</span>
-                      <span className="text-xs text-muted-foreground">{coin.symbol}</span>
-                    </span>
-                    <ChevronRight className="ml-auto size-4 text-muted-foreground" />
-                  </button>
-                ))}
+            {presetAsset && asset ? (
+              <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface-raised p-4">
+                <CoinLogo src={asset.image} symbol={asset.symbol} size={36} />
+                <div className="min-w-0">
+                  <p className="truncate text-sm text-foreground">{asset.name}</p>
+                  <p className="text-xs text-muted-foreground">{asset.symbol}</p>
+                </div>
+                <button
+                  type="button"
+                  className="ml-auto text-xs text-gold"
+                  onClick={() => {
+                    setAssetId("bitcoin");
+                    void navigate({ to: "/withdraw", search: {} });
+                  }}
+                >
+                  Change asset
+                </button>
               </div>
-            </div>
+            ) : null}
+            {!presetAsset ? (
+              <div className="flex flex-col gap-2">
+                <span className="text-sm text-foreground">Asset</span>
+                <div className="flex max-h-64 flex-col gap-2 overflow-y-auto">
+                  {coins.map((coin) => (
+                    <button
+                      key={coin.id}
+                      type="button"
+                      onClick={() => setAssetId(coin.id)}
+                      className={cn(
+                        "flex items-center gap-3 rounded-2xl border px-4 py-3 text-left",
+                        asset?.id === coin.id
+                          ? "border-gold/40 bg-surface-raised"
+                          : "border-border bg-card hover:border-border-strong",
+                      )}
+                    >
+                      <CoinLogo src={coin.image} symbol={coin.symbol} size={28} />
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm text-foreground">{coin.name}</span>
+                        <span className="text-xs text-muted-foreground">{coin.symbol}</span>
+                      </span>
+                      <ChevronRight className="ml-auto size-4 text-muted-foreground" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             <Input
               label={`Amount (${asset?.symbol ?? "asset"})`}
               inputMode="decimal"
@@ -171,6 +203,11 @@ function Withdraw() {
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
             />
+            {available !== null ? (
+              <p className="-mt-3 text-xs text-muted-foreground">
+                Available: {formatTokenAmount(available)} {asset?.symbol}
+              </p>
+            ) : null}
             <Input
               label="Destination address"
               value={address}

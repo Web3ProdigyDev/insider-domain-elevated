@@ -16,6 +16,7 @@ import {
 } from "@/components/common/segmented-tabs";
 import { Button } from "@/components/ui/button";
 import { useMarkets, usePortfolio } from "@/lib/use-markets";
+import { solFirst } from "@/lib/sort-assets";
 
 const PER_PAGE = 25;
 
@@ -53,7 +54,10 @@ function Markets() {
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const current = Math.min(page, totalPages);
-  const visible = filtered.slice((current - 1) * PER_PAGE, current * PER_PAGE);
+  const visible = solFirst(
+    filtered.slice((current - 1) * PER_PAGE, current * PER_PAGE),
+    (coin) => coin.symbol,
+  );
 
   return (
     <AppShell
@@ -133,12 +137,12 @@ function Markets() {
 
         <SegmentedTabsContent value="gainers">
           <div className="flex max-h-[52vh] flex-col gap-3 overflow-y-auto overscroll-contain pr-1">
-            {[...coins]
-              .sort((a, b) => b.change24h - a.change24h)
-              .slice(0, 20)
-              .map((coin) => (
-                <CoinCard key={coin.id} coin={coin} />
-              ))}
+            {solFirst(
+              [...coins].sort((a, b) => b.change24h - a.change24h).slice(0, 20),
+              (coin) => coin.symbol,
+            ).map((coin) => (
+              <CoinCard key={coin.id} coin={coin} />
+            ))}
           </div>
         </SegmentedTabsContent>
       </SegmentedTabs>

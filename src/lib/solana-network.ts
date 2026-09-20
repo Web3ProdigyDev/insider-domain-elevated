@@ -13,6 +13,10 @@ const RPC_URLS: Record<SolanaNetwork, string> = {
   mainnet: import.meta.env["VITE_SOLANA_MAINNET_RPC"] || "https://api.mainnet-beta.solana.com",
 };
 
+export function getSolanaNetwork(): SolanaNetwork {
+  return getSnapshot();
+}
+
 export function rpcUrl(network: SolanaNetwork): string {
   return RPC_URLS[network];
 }

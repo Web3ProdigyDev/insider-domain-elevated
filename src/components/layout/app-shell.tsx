@@ -4,6 +4,7 @@ import { BottomNav } from "./bottom-nav";
 import { TopBar } from "./top-bar";
 import { cn } from "@/lib/utils";
 import { useRequireMember } from "@/lib/use-auth";
+import { Skeleton } from "@/components/common/skeletons";
 
 export function AppShell({
   title,
@@ -20,7 +21,24 @@ export function AppShell({
   children: ReactNode;
   className?: string | undefined;
 }) {
-  const { allowed } = useRequireMember();
+  const { allowed, ready } = useRequireMember();
+  if (!ready) {
+    return (
+      <div className="flex min-h-screen w-full bg-background">
+        <aside className="hidden w-64 border-r border-border p-6 lg:block">
+          <Skeleton className="h-8 w-32" />
+        </aside>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <header className="h-16 border-b border-border p-5">
+            <Skeleton className="h-4 w-28" />
+          </header>
+          <main className="p-6">
+            <Skeleton className="h-8 w-48" />
+          </main>
+        </div>
+      </div>
+    );
+  }
   if (!allowed) return null;
 
   return (

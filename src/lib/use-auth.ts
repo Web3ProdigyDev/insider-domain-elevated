@@ -31,8 +31,7 @@ type MemberRecord = {
   createdAt: string;
 };
 
-/** Subscribes to the simulated auth store. SSR-safe. */
-export function useAuth() {
+function useAuthState() {
   const supabase = React.useMemo(() => createClient(), []);
   const [session, setSession] = React.useState<Session | null | undefined>(undefined);
   const [profile, setProfile] = React.useState<{
@@ -119,6 +118,19 @@ export function useAuth() {
     : null;
   const ready = session !== undefined && !profileLoading;
   return { user, ready, session };
+}
+
+const AuthContext = React.createContext<ReturnType<typeof useAuthState> | null>(null);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const value = useAuthState();
+  return React.createElement(AuthContext.Provider, { value }, children);
+}
+
+export function useAuth() {
+  const value = React.useContext(AuthContext);
+  if (!value) throw new Error("useAuth must be used within AuthProvider");
+  return value;
 }
 
 /**

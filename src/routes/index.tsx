@@ -19,6 +19,7 @@ import { useMarkets, usePortfolio } from "@/lib/use-markets";
 import { useAuth } from "@/lib/use-auth";
 import { getWalletData } from "@/lib/wallet.functions";
 import { useQuery } from "@tanstack/react-query";
+import { solFirst } from "@/lib/sort-assets";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -97,10 +98,13 @@ function OverviewContent({ user }: { user: ReturnType<typeof useAuth>["user"] })
     retry: false,
   });
 
-  const movers = [...coins]
-    .slice(0, 100)
-    .sort((a, b) => Math.abs(b.change24h) - Math.abs(a.change24h))
-    .slice(0, 4);
+  const movers = solFirst(
+    [...coins]
+      .slice(0, 100)
+      .sort((a, b) => Math.abs(b.change24h) - Math.abs(a.change24h))
+      .slice(0, 4),
+    (coin) => coin.symbol,
+  );
 
   return (
     <AppShell

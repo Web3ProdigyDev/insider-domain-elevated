@@ -3,6 +3,7 @@ import { derivePath } from "ed25519-hd-key";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import bs58 from "bs58";
 import { createClient } from "./supabase/client";
+import { getSolanaNetwork } from "./solana-network";
 
 const DATABASE_NAME = "insider-domain-vault";
 const STORE_NAME = "vault";
@@ -162,6 +163,10 @@ async function currentUserId(): Promise<string | null> {
  * the encrypted vault reached the account database. */
 async function pushVaultToAccount(value: StoredVault): Promise<boolean> {
   if (!SYNC_TO_ACCOUNT) return false;
+  if (getSolanaNetwork() !== "devnet") {
+    logVault("account vault backup skipped outside devnet");
+    return false;
+  }
   try {
     const userId = await currentUserId();
     if (!userId) return false;

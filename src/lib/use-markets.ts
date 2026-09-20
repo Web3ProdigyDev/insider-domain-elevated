@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getMarketCoins, type MarketCoin } from "./markets.functions";
 import { getWalletData } from "./wallet.functions";
 import { useLivePrices } from "./use-live-prices";
+import { solFirst } from "./sort-assets";
 
 /** Shared live-market access. One query, one cache, used by every screen. */
 export function useMarkets() {
@@ -17,14 +18,7 @@ export function useMarkets() {
 
   const coins = useLivePrices(query.data);
   const orderedCoins = React.useMemo(
-    () =>
-      [...coins].sort((a, b) => {
-        const aSol = a.symbol.toUpperCase() === "SOL";
-        const bSol = b.symbol.toUpperCase() === "SOL";
-        if (aSol && !bSol) return -1;
-        if (!aSol && bSol) return 1;
-        return 0;
-      }),
+    () => solFirst(coins, (coin) => coin.symbol),
     [coins],
   );
 

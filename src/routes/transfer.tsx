@@ -9,6 +9,7 @@ import { SearchBar } from "@/components/common/search-bar";
 import { EmptyState } from "@/components/common/empty-state";
 import { SkeletonList } from "@/components/common/skeletons";
 import { usePortfolio } from "@/lib/use-markets";
+import { solFirst } from "@/lib/sort-assets";
 import { useState } from "react";
 
 export const Route = createFileRoute("/transfer")({ component: TransferPicker });
@@ -16,8 +17,9 @@ export const Route = createFileRoute("/transfer")({ component: TransferPicker })
 function TransferPicker() {
   const { positions, isLoading } = usePortfolio();
   const [query, setQuery] = useState("");
-  const visible = positions.filter((p) =>
-    `${p.name} ${p.symbol}`.toLowerCase().includes(query.toLowerCase()),
+  const visible = solFirst(
+    positions.filter((p) => `${p.name} ${p.symbol}`.toLowerCase().includes(query.toLowerCase())),
+    (position) => position.symbol,
   );
 
   return (

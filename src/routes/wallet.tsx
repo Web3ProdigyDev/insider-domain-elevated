@@ -13,6 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { OnchainAssets } from "@/components/wallet/onchain-assets";
 import { notify } from "@/lib/notify";
 import { hasVault, loadVault, peekAccountVault, restoreVaultFromAccount } from "@/lib/wallet-vault";
+import { solFirst } from "@/lib/sort-assets";
 
 export const Route = createFileRoute("/wallet")({ component: Wallet });
 function Wallet() {
@@ -222,33 +223,34 @@ function Wallet() {
                 </Button>
               </Card>
             ) : null}
-            {Object.entries(balances)
-              .slice(0, 8)
-              .map(([id, amount]) => {
-                const coin = coins.find((item) => item.id === id);
-                return (
-                  <Link
-                    key={id}
-                    to="/asset/$id"
-                    params={{ id }}
-                    className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 transition-colors hover:border-border-strong hover:bg-surface-raised"
-                  >
-                    <CoinLogo src={coin?.image} symbol={coin?.symbol ?? id.slice(0, 3)} size={32} />
-                    <span className="text-sm text-foreground">{coin?.name ?? id}</span>
-                    <span className="ml-auto text-right">
-                      <span className="numeric block text-sm text-foreground">
-                        {amount.toFixed(4)} {coin?.symbol ?? ""}
-                      </span>
-                      <span className="numeric block text-xs text-muted-foreground">
-                        {coin?.price ? `$${coin.price.toLocaleString()}` : "Price unavailable"} ·{" "}
-                        {coin?.price
-                          ? `$${(amount * coin.price).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
-                          : "—"}
-                      </span>
+            {solFirst(
+              Object.entries(balances).slice(0, 8),
+              ([id]) => coins.find((item) => item.id === id)?.symbol ?? id,
+            ).map(([id, amount]) => {
+              const coin = coins.find((item) => item.id === id);
+              return (
+                <Link
+                  key={id}
+                  to="/asset/$id"
+                  params={{ id }}
+                  className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 transition-colors hover:border-border-strong hover:bg-surface-raised"
+                >
+                  <CoinLogo src={coin?.image} symbol={coin?.symbol ?? id.slice(0, 3)} size={32} />
+                  <span className="text-sm text-foreground">{coin?.name ?? id}</span>
+                  <span className="ml-auto text-right">
+                    <span className="numeric block text-sm text-foreground">
+                      {amount.toFixed(4)} {coin?.symbol ?? ""}
                     </span>
-                  </Link>
-                );
-              })}
+                    <span className="numeric block text-xs text-muted-foreground">
+                      {coin?.price ? `$${coin.price.toLocaleString()}` : "Price unavailable"} ·{" "}
+                      {coin?.price
+                        ? `$${(amount * coin.price).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+                        : "—"}
+                    </span>
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         </section>
         <section>

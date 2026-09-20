@@ -3,12 +3,11 @@ import { Shield } from "lucide-react";
 import { useAuth } from "@/lib/use-auth";
 import { cn } from "@/lib/utils";
 import { navItems, utilityNavItems } from "./nav-items";
+import { isNavActive } from "@/lib/nav-active";
 
 export function AppSidebar({ className }: { className?: string }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user } = useAuth();
-  const isActive = (to: string) => (to === "/" ? pathname === "/" : pathname.startsWith(to));
-
   return (
     <aside
       className={cn(
@@ -31,14 +30,14 @@ export function AppSidebar({ className }: { className?: string }) {
 
         <nav className="flex flex-col gap-0.5" aria-label="Primary">
           {navItems.map((item) => (
-            <SidebarLink key={item.to} item={item} active={isActive(item.to)} />
+            <SidebarLink key={item.to} item={item} active={isNavActive(pathname, item)} />
           ))}
         </nav>
 
         <p className="text-eyebrow mb-2 mt-8 px-3">Account</p>
         <nav className="flex flex-col gap-0.5" aria-label="Account">
           {utilityNavItems.map((item) => (
-            <SidebarLink key={item.to} item={item} active={isActive(item.to)} />
+            <SidebarLink key={item.to} item={item} active={isNavActive(pathname, item)} />
           ))}
         </nav>
         {user?.role === "admin" ? (
@@ -46,7 +45,7 @@ export function AppSidebar({ className }: { className?: string }) {
             <p className="text-eyebrow mb-2 px-3">Oversight</p>
             <SidebarLink
               item={{ label: "Members", to: "/admin", icon: Shield }}
-              active={isActive("/admin")}
+              active={pathname === "/admin" || pathname.startsWith("/admin/")}
             />
           </div>
         ) : null}

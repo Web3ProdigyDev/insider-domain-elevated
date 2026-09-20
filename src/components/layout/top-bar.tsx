@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { getNotifications } from "@/lib/notification.functions";
 import { signOut } from "@/lib/supabase/auth";
 import { useAuth } from "@/lib/use-auth";
+import { Breadcrumbs } from "./breadcrumbs";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,6 +53,7 @@ export function TopBar({
       )}
     >
       <div className="min-w-0">
+        <Breadcrumbs />
         {eyebrow ? <p className="text-eyebrow mb-1.5">{eyebrow}</p> : null}
         <h1 className="truncate text-xl font-medium tracking-[var(--tracking-tightest)] text-foreground lg:text-2xl">
           {title}

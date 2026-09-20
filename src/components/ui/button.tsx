@@ -4,14 +4,22 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
+function Spinner() {
+  return (
+    <span
+      aria-hidden="true"
+      className="size-4 animate-spin rounded-full border-2 border-current border-r-transparent"
+    />
+  );
+}
+
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium tracking-tight transition-all duration-300 ease-[var(--ease-luxe)] outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40 [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.985]",
   {
     variants: {
       variant: {
         // 1. Primary — solid gold on obsidian
-        primary:
-          "bg-gold text-background hover:bg-gold/90 shadow-[0_8px_24px_-14px_var(--gold)]",
+        primary: "bg-gold text-background hover:bg-gold/90 shadow-[0_8px_24px_-14px_var(--gold)]",
         // 2. Secondary — hairline outline
         secondary:
           "border border-border-strong bg-transparent text-foreground hover:bg-surface-raised",
@@ -48,20 +56,27 @@ function Button({
   size,
   full,
   asChild = false,
+  loading = false,
+  children,
   ...props
 }: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & { asChild?: boolean }) {
+  VariantProps<typeof buttonVariants> & { asChild?: boolean; loading?: boolean }) {
   const Comp = asChild ? Slot : "button";
   return (
     <Comp
       data-slot="button"
       className={cn(buttonVariants({ variant, size, full, className }))}
+      aria-busy={loading || undefined}
+      disabled={loading || props.disabled}
       {...props}
-    />
+    >
+      {loading ? <Spinner /> : null}
+      {children}
+    </Comp>
   );
 }
 
 export type ButtonProps = React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & { asChild?: boolean };
+  VariantProps<typeof buttonVariants> & { asChild?: boolean; loading?: boolean };
 
 export { Button, buttonVariants };

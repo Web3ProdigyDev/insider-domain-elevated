@@ -1,5 +1,6 @@
 import * as React from "react";
 import { BrandMark } from "@/components/layout/auth-shell";
+import { useAuth } from "@/lib/use-auth";
 
 const KEY = "insider-domain.splash.v1";
 
@@ -8,6 +9,7 @@ const KEY = "insider-domain.splash.v1";
  */
 export function SplashGate({ children }: { children: React.ReactNode }) {
   const [showing, setShowing] = React.useState(false);
+  const { ready } = useAuth();
 
   React.useEffect(() => {
     let seen = true;
@@ -18,16 +20,25 @@ export function SplashGate({ children }: { children: React.ReactNode }) {
     }
     if (seen) return;
     setShowing(true);
-    const timer = window.setTimeout(() => {
+    const startedAt = Date.now();
+    let timer: number | undefined;
+    const endSplash = () => {
       try {
         window.sessionStorage.setItem(KEY, "1");
       } catch {
         /* ignore */
       }
       setShowing(false);
-    }, 1500);
-    return () => window.clearTimeout(timer);
-  }, []);
+    };
+    const scheduleEnd = () => {
+      const remaining = Math.max(0, 600 - (Date.now() - startedAt));
+      timer = window.setTimeout(endSplash, remaining);
+    };
+    if (ready) scheduleEnd();
+    return () => {
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [ready]);
 
   return (
     <>

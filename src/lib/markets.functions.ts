@@ -25,12 +25,12 @@ type RawCoin = {
 };
 
 let cache: { at: number; coins: MarketCoin[] } | null = null;
-const TTL = 20_000;
+const TTL = 60_000;
 
-async function page(perPage: number, pageNumber: number): Promise<RawCoin[]> {
+async function page(): Promise<RawCoin[]> {
   const url =
     `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc` +
-    `&per_page=${perPage}&page=${pageNumber}&price_change_percentage=24h`;
+    `&per_page=250&page=1&price_change_percentage=24h`;
   const res = await fetch(url, { headers: { accept: "application/json" } });
   if (!res.ok) throw new Error(`Market feed unavailable (${res.status})`);
   return (await res.json()) as RawCoin[];
@@ -40,8 +40,8 @@ export const getMarketCoins = createServerFn({ method: "GET" }).handler(async ()
   if (cache && Date.now() - cache.at < TTL) return cache.coins;
 
   try {
-    const [first, second] = await Promise.all([page(250, 1), page(50, 2)]);
-    const coins: MarketCoin[] = [...first, ...second].map((c, i) => ({
+    const first = await page();
+    const coins: MarketCoin[] = first.map((c, i) => ({
       id: c.id,
       symbol: c.symbol.toUpperCase(),
       name: c.name,

@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { bottomNavItems } from "./nav-items";
+import { isNavActive } from "@/lib/nav-active";
 
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -13,7 +14,7 @@ export function BottomNav() {
     >
       <ul className="mx-auto grid max-w-lg grid-cols-5 px-1">
         {bottomNavItems.map((item) => {
-          const active = item.to === "/" ? pathname === "/" : pathname.startsWith(item.to);
+          const active = isNavActive(pathname, item);
           return (
             <li key={item.to}>
               <Link

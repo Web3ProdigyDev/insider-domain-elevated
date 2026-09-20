@@ -1,5 +1,5 @@
 import * as React from "react";
-import { hasVault, loadVault } from "./wallet-vault";
+import { hasVault, loadVault } from "./wallet-vault-store";
 
 /** Public address of the local wallet vault, or null when none is set up. */
 export function useVaultAddress() {

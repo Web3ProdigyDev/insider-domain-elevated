@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { notify } from "@/lib/notify";
 import { signOut } from "@/lib/supabase/auth";
 import { useAuth } from "@/lib/use-auth";
-import { clearVault, hasVault } from "@/lib/wallet-vault";
+import { clearVault, hasVault } from "@/lib/wallet-vault-store";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({

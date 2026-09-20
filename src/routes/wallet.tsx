@@ -12,7 +12,12 @@ import { getWalletData } from "@/lib/wallet.functions";
 import { useQuery } from "@tanstack/react-query";
 import { OnchainAssets } from "@/components/wallet/onchain-assets";
 import { notify } from "@/lib/notify";
-import { hasVault, loadVault, peekAccountVault, restoreVaultFromAccount } from "@/lib/wallet-vault";
+import {
+  hasVault,
+  loadVault,
+  peekAccountVault,
+  restoreVaultFromAccount,
+} from "@/lib/wallet-vault-store";
 import { solFirst } from "@/lib/sort-assets";
 
 export const Route = createFileRoute("/wallet")({ component: Wallet });

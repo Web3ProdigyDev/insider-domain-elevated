@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { notify } from "@/lib/notify";
+import { useAuth } from "@/lib/use-auth";
 import { signInWithPassword } from "@/lib/supabase/auth";
 
 export const Route = createFileRoute("/auth/")({
@@ -28,6 +29,7 @@ export const Route = createFileRoute("/auth/")({
 
 function SignIn() {
   const navigate = useNavigate();
+  const { configured } = useAuth();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
@@ -37,10 +39,23 @@ function SignIn() {
     event.preventDefault();
     if (busy) return;
     setError("");
+    if (!configured) {
+      setError(
+        "Sign-in is not available here. This environment is missing its Supabase key (VITE_SUPABASE_PUBLISHABLE_KEY).",
+      );
+      return;
+    }
     setBusy(true);
-    const result = await signInWithPassword(email, password);
-    if (result.error) {
-      setError("Invalid email or password, or confirm your email first.");
+    try {
+      const result = await signInWithPassword(email, password);
+      if (result.error) {
+        setError("Invalid email or password, or confirm your email first.");
+        setBusy(false);
+        return;
+      }
+    } catch (caught: unknown) {
+      console.warn("[v0] sign-in request failed", caught);
+      setError("We could not reach the sign-in service. Check your connection and try again.");
       setBusy(false);
       return;
     }

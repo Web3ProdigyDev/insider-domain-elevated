@@ -2,7 +2,7 @@ import * as React from "react";
 import { useNavigate } from "@tanstack/react-router";
 import type { Session } from "@supabase/supabase-js";
 
-import { createClient } from "./supabase/client";
+import { createClient, isSupabaseConfigured } from "./supabase/client";
 
 type MemberRecord = {
   id: string;
@@ -32,8 +32,12 @@ type MemberRecord = {
 };
 
 function useAuthState() {
-  const supabase = React.useMemo(() => createClient(), []);
-  const [session, setSession] = React.useState<Session | null | undefined>(undefined);
+  // Without the Supabase key the app still renders: visitors are simply signed out.
+  const configured = isSupabaseConfigured();
+  const supabase = React.useMemo(() => (configured ? createClient() : null), [configured]);
+  const [session, setSession] = React.useState<Session | null | undefined>(
+    configured ? undefined : null,
+  );
   const [profile, setProfile] = React.useState<{
     role: string;
     onboarding_completed: boolean;
@@ -42,8 +46,9 @@ function useAuthState() {
     surname: string | null;
     username: string | null;
   } | null>(null);
-  const [profileLoading, setProfileLoading] = React.useState(true);
+  const [profileLoading, setProfileLoading] = React.useState(configured);
   React.useEffect(() => {
+    if (!supabase) return;
     let active = true;
     const loadProfile = async (nextSession: Session | null) => {
       if (!nextSession) {
@@ -90,34 +95,34 @@ function useAuthState() {
   const authUser = session?.user;
   const user: MemberRecord | null = authUser
     ? ({
-        id: authUser.id,
-        email: authUser.email ?? "",
-        firstName: profile?.first_name ?? "",
-        surname: profile?.surname ?? "",
-        middleName: "",
-        username: profile?.username ?? "",
-        password: "",
-        dob: profile?.dob ?? "",
-        invitationCode: "",
-        invitedBy: "",
-        role: profile?.role ?? "member",
-        emailVerified: Boolean(authUser.email_confirmed_at),
-        onboardingCompleted: profile?.onboarding_completed ?? false,
-        onboarding: {
-          identityConfirmed: true,
-          ageConfirmed: true,
-          invitationConfirmed: true,
-          privacyAccepted: true,
-          securityAccepted: true,
-          communications: ["account", "security"],
-          experience: null,
-        },
-        wallet: null,
-        createdAt: authUser.created_at,
-      } as MemberRecord)
+      id: authUser.id,
+      email: authUser.email ?? "",
+      firstName: profile?.first_name ?? "",
+      surname: profile?.surname ?? "",
+      middleName: "",
+      username: profile?.username ?? "",
+      password: "",
+      dob: profile?.dob ?? "",
+      invitationCode: "",
+      invitedBy: "",
+      role: profile?.role ?? "member",
+      emailVerified: Boolean(authUser.email_confirmed_at),
+      onboardingCompleted: profile?.onboarding_completed ?? false,
+      onboarding: {
+        identityConfirmed: true,
+        ageConfirmed: true,
+        invitationConfirmed: true,
+        privacyAccepted: true,
+        securityAccepted: true,
+        communications: ["account", "security"],
+        experience: null,
+      },
+      wallet: null,
+      createdAt: authUser.created_at,
+    } as MemberRecord)
     : null;
   const ready = session !== undefined && !profileLoading;
-  return { user, ready, session };
+  return { user, ready, session, configured };
 }
 
 const AuthContext = React.createContext<ReturnType<typeof useAuthState> | null>(null);

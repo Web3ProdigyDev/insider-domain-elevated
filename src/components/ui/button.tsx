@@ -57,22 +57,39 @@ function Button({
   full,
   asChild = false,
   loading = false,
+  disabled,
   children,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & { asChild?: boolean; loading?: boolean }) {
-  const Comp = asChild ? Slot : "button";
+  const classes = cn(buttonVariants({ variant, size, full, className }));
+
+  // Slot needs exactly one child element, so the spinner is only added to a real <button>.
+  if (asChild) {
+    return (
+      <Slot
+        data-slot="button"
+        className={classes}
+        aria-busy={loading || undefined}
+        aria-disabled={loading || disabled || undefined}
+        {...props}
+      >
+        {children}
+      </Slot>
+    );
+  }
+
   return (
-    <Comp
+    <button
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, full, className }))}
+      className={classes}
       aria-busy={loading || undefined}
-      disabled={loading || props.disabled}
+      disabled={loading || disabled}
       {...props}
     >
       {loading ? <Spinner /> : null}
       {children}
-    </Comp>
+    </button>
   );
 }
 

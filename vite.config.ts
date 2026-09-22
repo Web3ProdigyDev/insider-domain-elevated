@@ -14,7 +14,7 @@ const rpcWebsocketsBrowserEntry = fileURLToPath(
 
 export default defineConfig({
   vite: {
-    plugins: [nodePolyfills({ include: ["buffer"] })],
+    plugins: [nodePolyfills({ include: ["process", "buffer"] })],
   },
   nitro: {
     // @solana/web3.js pulls in rpc-websockets via Connection. Nothing in this app calls

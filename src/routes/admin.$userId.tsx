@@ -27,6 +27,16 @@ function AdminMemberDetail() {
     enabled: ready && allowed,
     retry: false,
   });
+  const [role, setRole] = React.useState<"member" | "admin">("member");
+  const [assetId, setAssetId] = React.useState("");
+  const [delta, setDelta] = React.useState("");
+  const [reason, setReason] = React.useState("");
+  const [busy, setBusy] = React.useState(false);
+  const [expandedTransaction, setExpandedTransaction] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    if (detailQuery.data?.profile.role)
+      setRole(detailQuery.data.profile.role as "member" | "admin");
+  }, [detailQuery.data?.profile.role]);
   if (!ready || !allowed) return null;
   if (detailQuery.isLoading)
     return (
@@ -48,12 +58,6 @@ function AdminMemberDetail() {
       </AppShell>
     );
   const { profile, balances, transactions } = detailQuery.data;
-  const [role, setRole] = React.useState<"member" | "admin">(profile.role as "member" | "admin");
-  const [assetId, setAssetId] = React.useState("");
-  const [delta, setDelta] = React.useState("");
-  const [reason, setReason] = React.useState("");
-  const [busy, setBusy] = React.useState(false);
-  const [expandedTransaction, setExpandedTransaction] = React.useState<string | null>(null);
   const name = [profile.first_name, profile.surname].filter(Boolean).join(" ") || "Unnamed member";
   return (
     <AppShell

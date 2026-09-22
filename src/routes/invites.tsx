@@ -40,6 +40,25 @@ function InvitesPage() {
     }
   };
 
+  const shareInvite = async () => {
+    if (!code) return;
+    const url = `${window.location.origin}/onboarding?invite=${encodeURIComponent(code)}`;
+    try {
+      if (navigator.share)
+        await navigator.share({
+          title: "Insider Domain invite",
+          text: `Join me on Insider Domain with code ${code}`,
+          url,
+        });
+      else await navigator.clipboard.writeText(url);
+      await createClient().rpc("record_member_invite_share", { invite_code: code });
+      setMessage(navigator.share ? "Invite shared." : "Invite link copied.");
+    } catch (error) {
+      if ((error as DOMException).name !== "AbortError")
+        setMessage("We could not share that invite.");
+    }
+  };
+
   const redeemInvite = async () => {
     setBusy(true);
     setMessage("");
@@ -76,10 +95,15 @@ function InvitesPage() {
           {code && (
             <div className="space-y-3">
               <Input readOnly value={code} />
-              <Button variant="outline" onClick={() => void navigator.clipboard.writeText(code)}>
-                <Copy className="size-4" />
-                Copy code
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={() => void navigator.clipboard.writeText(code)}>
+                  <Copy className="size-4" />
+                  Copy code
+                </Button>
+                <Button variant="outline" onClick={() => void shareInvite()}>
+                  Share invite
+                </Button>
+              </div>
               {qr && (
                 <img
                   src={qr}

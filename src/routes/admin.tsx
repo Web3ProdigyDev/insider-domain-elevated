@@ -10,7 +10,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { createInviteCode, listInviteCodes, listMembers } from "@/lib/admin.functions";
+import {
+  createInviteCode,
+  listInviteCodes,
+  listMembers,
+  revokeInviteCode,
+} from "@/lib/admin.functions";
 import { useRequireMember } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/admin")({ component: AdminMembers });
@@ -40,7 +45,7 @@ function AdminMembers() {
   });
   if (!ready || !allowed) return null;
   return (
-    <AppShell eyebrow="Admin" title="Members" description="Read-only account oversight.">
+    <AppShell eyebrow="Admin" title="Members" description="Manage members, access, and invites.">
       <div className="flex flex-col gap-6">
         <Card padding="lg">
           <form
@@ -99,6 +104,17 @@ function AdminMembers() {
                   <span className="text-xs text-muted-foreground">
                     {invite.uses}/{invite.max_uses} uses
                   </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={invite.max_uses === 0}
+                    onClick={async () => {
+                      await revokeInviteCode(invite.id);
+                      void inviteQuery.refetch();
+                    }}
+                  >
+                    Revoke
+                  </Button>
                   <span className="ml-auto text-xs text-muted-foreground">
                     {invite.expires_at
                       ? `Expires ${new Date(invite.expires_at).toLocaleDateString()}`

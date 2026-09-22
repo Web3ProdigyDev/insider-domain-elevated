@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, WalletCards } from "lucide-react";
+import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -7,7 +8,12 @@ import { EmptyState } from "@/components/common/empty-state";
 import { SkeletonCard, SkeletonList } from "@/components/common/skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getMemberDetail } from "@/lib/admin.functions";
+import {
+  adjustMemberBalance,
+  getMemberDetail,
+  setMemberSuspended,
+  updateMemberRole,
+} from "@/lib/admin.functions";
 import { useRequireMember } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/admin/$userId")({ component: AdminMemberDetail });
@@ -42,6 +48,12 @@ function AdminMemberDetail() {
       </AppShell>
     );
   const { profile, balances, transactions } = detailQuery.data;
+  const [role, setRole] = React.useState<"member" | "admin">(profile.role as "member" | "admin");
+  const [assetId, setAssetId] = React.useState("");
+  const [delta, setDelta] = React.useState("");
+  const [reason, setReason] = React.useState("");
+  const [busy, setBusy] = React.useState(false);
+  const [expandedTransaction, setExpandedTransaction] = React.useState<string | null>(null);
   const name = [profile.first_name, profile.surname].filter(Boolean).join(" ") || "Unnamed member";
   return (
     <AppShell
@@ -66,10 +78,33 @@ function AdminMemberDetail() {
           </div>
           <div className="rounded-2xl border border-border bg-card p-5">
             <p className="text-eyebrow">Role</p>
-            <div className="mt-3">
-              <Badge variant={profile.role === "admin" ? "default" : "secondary"}>
-                {profile.role}
-              </Badge>
+            <div className="mt-3 flex items-center gap-2">
+              <select
+                aria-label="Member role"
+                value={role}
+                onChange={(event) => setRole(event.target.value as "member" | "admin")}
+                className="h-9 rounded-lg border border-border bg-card px-2 text-sm text-foreground"
+              >
+                <option value="member">member</option>
+                <option value="admin">admin</option>
+              </select>
+              <Button
+                size="sm"
+                disabled={busy || role === profile.role}
+                onClick={async () => {
+                  if (role === "admin" && !window.confirm("Grant admin access to this member?"))
+                    return;
+                  setBusy(true);
+                  try {
+                    await updateMemberRole(userId, role);
+                    void detailQuery.refetch();
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              >
+                Save
+              </Button>
             </div>
           </div>
           <div className="rounded-2xl border border-border bg-card p-5">
@@ -77,6 +112,26 @@ function AdminMemberDetail() {
             <p className="mt-3 text-sm text-foreground">
               {profile.onboarding_completed ? "Completed" : "Pending"}
             </p>
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <p className="text-eyebrow">Status</p>
+            <Button
+              className="mt-3"
+              variant="outline"
+              size="sm"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await setMemberSuspended(userId, !profile.suspended);
+                  void detailQuery.refetch();
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              {profile.suspended ? "Reinstate member" : "Suspend member"}
+            </Button>
           </div>
           <div className="rounded-2xl border border-border bg-card p-5">
             <p className="text-eyebrow">Joined</p>
@@ -113,6 +168,54 @@ function AdminMemberDetail() {
             </div>
           )}
         </section>
+        <section className="rounded-2xl border border-border bg-card p-5">
+          <p className="text-eyebrow">Adjust balance</p>
+          <form
+            className="mt-4 grid gap-3 sm:grid-cols-4"
+            onSubmit={async (event) => {
+              event.preventDefault();
+              setBusy(true);
+              try {
+                await adjustMemberBalance(userId, assetId, Number(delta), reason);
+                setDelta("");
+                setReason("");
+                void detailQuery.refetch();
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            <input
+              aria-label="Asset id"
+              placeholder="Asset id"
+              value={assetId}
+              onChange={(event) => setAssetId(event.target.value)}
+              className="h-10 rounded-xl border border-border bg-background px-3 text-sm text-foreground"
+              required
+            />
+            <input
+              aria-label="Amount"
+              type="number"
+              step="any"
+              placeholder="Amount"
+              value={delta}
+              onChange={(event) => setDelta(event.target.value)}
+              className="h-10 rounded-xl border border-border bg-background px-3 text-sm text-foreground"
+              required
+            />
+            <input
+              aria-label="Reason"
+              placeholder="Reason"
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              className="h-10 rounded-xl border border-border bg-background px-3 text-sm text-foreground sm:col-span-2"
+              required
+            />
+            <Button type="submit" disabled={busy}>
+              Apply adjustment
+            </Button>
+          </form>
+        </section>
         <section>
           <h2 className="text-lg font-medium text-foreground">Transaction history</h2>
           {transactions.length ? (
@@ -129,17 +232,40 @@ function AdminMemberDetail() {
                 </thead>
                 <tbody>
                   {transactions.map((transaction) => (
-                    <tr key={transaction.id} className="border-b border-border last:border-0">
-                      <td className="px-5 py-4 text-foreground">{transaction.type}</td>
-                      <td className="px-5 py-4 text-muted-foreground">{transaction.asset_id}</td>
-                      <td className="px-5 py-4 numeric text-foreground">{transaction.amount}</td>
-                      <td className="px-5 py-4">
-                        <Badge variant="secondary">{transaction.status}</Badge>
-                      </td>
-                      <td className="px-5 py-4 text-muted-foreground">
-                        {new Date(transaction.created_at).toLocaleString()}
-                      </td>
-                    </tr>
+                    <React.Fragment key={transaction.id}>
+                      <tr className="border-b border-border last:border-0">
+                        <td className="px-5 py-4 text-foreground">
+                          <button
+                            type="button"
+                            className="text-left hover:text-gold"
+                            onClick={() =>
+                              setExpandedTransaction((current) =>
+                                current === transaction.id ? null : transaction.id,
+                              )
+                            }
+                          >
+                            {transaction.type}
+                          </button>
+                        </td>
+                        <td className="px-5 py-4 text-muted-foreground">{transaction.asset_id}</td>
+                        <td className="px-5 py-4 numeric text-foreground">{transaction.amount}</td>
+                        <td className="px-5 py-4">
+                          <Badge variant="secondary">{transaction.status}</Badge>
+                        </td>
+                        <td className="px-5 py-4 text-muted-foreground">
+                          {new Date(transaction.created_at).toLocaleString()}
+                        </td>
+                      </tr>
+                      {expandedTransaction === transaction.id ? (
+                        <tr className="border-b border-border bg-surface/50">
+                          <td colSpan={5} className="px-5 py-4 text-xs text-muted-foreground">
+                            <pre className="whitespace-pre-wrap font-sans">
+                              {JSON.stringify(transaction.metadata ?? {}, null, 2)}
+                            </pre>
+                          </td>
+                        </tr>
+                      ) : null}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>

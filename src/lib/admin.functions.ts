@@ -71,14 +71,12 @@ export async function updateMemberRole(userId: string, role: "member" | "admin")
     .update({ role, updated_at: new Date().toISOString() })
     .eq("id", userId);
   if (error) throw error;
-  await supabase
-    .from("admin_actions")
-    .insert({
-      admin_id: user.id,
-      target_user_id: userId,
-      action: "role_changed",
-      detail: { role },
-    });
+  await supabase.from("admin_actions").insert({
+    admin_id: user.id,
+    target_user_id: userId,
+    action: "role_changed",
+    detail: { role },
+  });
 }
 
 export async function setMemberSuspended(userId: string, suspended: boolean) {
@@ -89,14 +87,12 @@ export async function setMemberSuspended(userId: string, suspended: boolean) {
     .update({ suspended, updated_at: new Date().toISOString() })
     .eq("id", userId);
   if (error) throw error;
-  await supabase
-    .from("admin_actions")
-    .insert({
-      admin_id: user.id,
-      target_user_id: userId,
-      action: suspended ? "member_suspended" : "member_reinstated",
-      detail: { suspended },
-    });
+  await supabase.from("admin_actions").insert({
+    admin_id: user.id,
+    target_user_id: userId,
+    action: suspended ? "member_suspended" : "member_reinstated",
+    detail: { suspended },
+  });
 }
 
 export async function adjustMemberBalance(
@@ -124,26 +120,22 @@ export async function adjustMemberBalance(
       { onConflict: "user_id,asset_id" },
     );
   if (balanceError) throw balanceError;
-  const { error: transactionError } = await supabase
-    .from("transactions")
-    .insert({
-      id: crypto.randomUUID(),
-      user_id: userId,
-      type: "admin_adjustment",
-      asset_id: assetId,
-      amount: delta,
-      status: "completed",
-      metadata: { reason: reason.trim(), admin_id: user.id },
-    });
+  const { error: transactionError } = await supabase.from("transactions").insert({
+    id: crypto.randomUUID(),
+    user_id: userId,
+    type: "admin_adjustment",
+    asset_id: assetId,
+    amount: delta,
+    status: "completed",
+    metadata: { reason: reason.trim(), admin_id: user.id },
+  });
   if (transactionError) throw transactionError;
-  await supabase
-    .from("admin_actions")
-    .insert({
-      admin_id: user.id,
-      target_user_id: userId,
-      action: "balance_adjusted",
-      detail: { asset_id: assetId, delta, reason: reason.trim() },
-    });
+  await supabase.from("admin_actions").insert({
+    admin_id: user.id,
+    target_user_id: userId,
+    action: "balance_adjusted",
+    detail: { asset_id: assetId, delta, reason: reason.trim() },
+  });
   return { amount };
 }
 

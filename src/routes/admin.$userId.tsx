@@ -53,6 +53,7 @@ function AdminMemberDetail() {
   const [delta, setDelta] = React.useState("");
   const [reason, setReason] = React.useState("");
   const [busy, setBusy] = React.useState(false);
+  const [expandedTransaction, setExpandedTransaction] = React.useState<string | null>(null);
   const name = [profile.first_name, profile.surname].filter(Boolean).join(" ") || "Unnamed member";
   return (
     <AppShell
@@ -231,17 +232,40 @@ function AdminMemberDetail() {
                 </thead>
                 <tbody>
                   {transactions.map((transaction) => (
-                    <tr key={transaction.id} className="border-b border-border last:border-0">
-                      <td className="px-5 py-4 text-foreground">{transaction.type}</td>
-                      <td className="px-5 py-4 text-muted-foreground">{transaction.asset_id}</td>
-                      <td className="px-5 py-4 numeric text-foreground">{transaction.amount}</td>
-                      <td className="px-5 py-4">
-                        <Badge variant="secondary">{transaction.status}</Badge>
-                      </td>
-                      <td className="px-5 py-4 text-muted-foreground">
-                        {new Date(transaction.created_at).toLocaleString()}
-                      </td>
-                    </tr>
+                    <React.Fragment key={transaction.id}>
+                      <tr className="border-b border-border last:border-0">
+                        <td className="px-5 py-4 text-foreground">
+                          <button
+                            type="button"
+                            className="text-left hover:text-gold"
+                            onClick={() =>
+                              setExpandedTransaction((current) =>
+                                current === transaction.id ? null : transaction.id,
+                              )
+                            }
+                          >
+                            {transaction.type}
+                          </button>
+                        </td>
+                        <td className="px-5 py-4 text-muted-foreground">{transaction.asset_id}</td>
+                        <td className="px-5 py-4 numeric text-foreground">{transaction.amount}</td>
+                        <td className="px-5 py-4">
+                          <Badge variant="secondary">{transaction.status}</Badge>
+                        </td>
+                        <td className="px-5 py-4 text-muted-foreground">
+                          {new Date(transaction.created_at).toLocaleString()}
+                        </td>
+                      </tr>
+                      {expandedTransaction === transaction.id ? (
+                        <tr className="border-b border-border bg-surface/50">
+                          <td colSpan={5} className="px-5 py-4 text-xs text-muted-foreground">
+                            <pre className="whitespace-pre-wrap font-sans">
+                              {JSON.stringify(transaction.metadata ?? {}, null, 2)}
+                            </pre>
+                          </td>
+                        </tr>
+                      ) : null}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>

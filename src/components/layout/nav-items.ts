@@ -45,4 +45,10 @@ export const utilityNavItems: NavItem[] = [
   { label: "Settings", to: "/settings", icon: Settings },
 ];
 
+export const adminNavItem: NavItem = {
+  label: "Admin",
+  to: "/admin",
+  icon: Users,
+  owns: ["/admin"],
+};
 export const bottomNavItems = navItems.filter((i) => i.primary);

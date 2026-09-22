@@ -1,10 +1,13 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useRequireMember } from "@/lib/use-auth";
 import { cn } from "@/lib/utils";
-import { bottomNavItems } from "./nav-items";
+import { adminNavItem, bottomNavItems } from "./nav-items";
 import { isNavActive } from "@/lib/nav-active";
 
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { user } = useRequireMember();
+  const items = user?.role === "admin" ? [...bottomNavItems, adminNavItem] : bottomNavItems;
 
   return (
     <nav
@@ -13,7 +16,7 @@ export function BottomNav() {
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <ul className="mx-auto grid max-w-lg grid-cols-5 px-1">
-        {bottomNavItems.map((item) => {
+        {items.map((item) => {
           const active = isNavActive(pathname, item);
           return (
             <li key={item.to}>

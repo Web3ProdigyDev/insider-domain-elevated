@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ export const Route = createFileRoute("/onboarding")({
 
 function Onboarding() {
   const navigate = useNavigate();
+  const search = useSearch({ from: "/onboarding" });
   const { user, ready, allowed } = useRequireMember({ allowIncomplete: true });
   const supabase = React.useMemo(() => createClient(), []);
   const [session, setSession] = React.useState<{ user: { id: string } } | null>(null);
@@ -21,7 +22,7 @@ function Onboarding() {
   const [surname, setSurname] = React.useState("");
   const [username, setUsername] = React.useState("");
   const [dob, setDob] = React.useState("");
-  const [inviteCode, setInviteCode] = React.useState("");
+  const [inviteCode, setInviteCode] = React.useState(() => search.invite ?? "");
   const [error, setError] = React.useState("");
   const [inviteNotice, setInviteNotice] = React.useState("");
   const [busy, setBusy] = React.useState(false);
@@ -83,10 +84,20 @@ function Onboarding() {
         return;
       }
       if (inviteCode.trim()) {
-        const { data: redeemed, error: redeemError } = await supabase.rpc("redeem_invite_code", {
-          code: inviteCode.trim(),
-          user_id: session.user.id,
-        });
+        const { data: memberRedeemed, error: memberRedeemError } = await supabase.rpc(
+          "redeem_member_invite",
+          {
+            invite_code: inviteCode.trim(),
+          },
+        );
+        const legacyResult = memberRedeemError
+          ? await supabase.rpc("redeem_invite_code", {
+              code: inviteCode.trim(),
+              user_id: session.user.id,
+            })
+          : { data: memberRedeemed, error: null };
+        const redeemed = legacyResult.data;
+        const redeemError = legacyResult.error;
         if (redeemError) {
           console.error("[v0] invite code redemption failed", {
             error: {

@@ -24,7 +24,8 @@ alter table if exists public.notifications
   add column if not exists message text;
 
 update public.notifications
-set message = coalesce(message, body)
-where message is null;
+set message = coalesce(message, body),
+    body = coalesce(body, message)
+where message is null or body is null;
 
 comment on column public.notifications.message is 'Legacy-compatible notification message; body remains the app display field.';

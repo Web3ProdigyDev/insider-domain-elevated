@@ -15,8 +15,11 @@ export function useMarkets() {
     retry: 2,
   });
 
-  const coins = query.data ?? [];
-  const orderedCoins = React.useMemo(() => solFirst(coins, (coin) => coin.symbol), [coins]);
+  const orderedCoins = React.useMemo(
+    () => solFirst(query.data ?? [], (coin) => coin.symbol),
+    [query.data],
+  );
+  const coins = orderedCoins;
 
   const byId = React.useMemo(() => {
     const map = new Map<string, MarketCoin>();

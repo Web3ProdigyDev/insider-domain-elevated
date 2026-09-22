@@ -3,6 +3,7 @@ alter table if exists public.notifications
   add column if not exists user_id uuid,
   add column if not exists title text,
   add column if not exists body text,
+  add column if not exists message text,
   add column if not exists read_at timestamptz,
   add column if not exists created_at timestamptz default now();
 
@@ -11,6 +12,7 @@ create table if not exists public.notifications (
   user_id uuid not null references auth.users(id) on delete cascade,
   title text not null,
   body text,
+  message text,
   read_at timestamptz,
   created_at timestamptz not null default now()
 );

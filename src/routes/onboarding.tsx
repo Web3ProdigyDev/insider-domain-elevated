@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
+import { PageLoading } from "@/components/common/skeletons";
 import { useRequireMember } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/onboarding")({
@@ -17,7 +18,9 @@ function Onboarding() {
   const search = useSearch({ from: "/onboarding" });
   const { user, ready, allowed } = useRequireMember({ allowIncomplete: true });
   const supabase = React.useMemo(() => createClient(), []);
-  const [session, setSession] = React.useState<{ user: { id: string } } | null>(null);
+  const [session, setSession] = React.useState<{
+    user: { id: string; user_metadata?: { first_name?: string; surname?: string } };
+  } | null>(null);
   const [firstName, setFirstName] = React.useState("");
   const [surname, setSurname] = React.useState("");
   const [username, setUsername] = React.useState("");
@@ -28,9 +31,20 @@ function Onboarding() {
   const [busy, setBusy] = React.useState(false);
 
   React.useEffect(() => {
+    const metadata = session?.user.user_metadata;
+    if (metadata?.first_name && !firstName) setFirstName(metadata.first_name);
+    if (metadata?.surname && !surname) setSurname(metadata.surname);
+  }, [session, firstName, surname]);
+
+  React.useEffect(() => {
     let active = true;
     void supabase.auth.getSession().then(({ data }) => {
-      if (active) setSession(data.session ? { user: { id: data.session.user.id } } : null);
+      if (active)
+        setSession(
+          data.session
+            ? { user: { id: data.session.user.id, user_metadata: data.session.user.user_metadata } }
+            : null,
+        );
     });
     return () => {
       active = false;
@@ -134,7 +148,8 @@ function Onboarding() {
     }
   };
 
-  if (!ready || !user || !allowed || !session) return null;
+  if (!ready || !user || !allowed || !session)
+    return <PageLoading label="Checking your membership" />;
   return (
     <AuthShell
       eyebrow="Step 1 of 2"

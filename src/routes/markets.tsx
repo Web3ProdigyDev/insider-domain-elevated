@@ -7,7 +7,7 @@ import { SearchBar } from "@/components/common/search-bar";
 import { CoinCard } from "@/components/cards/coin-card";
 import { AssetCard } from "@/components/cards/asset-card";
 import { EmptyState } from "@/components/common/empty-state";
-import { SkeletonList } from "@/components/common/skeletons";
+import { SkeletonTable } from "@/components/common/skeletons";
 import {
   SegmentedTabs,
   SegmentedTabsContent,
@@ -91,14 +91,7 @@ function Markets() {
 
         <SegmentedTabsContent value="all">
           {isLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-[72px] animate-pulse rounded-2xl border border-border bg-card"
-                />
-              ))}
-            </div>
+            <SkeletonTable rows={8} />
           ) : isError ? (
             <EmptyState
               title="The tape is quiet"

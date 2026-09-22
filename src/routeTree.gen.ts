@@ -32,6 +32,7 @@ import { Route as AssetIdRouteImport } from './routes/asset.$id'
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as AuthRecoverRouteImport } from './routes/auth.recover'
 import { Route as AuthSignupRouteImport } from './routes/auth.signup'
+import { Route as AuthSuspendedRouteImport } from './routes/auth.suspended'
 import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
 import { Route as TransferAssetIdRouteImport } from './routes/transfer.$assetId'
 
@@ -150,6 +151,11 @@ const AuthSignupRoute = AuthSignupRouteImport.update({
   path: '/auth/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthSuspendedRoute = AuthSuspendedRouteImport.update({
+  id: '/auth/suspended',
+  path: '/auth/suspended',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthVerifyRoute = AuthVerifyRouteImport.update({
   id: '/auth/verify',
   path: '/auth/verify',
@@ -184,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/asset/$id': typeof AssetIdRoute
   '/auth/recover': typeof AuthRecoverRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/auth/suspended': typeof AuthSuspendedRoute
   '/auth/verify': typeof AuthVerifyRoute
   '/transfer/$assetId': typeof TransferAssetIdRoute
   '/auth/': typeof AuthIndexRoute
@@ -211,6 +218,7 @@ export interface FileRoutesByTo {
   '/asset/$id': typeof AssetIdRoute
   '/auth/recover': typeof AuthRecoverRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/auth/suspended': typeof AuthSuspendedRoute
   '/auth/verify': typeof AuthVerifyRoute
   '/transfer/$assetId': typeof TransferAssetIdRoute
   '/auth': typeof AuthIndexRoute
@@ -239,6 +247,7 @@ export interface FileRoutesById {
   '/asset/$id': typeof AssetIdRoute
   '/auth/recover': typeof AuthRecoverRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/auth/suspended': typeof AuthSuspendedRoute
   '/auth/verify': typeof AuthVerifyRoute
   '/transfer/$assetId': typeof TransferAssetIdRoute
   '/auth/': typeof AuthIndexRoute
@@ -268,6 +277,7 @@ export interface FileRouteTypes {
     | '/asset/$id'
     | '/auth/recover'
     | '/auth/signup'
+    | '/auth/suspended'
     | '/auth/verify'
     | '/transfer/$assetId'
     | '/auth/'
@@ -295,6 +305,7 @@ export interface FileRouteTypes {
     | '/asset/$id'
     | '/auth/recover'
     | '/auth/signup'
+    | '/auth/suspended'
     | '/auth/verify'
     | '/transfer/$assetId'
     | '/auth'
@@ -322,6 +333,7 @@ export interface FileRouteTypes {
     | '/asset/$id'
     | '/auth/recover'
     | '/auth/signup'
+    | '/auth/suspended'
     | '/auth/verify'
     | '/transfer/$assetId'
     | '/auth/'
@@ -349,6 +361,7 @@ export interface RootRouteChildren {
   AssetIdRoute: typeof AssetIdRoute
   AuthRecoverRoute: typeof AuthRecoverRoute
   AuthSignupRoute: typeof AuthSignupRoute
+  AuthSuspendedRoute: typeof AuthSuspendedRoute
   AuthVerifyRoute: typeof AuthVerifyRoute
   AuthIndexRoute: typeof AuthIndexRoute
 }
@@ -516,6 +529,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSignupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/suspended': {
+      id: '/auth/suspended'
+      path: '/auth/suspended'
+      fullPath: '/auth/suspended'
+      preLoaderRoute: typeof AuthSuspendedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/verify': {
       id: '/auth/verify'
       path: '/auth/verify'
@@ -577,6 +597,7 @@ const rootRouteChildren: RootRouteChildren = {
   AssetIdRoute: AssetIdRoute,
   AuthRecoverRoute: AuthRecoverRoute,
   AuthSignupRoute: AuthSignupRoute,
+  AuthSuspendedRoute: AuthSuspendedRoute,
   AuthVerifyRoute: AuthVerifyRoute,
   AuthIndexRoute: AuthIndexRoute,
 }

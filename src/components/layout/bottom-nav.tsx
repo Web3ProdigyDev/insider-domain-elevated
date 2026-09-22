@@ -1,12 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useRequireMember } from "@/lib/use-auth";
+import { useAuth } from "@/lib/use-auth";
 import { cn } from "@/lib/utils";
 import { adminNavItem, bottomNavItems } from "./nav-items";
 import { isNavActive } from "@/lib/nav-active";
 
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { user } = useRequireMember();
+  const { user } = useAuth();
   const items = user?.role === "admin" ? [...bottomNavItems, adminNavItem] : bottomNavItems;
 
   return (

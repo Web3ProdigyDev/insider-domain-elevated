@@ -13,6 +13,7 @@ export function AppShell({
   action,
   children,
   className,
+  allowIncomplete = false,
 }: {
   title: string;
   eyebrow?: string | undefined;
@@ -20,8 +21,12 @@ export function AppShell({
   action?: ReactNode | undefined;
   children: ReactNode;
   className?: string | undefined;
+  /** Pass true on pages that let members with unfinished onboarding stay,
+   * so this shell does not redirect them away on its own. Must match the
+   * value the page itself passes to its own useRequireMember call. */
+  allowIncomplete?: boolean;
 }) {
-  const { allowed, ready } = useRequireMember();
+  const { allowed, ready } = useRequireMember({ allowIncomplete });
   if (!ready) {
     return (
       <div className="flex min-h-screen w-full bg-background">

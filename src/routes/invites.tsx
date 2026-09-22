@@ -79,7 +79,7 @@ function InvitesPage() {
 
   if (!ready) return null;
   return (
-    <AppShell eyebrow="Member network" title="Invite someone you trust">
+    <AppShell eyebrow="Member network" title="Invite someone you trust" allowIncomplete>
       <div className="space-y-4">
         <Card className="space-y-4 p-5">
           <div className="flex items-center gap-3">

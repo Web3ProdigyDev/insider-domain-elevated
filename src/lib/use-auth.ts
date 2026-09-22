@@ -18,6 +18,7 @@ type MemberRecord = {
   role: string;
   emailVerified: boolean;
   onboardingCompleted: boolean;
+  suspended: boolean;
   onboarding: {
     identityConfirmed: boolean;
     ageConfirmed: boolean;
@@ -41,6 +42,7 @@ function useAuthState() {
   const [profile, setProfile] = React.useState<{
     role: string;
     onboarding_completed: boolean;
+    suspended: boolean;
     dob: string | null;
     first_name: string | null;
     surname: string | null;
@@ -59,7 +61,7 @@ function useAuthState() {
       setProfileLoading(true);
       const { data: row, error } = await supabase
         .from("profiles")
-        .select("role,onboarding_completed,dob,first_name,surname,username")
+        .select("role,onboarding_completed,suspended,dob,first_name,surname,username")
         .eq("id", nextSession.user.id)
         .maybeSingle();
       if (active) {
@@ -95,31 +97,32 @@ function useAuthState() {
   const authUser = session?.user;
   const user: MemberRecord | null = authUser
     ? ({
-      id: authUser.id,
-      email: authUser.email ?? "",
-      firstName: profile?.first_name ?? "",
-      surname: profile?.surname ?? "",
-      middleName: "",
-      username: profile?.username ?? "",
-      password: "",
-      dob: profile?.dob ?? "",
-      invitationCode: "",
-      invitedBy: "",
-      role: profile?.role ?? "member",
-      emailVerified: Boolean(authUser.email_confirmed_at),
-      onboardingCompleted: profile?.onboarding_completed ?? false,
-      onboarding: {
-        identityConfirmed: true,
-        ageConfirmed: true,
-        invitationConfirmed: true,
-        privacyAccepted: true,
-        securityAccepted: true,
-        communications: ["account", "security"],
-        experience: null,
-      },
-      wallet: null,
-      createdAt: authUser.created_at,
-    } as MemberRecord)
+        id: authUser.id,
+        email: authUser.email ?? "",
+        firstName: profile?.first_name ?? "",
+        surname: profile?.surname ?? "",
+        middleName: "",
+        username: profile?.username ?? "",
+        password: "",
+        dob: profile?.dob ?? "",
+        invitationCode: "",
+        invitedBy: "",
+        role: profile?.role ?? "member",
+        suspended: profile?.suspended ?? false,
+        emailVerified: Boolean(authUser.email_confirmed_at),
+        onboardingCompleted: profile?.onboarding_completed ?? false,
+        onboarding: {
+          identityConfirmed: true,
+          ageConfirmed: true,
+          invitationConfirmed: true,
+          privacyAccepted: true,
+          securityAccepted: true,
+          communications: ["account", "security"],
+          experience: null,
+        },
+        wallet: null,
+        createdAt: authUser.created_at,
+      } as MemberRecord)
     : null;
   const ready = session !== undefined && !profileLoading;
   return { user, ready, session, configured };
@@ -156,6 +159,10 @@ export function useRequireMember({ adminOnly = false, allowIncomplete = false } 
       void navigate({ to: "/auth/verify", replace: true });
       return;
     }
+    if (user.suspended) {
+      void navigate({ to: "/auth/suspended", replace: true });
+      return;
+    }
     if (!allowIncomplete && !user.onboardingCompleted) {
       void navigate({ to: "/onboarding", replace: true });
       return;
@@ -168,6 +175,7 @@ export function useRequireMember({ adminOnly = false, allowIncomplete = false } 
   const allowed =
     !!user &&
     user.emailVerified &&
+    !user.suspended &&
     (allowIncomplete || user.onboardingCompleted) &&
     (!adminOnly || user.role === "admin");
 

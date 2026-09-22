@@ -1,6 +1,11 @@
 import { createClient } from "./client";
 
-export async function signUpWithPassword(input: { email: string; password: string }) {
+export async function signUpWithPassword(input: {
+  email: string;
+  password: string;
+  firstName: string;
+  surname: string;
+}) {
   const supabase = createClient();
   return supabase.auth.signUp({
     email: input.email.trim().toLowerCase(),

@@ -14,6 +14,7 @@ import { SectionHeader } from "@/components/common/section-header";
 import { QuickActions } from "@/components/common/quick-actions";
 import { Sparkline } from "@/components/common/sparkline";
 import { AllocationBar } from "@/components/common/allocation-bar";
+import { PageLoading } from "@/components/common/skeletons";
 import { formatSigned } from "@/lib/format";
 import { useMarkets, usePortfolio } from "@/lib/use-markets";
 import { useAuth } from "@/lib/use-auth";
@@ -48,7 +49,7 @@ function Overview() {
     if (ready && !user) void navigate({ to: "/auth", replace: true });
   }, [ready, user, navigate]);
 
-  if (!ready || !user) return null;
+  if (!ready || !user) return <PageLoading label="Opening your private desk" />;
   return <OverviewContent user={user} />;
 }
 

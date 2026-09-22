@@ -18,19 +18,25 @@ export const Route = createFileRoute("/auth/signup")({
 });
 
 function SignUpRoute() {
+  const [firstName, setFirstName] = React.useState("");
+  const [surname, setSurname] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
   const [submitted, setSubmitted] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
-  const ready = email.includes("@") && password.length >= 8;
+  const ready =
+    firstName.trim().length >= 2 &&
+    surname.trim().length >= 2 &&
+    email.includes("@") &&
+    password.length >= 8;
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!ready || busy) return;
     setError("");
     setBusy(true);
-    const result = await signUpWithPassword({ email, password });
+    const result = await signUpWithPassword({ email, password, firstName, surname });
     if (result.error) {
       setError("We could not create that membership. Check your details and try again.");
       setBusy(false);
@@ -62,6 +68,22 @@ function SignUpRoute() {
               Confirm it, then sign in to continue.
             </div>
           ) : null}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input
+              label="First name"
+              autoComplete="given-name"
+              value={firstName}
+              onChange={(event) => setFirstName(event.target.value)}
+              placeholder="Ada"
+            />
+            <Input
+              label="Surname"
+              autoComplete="family-name"
+              value={surname}
+              onChange={(event) => setSurname(event.target.value)}
+              placeholder="Lovelace"
+            />
+          </div>
           <Input
             label="Email address"
             type="email"

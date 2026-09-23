@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Copy, Gift, QrCode } from "lucide-react";
+import { ArrowLeft, Copy, Gift, QrCode } from "lucide-react";
 import QRCode from "qrcode";
 
 import { Button } from "@/components/ui/button";
@@ -80,6 +80,13 @@ function InvitesPage() {
   if (!ready) return null;
   return (
     <AppShell eyebrow="Member network" title="Invite someone you trust" allowIncomplete>
+      <button
+        type="button"
+        onClick={() => void navigate({ to: "/settings" })}
+        className="mb-6 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="size-3.5" /> Settings
+      </button>
       <div className="space-y-4">
         <Card className="space-y-4 p-5">
           <div className="flex items-center gap-3">

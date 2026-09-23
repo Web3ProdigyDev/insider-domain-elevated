@@ -1,7 +1,7 @@
 import * as React from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, Check } from "lucide-react";
+import { ArrowLeft, Bell, Check } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { EmptyState } from "@/components/common/empty-state";
@@ -26,10 +26,16 @@ export const Route = createFileRoute("/notifications")({
         content: "Assistant reviews, invitations, funding and system notes in one quiet place.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: `${import.meta.env.VITE_SITE_URL || "https://insider-domain-elevated.lovable.app"}/notifications` },
+      {
+        property: "og:url",
+        content: `${import.meta.env.VITE_SITE_URL || "https://insider-domain-elevated.lovable.app"}/notifications`,
+      },
     ],
     links: [
-      { rel: "canonical", href: `${import.meta.env.VITE_SITE_URL || "https://insider-domain-elevated.lovable.app"}/notifications` },
+      {
+        rel: "canonical",
+        href: `${import.meta.env.VITE_SITE_URL || "https://insider-domain-elevated.lovable.app"}/notifications`,
+      },
     ],
   }),
   component: Notifications,
@@ -79,6 +85,13 @@ function Notifications() {
         </Button>
       }
     >
+      <button
+        type="button"
+        onClick={() => void navigate({ to: "/" })}
+        className="mb-6 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="size-3.5" /> Home
+      </button>
       {notificationsQuery.isLoading ? (
         <SkeletonList rows={5} />
       ) : notifications.length ? (

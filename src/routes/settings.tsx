@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Bell, Shield, LogOut, ChevronRight, Trash2, UserPlus } from "lucide-react";
+import { ArrowLeft, Bell, Shield, LogOut, ChevronRight, Trash2, UserPlus } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { MemberCard } from "@/components/cards/member-card";
@@ -44,6 +44,12 @@ function Settings() {
 
   return (
     <AppShell eyebrow="Account" title="Settings">
+      <Link
+        to="/"
+        className="mb-6 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="size-3.5" /> Home
+      </Link>
       <MemberCard
         member={{
           id: user?.id ?? "self",

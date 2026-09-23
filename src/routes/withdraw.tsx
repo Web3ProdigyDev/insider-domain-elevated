@@ -76,7 +76,10 @@ function Withdraw() {
         amount,
         metadata: { destination: address.trim() },
       });
-      notify.success("Withdrawal queued", "Your withdrawal is under review.");
+      notify.success(
+        "Withdrawal processing",
+        "This is a withdrawal request for review; it has not been broadcast to the Solana network and funds have not moved.",
+      );
       setAmount("");
       setAddress("");
       setReviewing(false);
@@ -102,7 +105,8 @@ function Withdraw() {
           <div>
             <p className="text-sm text-foreground">Withdraw funds</p>
             <p className="text-xs text-muted-foreground">
-              Enter an amount and verified destination for review.
+              Enter an amount and verified destination for review. Requests are not broadcast
+              automatically.
             </p>
           </div>
         </div>

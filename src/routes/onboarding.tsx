@@ -1,5 +1,6 @@
 import * as React from "react";
-import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,8 @@ import { PageLoading } from "@/components/common/skeletons";
 import { useRequireMember } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/onboarding")({
+  validateSearch: (search: Record<string, unknown>): { invite?: string } =>
+    typeof search.invite === "string" && search.invite ? { invite: search.invite } : {},
   head: () => ({ meta: [{ title: "Your details — Insider Domain" }] }),
   component: Onboarding,
 });
@@ -29,6 +32,9 @@ function Onboarding() {
   const [error, setError] = React.useState("");
   const [inviteNotice, setInviteNotice] = React.useState("");
   const [busy, setBusy] = React.useState(false);
+  const hasSignupNames = Boolean(
+    session?.user.user_metadata?.first_name?.trim() && session?.user.user_metadata?.surname?.trim(),
+  );
 
   React.useEffect(() => {
     const metadata = session?.user.user_metadata;
@@ -57,7 +63,7 @@ function Onboarding() {
     setError("");
     const age = dob ? Math.floor((Date.now() - new Date(dob).getTime()) / 31_557_600_000) : 0;
     if (busy) return;
-    if (firstName.trim().length < 2 || surname.trim().length < 2)
+    if (!hasSignupNames && (firstName.trim().length < 2 || surname.trim().length < 2))
       return setError("Enter your first and last name to continue.");
     if (!/^[a-z0-9_]{3,24}$/i.test(username))
       return setError("Choose a username with 3–24 letters, numbers, or underscores.");
@@ -66,8 +72,12 @@ function Onboarding() {
     try {
       const profilePayload = {
         id: session.user.id,
-        first_name: firstName.trim(),
-        surname: surname.trim(),
+        first_name: hasSignupNames
+          ? (session.user.user_metadata?.first_name?.trim() ?? firstName.trim())
+          : firstName.trim(),
+        surname: hasSignupNames
+          ? (session.user.user_metadata?.surname?.trim() ?? surname.trim())
+          : surname.trim(),
         username: username.trim().toLowerCase(),
         dob,
         onboarding_completed: true,
@@ -156,26 +166,34 @@ function Onboarding() {
       title="Tell us who you are"
       description="A few details help us keep your account secure and confirm funding eligibility."
     >
+      <Link
+        to="/auth/signup"
+        className="mb-6 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="size-3.5" /> Back to sign up
+      </Link>
       <div className="mb-5 flex gap-2" aria-label="Onboarding progress">
         <span className="h-1 flex-1 rounded-full bg-gold" />
         <span className="h-1 flex-1 rounded-full bg-border" />
       </div>
       <Card padding="lg">
         <form className="space-y-5" onSubmit={submit}>
-          <div className="grid gap-5 sm:grid-cols-2">
-            <Input
-              label="First name"
-              autoComplete="given-name"
-              value={firstName}
-              onChange={(event) => setFirstName(event.target.value)}
-            />
-            <Input
-              label="Surname"
-              autoComplete="family-name"
-              value={surname}
-              onChange={(event) => setSurname(event.target.value)}
-            />
-          </div>
+          {!hasSignupNames ? (
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Input
+                label="First name"
+                autoComplete="given-name"
+                value={firstName}
+                onChange={(event) => setFirstName(event.target.value)}
+              />
+              <Input
+                label="Surname"
+                autoComplete="family-name"
+                value={surname}
+                onChange={(event) => setSurname(event.target.value)}
+              />
+            </div>
+          ) : null}
           <Input
             label="Username"
             hint="This is how the desk will identify you."

@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
 
 import { MarketingShell, Crumbs } from "@/components/marketing/marketing-shell";
 
@@ -55,8 +56,16 @@ const SECTIONS = [
 ];
 
 function Privacy() {
+  const navigate = useNavigate();
   return (
     <MarketingShell>
+      <button
+        type="button"
+        onClick={() => void navigate({ to: "/" })}
+        className="mb-4 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="size-3.5" /> Home
+      </button>
       <Crumbs items={[{ label: "Privacy" }]} />
       <h1 className="mt-6 text-3xl font-medium tracking-[var(--tracking-tightest)] text-foreground sm:text-4xl">
         Privacy Policy

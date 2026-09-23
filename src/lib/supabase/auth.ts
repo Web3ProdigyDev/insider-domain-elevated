@@ -11,6 +11,11 @@ export async function signUpWithPassword(input: {
     email: input.email.trim().toLowerCase(),
     password: input.password,
     options: {
+      data: {
+        first_name: input.firstName.trim(),
+        surname: input.surname.trim(),
+        full_name: `${input.firstName.trim()} ${input.surname.trim()}`,
+      },
       emailRedirectTo:
         import.meta.env.VITE_SUPABASE_REDIRECT_URL ||
         `${import.meta.env.VITE_SITE_URL || window.location.origin}/auth/callback`,

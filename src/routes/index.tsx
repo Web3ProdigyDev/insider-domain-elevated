@@ -7,16 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PortfolioCard } from "@/components/cards/portfolio-card";
-import { AssetCard } from "@/components/cards/asset-card";
+import { CoinLogo } from "@/components/common/coin-logo";
+import { EmptyState } from "@/components/common/empty-state";
 import { CoinCard } from "@/components/cards/coin-card";
 import { TransactionCard } from "@/components/cards/transaction-card";
 import { SectionHeader } from "@/components/common/section-header";
 import { QuickActions } from "@/components/common/quick-actions";
-import { Sparkline } from "@/components/common/sparkline";
 import { AllocationBar } from "@/components/common/allocation-bar";
 import { PageLoading } from "@/components/common/skeletons";
-import { formatSigned } from "@/lib/format";
 import { useMarkets, usePortfolio } from "@/lib/use-markets";
+import { holdingsQueryOptions } from "@/lib/solana-assets";
+import { useVaultAddress } from "@/lib/use-vault-address";
+import { useSolanaNetwork } from "@/lib/solana-network";
 import { useAuth } from "@/lib/use-auth";
 import { getWalletData } from "@/lib/wallet.functions";
 import { useQuery } from "@tanstack/react-query";
@@ -93,6 +95,12 @@ function GetStarted() {
 function OverviewContent({ user }: { user: ReturnType<typeof useAuth>["user"] }) {
   const { positions, balance, change24h, changeValue, isLoading } = usePortfolio();
   const { coins } = useMarkets();
+  const { address: vaultAddress } = useVaultAddress();
+  const [network] = useSolanaNetwork();
+  const onchainQuery = useQuery({
+    ...holdingsQueryOptions(vaultAddress ?? "", network),
+    enabled: Boolean(vaultAddress),
+  });
   const walletQuery = useQuery({
     queryKey: ["wallet-data"],
     queryFn: () => getWalletData(),
@@ -155,20 +163,74 @@ function OverviewContent({ user }: { user: ReturnType<typeof useAuth>["user"] })
 
       <section className="mt-10">
         <SectionHeader
-          title="Positions"
+          title="Portfolio summary"
           action={
             <Button variant="ghost" size="sm" asChild>
               <Link to="/wallet">
-                All <ArrowUpRight />
+                Wallet <ArrowUpRight />
               </Link>
             </Button>
           }
         />
-        <div className="space-y-3">
-          {positions.slice(0, 4).map((position) => (
-            <AssetCard key={position.id} position={position} />
-          ))}
-        </div>
+        <Card padding="lg">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <p className="text-eyebrow">Real devnet SOL</p>
+              <p className="numeric mt-2 text-2xl text-foreground">
+                {onchainQuery.isLoading
+                  ? "Loading…"
+                  : `${onchainQuery.data?.sol?.toFixed(4) ?? "0.0000"} SOL`}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                On-chain balance, kept separate from simulated funds.
+              </p>
+            </div>
+            <div>
+              <p className="text-eyebrow">Simulated wallet value</p>
+              <p className="numeric mt-2 text-2xl text-foreground">
+                ${balance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Paper balances used by the simulator.
+              </p>
+            </div>
+          </div>
+          <p className="mt-5 text-xs leading-relaxed text-muted-foreground">
+            Some prices on this platform are simulated for testing purposes and do not reflect real
+            market activity.
+          </p>
+          {positions.length ? (
+            <div className="mt-5 space-y-2">
+              {positions.slice(0, 3).map((position) => {
+                const coin = coins.find((item) => item.id === position.id);
+                return (
+                  <Link
+                    key={position.id}
+                    to="/wallet"
+                    className="flex items-center gap-3 rounded-xl border border-border px-3 py-2 hover:bg-surface-raised"
+                  >
+                    <CoinLogo src={position.image} symbol={position.symbol} size={28} />
+                    <span className="text-sm text-foreground">{position.symbol}</span>
+                    <span className="numeric ml-auto text-sm text-muted-foreground">
+                      {position.amount.toFixed(4)}
+                    </span>
+                    {coin?.simulated ? <Badge variant="outline">Simulated</Badge> : null}
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            <EmptyState
+              title="No simulated holdings yet"
+              description="Deposit funds to start building your simulated portfolio."
+              action={
+                <Button size="sm" asChild>
+                  <Link to="/deposit">Deposit</Link>
+                </Button>
+              }
+            />
+          )}
+        </Card>
       </section>
 
       <section className="mt-10">
@@ -202,12 +264,11 @@ function OverviewContent({ user }: { user: ReturnType<typeof useAuth>["user"] })
                 Scanning live market conditions across supported instruments.
               </p>
             </div>
-            <Badge variant="gold">Armed</Badge>
+            <Badge variant="outline">Idle</Badge>
           </div>
-          <Sparkline seed="sniper" change={2.4} height={56} className="mt-5" />
           <div className="mt-5 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
             <p className="numeric text-xs text-muted-foreground">
-              Session P&L <span className="text-positive">{formatSigned(3.42)}</span>
+              No active session <span className="text-muted-foreground">· idle</span>
             </p>
             <Button variant="secondary" size="sm" asChild>
               <Link to="/trading">Open desk</Link>

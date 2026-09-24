@@ -17,6 +17,13 @@ import {
   revokeInviteCode,
 } from "@/lib/admin.functions";
 import { useRequireMember } from "@/lib/use-auth";
+import {
+  deactivatePriceSimulation,
+  listPriceSimulations,
+  savePriceSimulation,
+} from "@/lib/price-simulation.functions";
+import { useMarkets } from "@/lib/use-markets";
+import type { PriceSimulation } from "@/lib/markets.functions";
 
 export const Route = createFileRoute("/admin")({ component: AdminMembers });
 
@@ -27,6 +34,21 @@ function AdminMembers() {
   const [inviteRole, setInviteRole] = React.useState<"member" | "admin">("member");
   const [maxUses, setMaxUses] = React.useState("1");
   const [inviteBusy, setInviteBusy] = React.useState(false);
+  const [simulationId, setSimulationId] = React.useState<string | undefined>();
+  const [simulation, setSimulation] = React.useState({
+    coin_id: "dogecoin",
+    spike_percent: "10",
+    range_min: "0",
+    range_max: "0",
+    capture_fraction: "0.6",
+  });
+  const simulationQuery = useQuery({
+    queryKey: ["admin-price-simulations"],
+    queryFn: listPriceSimulations,
+    enabled: ready && allowed,
+    retry: false,
+  });
+  const { coins } = useMarkets();
   const inviteQuery = useQuery({
     queryKey: ["admin-invites"],
     queryFn: listInviteCodes,
@@ -47,6 +69,109 @@ function AdminMembers() {
   return (
     <AppShell eyebrow="Admin" title="Members" description="Manage members, access, and invites.">
       <div className="flex flex-col gap-6">
+        <Card padding="lg">
+          <p className="text-eyebrow">Price simulations</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Explicitly labeled test prices only. Members see a Simulated badge.
+          </p>
+          <form
+            className="mt-4 grid gap-3 sm:grid-cols-5"
+            onSubmit={async (event) => {
+              event.preventDefault();
+              await savePriceSimulation({
+                coin_id: simulation.coin_id,
+                spike_percent: Number(simulation.spike_percent),
+                range_min: Number(simulation.range_min) || 0,
+                range_max: Number(simulation.range_max) || 0,
+                capture_fraction: Number(simulation.capture_fraction),
+                ...(simulationId ? { id: simulationId } : {}),
+              });
+              void simulationQuery.refetch();
+            }}
+          >
+            <select
+              aria-label="Simulation coin"
+              className="h-10 rounded-xl border border-border bg-card px-3 text-sm"
+              value={simulation.coin_id}
+              onChange={(event) => setSimulation({ ...simulation, coin_id: event.target.value })}
+            >
+              {coins.slice(0, 100).map((coin) => (
+                <option key={coin.id} value={coin.id}>
+                  {coin.symbol}
+                </option>
+              ))}
+            </select>
+            <Input
+              label="Spike %"
+              value={simulation.spike_percent}
+              onChange={(event) =>
+                setSimulation({ ...simulation, spike_percent: event.target.value })
+              }
+            />
+            <Input
+              label="Min"
+              value={simulation.range_min}
+              onChange={(event) => setSimulation({ ...simulation, range_min: event.target.value })}
+            />
+            <Input
+              label="Max"
+              value={simulation.range_max}
+              onChange={(event) => setSimulation({ ...simulation, range_max: event.target.value })}
+            />
+            <Input
+              label="Capture"
+              value={simulation.capture_fraction}
+              onChange={(event) =>
+                setSimulation({ ...simulation, capture_fraction: event.target.value })
+              }
+            />
+            <Button type="submit">{simulationId ? "Save simulation" : "Create simulation"}</Button>
+          </form>
+          <div className="mt-4 space-y-2">
+            {simulationQuery.data
+              ?.filter((item: PriceSimulation) => item.active)
+              .map((item: PriceSimulation) => (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-3 rounded-xl border border-border px-3 py-2 text-sm"
+                >
+                  <span className="font-medium">{item.coin_id}</span>
+                  <span className="text-muted-foreground">
+                    +{item.spike_percent}% · {item.range_min} to {item.range_max}
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setSimulationId(item.id);
+                      setSimulation({
+                        coin_id: item.coin_id,
+                        spike_percent: String(item.spike_percent ?? 0),
+                        range_min: String(item.range_min ?? 0),
+                        range_max: String(item.range_max ?? 0),
+                        capture_fraction: String(item.capture_fraction ?? 0.6),
+                      });
+                    }}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="ml-auto"
+                    onClick={async () => {
+                      await deactivatePriceSimulation(item.id);
+                      void simulationQuery.refetch();
+                    }}
+                  >
+                    Deactivate
+                  </Button>
+                </div>
+              ))}
+          </div>
+        </Card>
         <Card padding="lg">
           <form
             className="flex flex-wrap items-end gap-3"

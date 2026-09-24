@@ -1,5 +1,15 @@
 import { createServerFn } from "@tanstack/react-start";
 
+export type PriceSimulation = {
+  id: string;
+  coin_id: string;
+  spike_percent: number | null;
+  range_min: number | null;
+  range_max: number | null;
+  capture_fraction: number;
+  active: boolean;
+};
+
 export type MarketCoin = {
   id: string;
   symbol: string;
@@ -10,6 +20,7 @@ export type MarketCoin = {
   marketCap: number;
   volume24h: number;
   rank: number;
+  simulated?: boolean;
 };
 
 type RawCoin = {

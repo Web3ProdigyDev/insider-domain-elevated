@@ -69,6 +69,10 @@ function Markets() {
         </Button>
       }
     >
+      <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+        Some prices on this platform are simulated for testing purposes and do not reflect real
+        market activity.
+      </p>
       <SearchBar
         value={query}
         onValueChange={(v) => {
@@ -131,11 +135,13 @@ function Markets() {
         <SegmentedTabsContent value="gainers">
           <div className="flex max-h-[52vh] flex-col gap-3 overflow-y-auto overscroll-contain pr-1">
             {solFirst(
-              [...coins].sort((a, b) => b.change24h - a.change24h).slice(0, 20),
+              [...coins].sort((a, b) => b.change24h - a.change24h),
               (coin) => coin.symbol,
-            ).map((coin) => (
-              <CoinCard key={coin.id} coin={coin} />
-            ))}
+            )
+              .slice(0, 20)
+              .map((coin) => (
+                <CoinCard key={coin.id} coin={coin} />
+              ))}
           </div>
         </SegmentedTabsContent>
       </SegmentedTabs>

@@ -96,7 +96,8 @@ function AssetDetail() {
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-5">
-          <p className="numeric text-3xl text-foreground">{formatPrice(coin.price)}</p>
+          <p className="numeric text-3xl text-foreground">{formatPrice(coin.price)} {coin.simulated ? <Badge variant="outline" className="align-middle text-xs">Simulated</Badge> : null}</p>
+          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Some prices on this platform are simulated for testing purposes and do not reflect real market activity.</p>
           <p className={"numeric mt-1 text-sm " + (positive ? "text-positive" : "text-negative")}>
             {formatSigned(coin.change24h)} · 24h
           </p>

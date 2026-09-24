@@ -216,6 +216,10 @@ function Wallet() {
         </section>
         <section>
           <p className="text-eyebrow">Account balances</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            Some prices on this platform are simulated for testing purposes and do not reflect real
+            market activity.
+          </p>
           <div className="mt-3 flex max-h-[52vh] flex-col gap-2 overflow-y-auto overscroll-contain pr-1">
             {Object.keys(balances).length === 0 ? (
               <Card padding="default" className="border-dashed">
@@ -247,7 +251,13 @@ function Wallet() {
                       {amount.toFixed(4)} {coin?.symbol ?? ""}
                     </span>
                     <span className="numeric block text-xs text-muted-foreground">
-                      {coin?.price ? `$${coin.price.toLocaleString()}` : "Price unavailable"} ·{" "}
+                      {coin?.price ? `$${coin.price.toLocaleString()}` : "Price unavailable"}{" "}
+                      {coin?.simulated ? (
+                        <Badge variant="outline" className="ml-1">
+                          Simulated
+                        </Badge>
+                      ) : null}{" "}
+                      ·{" "}
                       {coin?.price
                         ? `$${(amount * coin.price).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
                         : "—"}

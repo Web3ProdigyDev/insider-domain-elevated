@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getMarketCoins, type MarketCoin } from "./markets.functions";
 import { getWalletData } from "./wallet.functions";
 import { solFirst } from "./sort-assets";
+import { applyPriceSimulations, usePriceSimulations } from "./use-price-simulations";
 
 /** Shared live-market access. One query, one cache, used by every screen. */
 export function useMarkets() {
@@ -15,22 +16,26 @@ export function useMarkets() {
     retry: 2,
   });
 
+  const simulationQuery = usePriceSimulations();
   const orderedCoins = React.useMemo(
     () => solFirst(query.data ?? [], (coin) => coin.symbol),
     [query.data],
   );
-  const coins = orderedCoins;
+  const coins = React.useMemo(
+    () => applyPriceSimulations(orderedCoins, simulationQuery.data ?? []),
+    [orderedCoins, simulationQuery.data],
+  );
 
   const byId = React.useMemo(() => {
     const map = new Map<string, MarketCoin>();
-    for (const coin of orderedCoins) map.set(coin.id, coin);
+    for (const coin of coins) map.set(coin.id, coin);
     return map;
-  }, [orderedCoins]);
+  }, [coins]);
 
   return {
-    coins: orderedCoins,
+    coins,
     byId,
-    isLoading: query.isLoading,
+    isLoading: query.isLoading || simulationQuery.isLoading,
     isError: query.isError,
     refetch: query.refetch,
   };

@@ -63,13 +63,13 @@ export function usePortfolio() {
   return React.useMemo(() => {
     const positions = (walletQuery.data?.balances ?? [])
       .map((row) => {
-        const coin = byId.get(row.assetId);
+        const coin = byId.get(row.asset_id);
         const amount = Number(row.amount);
         const price = coin?.price ?? 0;
         return {
-          id: row.assetId,
-          symbol: coin?.symbol ?? row.assetId,
-          name: coin?.name ?? row.assetId,
+          id: row.asset_id,
+          symbol: coin?.symbol ?? row.asset_id,
+          name: coin?.name ?? row.asset_id,
           image: coin?.image,
           amount,
           price,

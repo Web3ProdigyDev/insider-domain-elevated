@@ -74,12 +74,12 @@ function Wallet() {
   });
   const wallet = walletQuery.data;
   const balances = Object.fromEntries(
-    (wallet?.balances ?? []).map((row) => [row.assetId, Number(row.amount)]),
+    (wallet?.balances ?? []).map((row) => [row.asset_id, Number(row.amount)]),
   );
   const transactions = (wallet?.activity ?? []).map((row) => ({
     id: row.id,
-    note: `${row.type} ${row.assetId}`,
-    symbol: row.assetId,
+    note: `${row.type} ${row.asset_id}`,
+    symbol: row.asset_id,
     status: row.status,
     amount: Number(row.amount),
   }));

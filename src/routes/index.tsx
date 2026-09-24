@@ -234,10 +234,10 @@ function OverviewContent({ user }: { user: ReturnType<typeof useAuth>["user"] })
               transaction={{
                 id: transaction.id,
                 type: transaction.type as "buy" | "sell" | "deposit" | "withdrawal",
-                asset: transaction.assetId,
+                asset: transaction.asset_id,
                 amount: Number(transaction.amount),
                 value: Number(transaction.amount),
-                date: transaction.createdAt.toLocaleDateString(),
+                date: new Date(transaction.created_at).toLocaleDateString(),
                 status: transaction.status as "settled" | "pending" | "failed",
               }}
             />

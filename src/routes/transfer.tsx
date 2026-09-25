@@ -8,14 +8,14 @@ import { formatPrice } from "@/components/cards/coin-card";
 import { SearchBar } from "@/components/common/search-bar";
 import { EmptyState } from "@/components/common/empty-state";
 import { SkeletonList } from "@/components/common/skeletons";
-import { usePortfolio } from "@/lib/use-markets";
+import { useTransferAssets } from "@/lib/use-transfer-assets";
 import { solFirst } from "@/lib/sort-assets";
 import { useState } from "react";
 
 export const Route = createFileRoute("/transfer")({ component: TransferPicker });
 
 function TransferPicker() {
-  const { positions, isLoading } = usePortfolio();
+  const { positions, isLoading } = useTransferAssets();
   const [query, setQuery] = useState("");
   const visible = solFirst(
     positions.filter((p) => `${p.name} ${p.symbol}`.toLowerCase().includes(query.toLowerCase())),

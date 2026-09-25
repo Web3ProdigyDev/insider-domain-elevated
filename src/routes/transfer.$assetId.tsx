@@ -9,7 +9,7 @@ import { CoinLogo } from "@/components/common/coin-logo";
 import { formatPrice } from "@/components/cards/coin-card";
 import { SectionHeader } from "@/components/common/section-header";
 import { notify } from "@/lib/notify";
-import { usePortfolio } from "@/lib/use-markets";
+import { useTransferAssets } from "@/lib/use-transfer-assets";
 import { recordWalletTransaction } from "@/lib/wallet.functions";
 import { hasVault } from "@/lib/wallet-vault-store";
 import { unlockVault } from "@/lib/wallet-vault";
@@ -17,7 +17,7 @@ import { unlockVault } from "@/lib/wallet-vault";
 export const Route = createFileRoute("/transfer/$assetId")({ component: TransferDetails });
 function TransferDetails() {
   const { assetId } = Route.useParams();
-  const { positions } = usePortfolio();
+  const { positions } = useTransferAssets();
   const asset = positions.find((p) => p.id === assetId);
   const navigate = useNavigate();
   const [amount, setAmount] = useState("");

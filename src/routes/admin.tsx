@@ -25,6 +25,8 @@ import {
 } from "@/lib/price-simulation.functions";
 import { useMarkets } from "@/lib/use-markets";
 import type { PriceSimulation } from "@/lib/markets.functions";
+import { SearchBar } from "@/components/common/search-bar";
+import { CoinLogo } from "@/components/common/coin-logo";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin")({ component: AdminMembers });
@@ -44,9 +46,14 @@ function AdminMembers() {
     range_min: "0",
     range_max: "0",
     capture_fraction: "0.6",
+    target_user_id: "",
   }).current;
   const [simulation, setSimulation] = React.useState(defaultSimulation);
   const [simulationBusy, setSimulationBusy] = React.useState(false);
+  const [coinPickerOpen, setCoinPickerOpen] = React.useState(false);
+  const [coinSearch, setCoinSearch] = React.useState("");
+  const [targetSearch, setTargetSearch] = React.useState("");
+  const [targetPickerOpen, setTargetPickerOpen] = React.useState(false);
   // Rows currently playing their exit animation before actually being
   // removed from the list — see the Deactivate handler below.
   const [leavingIds, setLeavingIds] = React.useState<Set<string>>(new Set());
@@ -57,6 +64,50 @@ function AdminMembers() {
     retry: false,
   });
   const { coins } = useMarkets();
+  // Fetched once to resolve target_user_id -> a readable name, both in the
+  // picker and on each existing simulation row.
+  const allMembersQuery = useQuery({
+    queryKey: ["admin-all-members-for-targeting"],
+    queryFn: () => listMembers(""),
+    enabled: ready && allowed,
+    retry: false,
+  });
+  const memberLabel = React.useCallback(
+    (id: string) => {
+      const match = allMembersQuery.data?.find((member) => member.id === id);
+      if (!match) return id.slice(0, 8);
+      return (
+        [match.first_name, match.surname].filter(Boolean).join(" ") ||
+        match.username ||
+        match.email ||
+        id.slice(0, 8)
+      );
+    },
+    [allMembersQuery.data],
+  );
+  const selectedCoin = coins.find((coin) => coin.id === simulation.coin_id);
+  const coinCandidates = React.useMemo(() => {
+    const term = coinSearch.trim().toLowerCase();
+    const list = coins.slice(0, 300);
+    if (!term) return list.slice(0, 30);
+    return list
+      .filter(
+        (coin) => coin.name.toLowerCase().includes(term) || coin.symbol.toLowerCase().includes(term),
+      )
+      .slice(0, 30);
+  }, [coins, coinSearch]);
+  const targetCandidates = React.useMemo(() => {
+    const term = targetSearch.trim().toLowerCase();
+    const list = allMembersQuery.data ?? [];
+    if (!term) return list.slice(0, 8);
+    return list
+      .filter((member) =>
+        [member.first_name, member.surname, member.username, member.email]
+          .filter(Boolean)
+          .some((field) => field!.toLowerCase().includes(term)),
+      )
+      .slice(0, 8);
+  }, [allMembersQuery.data, targetSearch]);
   const inviteQuery = useQuery({
     queryKey: ["admin-invites"],
     queryFn: listInviteCodes,
@@ -99,6 +150,7 @@ function AdminMembers() {
                   range_min: Number(simulation.range_min) || 0,
                   range_max: Number(simulation.range_max) || 0,
                   capture_fraction: Number(simulation.capture_fraction),
+                  target_user_id: simulation.target_user_id || null,
                   ...(simulationId ? { id: simulationId } : {}),
                 });
                 setSimulationId(undefined);
@@ -115,18 +167,49 @@ function AdminMembers() {
               }
             }}
           >
-            <select
-              aria-label="Simulation coin"
-              className="h-10 rounded-xl border border-border bg-card px-3 text-sm"
-              value={simulation.coin_id}
-              onChange={(event) => setSimulation({ ...simulation, coin_id: event.target.value })}
-            >
-              {coins.slice(0, 100).map((coin) => (
-                <option key={coin.id} value={coin.id}>
-                  {coin.symbol}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <p className="text-xs font-medium text-foreground">Asset</p>
+              <button
+                type="button"
+                onClick={() => setCoinPickerOpen((open) => !open)}
+                className="mt-1.5 flex h-10 w-full items-center gap-2 rounded-xl border border-border bg-card px-3 text-sm text-foreground"
+              >
+                <CoinLogo src={selectedCoin?.image} symbol={selectedCoin?.symbol ?? "—"} size={20} />
+                <span className="truncate">{selectedCoin?.symbol ?? simulation.coin_id}</span>
+              </button>
+              {coinPickerOpen ? (
+                <div className="absolute z-20 mt-1 w-72 max-w-[80vw] rounded-xl border border-border bg-card p-2 shadow-lg">
+                  <SearchBar
+                    value={coinSearch}
+                    onValueChange={setCoinSearch}
+                    placeholder="Search asset or ticker"
+                    className="mb-2"
+                  />
+                  <div className="max-h-56 space-y-1 overflow-y-auto">
+                    {coinCandidates.length ? (
+                      coinCandidates.map((coin) => (
+                        <button
+                          key={coin.id}
+                          type="button"
+                          onMouseDown={() => {
+                            setSimulation((current) => ({ ...current, coin_id: coin.id }));
+                            setCoinPickerOpen(false);
+                            setCoinSearch("");
+                          }}
+                          className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-foreground hover:bg-surface-raised"
+                        >
+                          <CoinLogo src={coin.image} symbol={coin.symbol} size={20} />
+                          <span className="truncate">{coin.name}</span>
+                          <span className="ml-auto text-xs text-muted-foreground">{coin.symbol}</span>
+                        </button>
+                      ))
+                    ) : (
+                      <p className="px-2 py-2 text-xs text-muted-foreground">No match</p>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+            </div>
             <Input
               label="Spike %"
               value={simulation.spike_percent}
@@ -151,7 +234,69 @@ function AdminMembers() {
                 setSimulation({ ...simulation, capture_fraction: event.target.value })
               }
             />
-            <div className="flex gap-2">
+            <div className="relative sm:col-span-5">
+              <p className="text-xs font-medium text-foreground">Target member (optional)</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Leave empty to show this to every member. Set one to run it only for a specific
+                person — they still see the &quot;Simulated&quot; label, same as everyone else.
+              </p>
+              {simulation.target_user_id ? (
+                <div className="mt-2 flex items-center gap-2 rounded-xl border border-gold/30 bg-gold-muted/40 px-3 py-2 text-sm">
+                  <span className="text-foreground">{memberLabel(simulation.target_user_id)}</span>
+                  <button
+                    type="button"
+                    className="ml-auto text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() =>
+                      setSimulation((current) => ({ ...current, target_user_id: "" }))
+                    }
+                  >
+                    Clear
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-2">
+                  <Input
+                    value={targetSearch}
+                    onChange={(event) => {
+                      setTargetSearch(event.target.value);
+                      setTargetPickerOpen(true);
+                    }}
+                    onFocus={() => setTargetPickerOpen(true)}
+                    onBlur={() => window.setTimeout(() => setTargetPickerOpen(false), 150)}
+                    placeholder="Search by name, username, or email"
+                  />
+                  {targetPickerOpen && targetSearch.trim() ? (
+                    <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-border bg-card shadow-lg">
+                      {targetCandidates.length ? (
+                        targetCandidates.map((member) => (
+                          <button
+                            key={member.id}
+                            type="button"
+                            onMouseDown={() => {
+                              setSimulation((current) => ({
+                                ...current,
+                                target_user_id: member.id,
+                              }));
+                              setTargetSearch("");
+                              setTargetPickerOpen(false);
+                            }}
+                            className="block w-full px-3 py-2 text-left text-sm text-foreground hover:bg-surface-raised"
+                          >
+                            {[member.first_name, member.surname].filter(Boolean).join(" ") ||
+                              member.username ||
+                              member.email ||
+                              member.id}
+                          </button>
+                        ))
+                      ) : (
+                        <p className="px-3 py-2 text-xs text-muted-foreground">No match</p>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </div>
+            <div className="flex gap-2 sm:col-span-5">
               <Button type="submit" disabled={simulationBusy} className="flex-1">
                 {simulationBusy
                   ? "Saving…"
@@ -187,10 +332,18 @@ function AdminMembers() {
                       : "animate-[spike-in_260ms_ease-out]",
                   )}
                 >
+                  <CoinLogo
+                    src={coins.find((coin) => coin.id === item.coin_id)?.image}
+                    symbol={item.coin_id}
+                    size={20}
+                  />
                   <span className="font-medium">{item.coin_id}</span>
                   <span className="text-muted-foreground">
                     +{item.spike_percent}% · {item.range_min} to {item.range_max}
                   </span>
+                  <Badge variant={item.target_user_id ? "gold" : "outline"}>
+                    {item.target_user_id ? memberLabel(item.target_user_id) : "All members"}
+                  </Badge>
                   <Button
                     type="button"
                     size="sm"
@@ -203,6 +356,7 @@ function AdminMembers() {
                         range_min: String(item.range_min ?? 0),
                         range_max: String(item.range_max ?? 0),
                         capture_fraction: String(item.capture_fraction ?? 0.6),
+                        target_user_id: item.target_user_id ?? "",
                       });
                     }}
                   >

@@ -30,6 +30,7 @@ export async function savePriceSimulation(input: {
   range_min: number;
   range_max: number;
   capture_fraction: number;
+  target_user_id?: string | null;
 }) {
   const { supabase, user } = await requireAdmin();
   if (
@@ -48,6 +49,7 @@ export async function savePriceSimulation(input: {
     range_min: input.range_min,
     range_max: input.range_max,
     capture_fraction: input.capture_fraction,
+    target_user_id: input.target_user_id || null,
     active: true,
     created_by: user.id,
   };

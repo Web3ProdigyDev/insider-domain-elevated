@@ -9,9 +9,10 @@ export function usePriceSimulations() {
   const query = useQuery({
     queryKey: ["price-simulations"],
     queryFn: async () => {
-      const { data, error } = await createClient()
+      const supabase = createClient();
+      const { data, error } = await supabase
         .from("price_simulations")
-        .select("id,coin_id,spike_percent,range_min,range_max,capture_fraction,active")
+        .select("id,coin_id,spike_percent,range_min,range_max,capture_fraction,active,target_user_id")
         .eq("active", true);
       if (error) throw error;
       return (data ?? []) as PriceSimulation[];
@@ -35,7 +36,16 @@ export function applyPriceSimulations<T extends { id: string; price: number }>(
   coins: T[],
   simulations: PriceSimulation[],
 ) {
-  const byCoin = new Map(simulations.map((simulation) => [simulation.coin_id, simulation]));
+  // RLS already limits what comes back to: simulations aimed at everyone,
+  // plus any aimed specifically at the current viewer. If both exist for
+  // the same coin, the one targeted at this person takes priority.
+  const byCoin = new Map<string, PriceSimulation>();
+  for (const simulation of simulations) {
+    const existing = byCoin.get(simulation.coin_id);
+    if (!existing || (simulation.target_user_id && !existing.target_user_id)) {
+      byCoin.set(simulation.coin_id, simulation);
+    }
+  }
   return coins.map((coin) => {
     const simulation = byCoin.get(coin.id);
     if (!simulation) return coin;

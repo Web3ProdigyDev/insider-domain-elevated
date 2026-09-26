@@ -8,6 +8,8 @@ export type PriceSimulation = {
   range_max: number | null;
   capture_fraction: number;
   active: boolean;
+  // null = visible to every member; set = visible only to that one member.
+  target_user_id: string | null;
 };
 
 export type MarketCoin = {

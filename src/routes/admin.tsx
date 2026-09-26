@@ -17,6 +17,7 @@ import {
   revokeInviteCode,
 } from "@/lib/admin.functions";
 import { useRequireMember } from "@/lib/use-auth";
+import { notify } from "@/lib/notify";
 import {
   deactivatePriceSimulation,
   listPriceSimulations,
@@ -34,6 +35,7 @@ function AdminMembers() {
   const [inviteRole, setInviteRole] = React.useState<"member" | "admin">("member");
   const [maxUses, setMaxUses] = React.useState("1");
   const [inviteBusy, setInviteBusy] = React.useState(false);
+  const [revokingId, setRevokingId] = React.useState<string | undefined>();
   const [simulationId, setSimulationId] = React.useState<string | undefined>();
   const [simulation, setSimulation] = React.useState({
     coin_id: "dogecoin",
@@ -162,8 +164,16 @@ function AdminMembers() {
                     variant="ghost"
                     className="ml-auto"
                     onClick={async () => {
-                      await deactivatePriceSimulation(item.id);
-                      void simulationQuery.refetch();
+                      try {
+                        await deactivatePriceSimulation(item.id);
+                        void simulationQuery.refetch();
+                      } catch (error: unknown) {
+                        console.error("[v0] deactivate simulation failed", error);
+                        notify.error(
+                          "Could not deactivate simulation",
+                          error instanceof Error ? error.message : undefined,
+                        );
+                      }
                     }}
                   >
                     Deactivate
@@ -184,6 +194,12 @@ function AdminMembers() {
                 const code = `ID-${Math.floor(1000 + Math.random() * 9000)}-${crypto.randomUUID().slice(0, 4).toUpperCase()}`;
                 await createInviteCode({ code, role: inviteRole, maxUses: uses });
                 void inviteQuery.refetch();
+              } catch (error: unknown) {
+                console.error("[v0] create invite code failed", error);
+                notify.error(
+                  "Could not generate invite code",
+                  error instanceof Error ? error.message : undefined,
+                );
               } finally {
                 setInviteBusy(false);
               }
@@ -232,13 +248,24 @@ function AdminMembers() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    disabled={invite.max_uses === 0}
+                    disabled={invite.max_uses === 0 || revokingId === invite.id}
                     onClick={async () => {
-                      await revokeInviteCode(invite.id);
-                      void inviteQuery.refetch();
+                      setRevokingId(invite.id);
+                      try {
+                        await revokeInviteCode(invite.id);
+                        void inviteQuery.refetch();
+                      } catch (error: unknown) {
+                        console.error("[v0] revoke invite code failed", error);
+                        notify.error(
+                          "Could not revoke invite code",
+                          error instanceof Error ? error.message : undefined,
+                        );
+                      } finally {
+                        setRevokingId(undefined);
+                      }
                     }}
                   >
-                    Revoke
+                    {revokingId === invite.id ? "Revoking…" : "Revoke"}
                   </Button>
                   <span className="ml-auto text-xs text-muted-foreground">
                     {invite.expires_at

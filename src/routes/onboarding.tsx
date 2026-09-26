@@ -92,11 +92,11 @@ function Onboarding() {
         console.error("[v0] onboarding profile upsert failed", {
           error: updateError
             ? {
-                code: updateError.code,
-                message: updateError.message,
-                details: updateError.details,
-                hint: updateError.hint,
-              }
+              code: updateError.code,
+              message: updateError.message,
+              details: updateError.details,
+              hint: updateError.hint,
+            }
             : null,
           returnedProfile: updatedProfile,
           userId: session.user.id,
@@ -114,12 +114,13 @@ function Onboarding() {
             invite_code: inviteCode.trim(),
           },
         );
-        const legacyResult = memberRedeemError
-          ? await supabase.rpc("redeem_invite_code", {
+        const legacyResult =
+          memberRedeemError || !memberRedeemed
+            ? await supabase.rpc("redeem_invite_code", {
               code: inviteCode.trim(),
               user_id: session.user.id,
             })
-          : { data: memberRedeemed, error: null };
+            : { data: memberRedeemed, error: null };
         const redeemed = legacyResult.data;
         const redeemError = legacyResult.error;
         if (redeemError) {

@@ -56,6 +56,20 @@ export async function verifyOtp(email: string, token: string) {
   });
 }
 
+export async function sendPasswordResetEmail(email: string) {
+  const supabase = createClient();
+  return supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+    redirectTo:
+      import.meta.env["VITE_SUPABASE_RESET_REDIRECT_URL"] ||
+      `${import.meta.env["VITE_SITE_URL"] || window.location.origin}/auth/recover`,
+  });
+}
+
+export async function updatePassword(newPassword: string) {
+  const supabase = createClient();
+  return supabase.auth.updateUser({ password: newPassword });
+}
+
 export async function signOut() {
   const supabase = createClient();
   const { error } = await supabase.auth.signOut();

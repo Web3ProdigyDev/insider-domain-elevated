@@ -106,6 +106,14 @@ function SignIn() {
             placeholder="Your password"
             {...(error ? { error } : {})}
           />
+          <div className="flex justify-end">
+            <Link
+              to="/auth/recover"
+              className="text-xs text-gold underline-offset-4 hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <Button type="submit" full disabled={!email.includes("@") || password.length < 8 || busy}>
             {busy ? "Signing in…" : "Sign in"}
           </Button>

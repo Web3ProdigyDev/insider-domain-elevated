@@ -254,7 +254,7 @@ function AdminMemberDetail() {
                         <td className="px-5 py-4 text-muted-foreground">{transaction.asset_id}</td>
                         <td className="px-5 py-4 numeric text-foreground">{transaction.amount}</td>
                         <td className="px-5 py-4">
-                          <Badge variant="secondary">{transaction.status}</Badge>
+                          <Badge variant="outline">{transaction.status}</Badge>
                         </td>
                         <td className="px-5 py-4 text-muted-foreground">
                           {new Date(transaction.created_at).toLocaleString()}

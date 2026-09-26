@@ -25,6 +25,7 @@ import {
 } from "@/lib/price-simulation.functions";
 import { useMarkets } from "@/lib/use-markets";
 import type { PriceSimulation } from "@/lib/markets.functions";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin")({ component: AdminMembers });
 
@@ -37,13 +38,18 @@ function AdminMembers() {
   const [inviteBusy, setInviteBusy] = React.useState(false);
   const [revokingId, setRevokingId] = React.useState<string | undefined>();
   const [simulationId, setSimulationId] = React.useState<string | undefined>();
-  const [simulation, setSimulation] = React.useState({
+  const defaultSimulation = React.useRef({
     coin_id: "dogecoin",
     spike_percent: "10",
     range_min: "0",
     range_max: "0",
     capture_fraction: "0.6",
-  });
+  }).current;
+  const [simulation, setSimulation] = React.useState(defaultSimulation);
+  const [simulationBusy, setSimulationBusy] = React.useState(false);
+  // Rows currently playing their exit animation before actually being
+  // removed from the list — see the Deactivate handler below.
+  const [leavingIds, setLeavingIds] = React.useState<Set<string>>(new Set());
   const simulationQuery = useQuery({
     queryKey: ["admin-price-simulations"],
     queryFn: listPriceSimulations,
@@ -76,19 +82,37 @@ function AdminMembers() {
           <p className="mt-1 text-xs text-muted-foreground">
             Explicitly labeled test prices only. Members see a Simulated badge.
           </p>
+          {simulationId ? (
+            <p className="mt-3 text-xs text-gold">
+              Editing an existing simulation — Cancel to create a new one instead.
+            </p>
+          ) : null}
           <form
             className="mt-4 grid gap-3 sm:grid-cols-5"
             onSubmit={async (event) => {
               event.preventDefault();
-              await savePriceSimulation({
-                coin_id: simulation.coin_id,
-                spike_percent: Number(simulation.spike_percent),
-                range_min: Number(simulation.range_min) || 0,
-                range_max: Number(simulation.range_max) || 0,
-                capture_fraction: Number(simulation.capture_fraction),
-                ...(simulationId ? { id: simulationId } : {}),
-              });
-              void simulationQuery.refetch();
+              setSimulationBusy(true);
+              try {
+                await savePriceSimulation({
+                  coin_id: simulation.coin_id,
+                  spike_percent: Number(simulation.spike_percent),
+                  range_min: Number(simulation.range_min) || 0,
+                  range_max: Number(simulation.range_max) || 0,
+                  capture_fraction: Number(simulation.capture_fraction),
+                  ...(simulationId ? { id: simulationId } : {}),
+                });
+                setSimulationId(undefined);
+                setSimulation(defaultSimulation);
+                void simulationQuery.refetch();
+              } catch (error: unknown) {
+                console.error("[v0] save price simulation failed", error);
+                notify.error(
+                  simulationId ? "Could not save simulation" : "Could not create simulation",
+                  error instanceof Error ? error.message : undefined,
+                );
+              } finally {
+                setSimulationBusy(false);
+              }
             }}
           >
             <select
@@ -127,7 +151,28 @@ function AdminMembers() {
                 setSimulation({ ...simulation, capture_fraction: event.target.value })
               }
             />
-            <Button type="submit">{simulationId ? "Save simulation" : "Create simulation"}</Button>
+            <div className="flex gap-2">
+              <Button type="submit" disabled={simulationBusy} className="flex-1">
+                {simulationBusy
+                  ? "Saving…"
+                  : simulationId
+                    ? "Save simulation"
+                    : "Create simulation"}
+              </Button>
+              {simulationId ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={simulationBusy}
+                  onClick={() => {
+                    setSimulationId(undefined);
+                    setSimulation(defaultSimulation);
+                  }}
+                >
+                  Cancel
+                </Button>
+              ) : null}
+            </div>
           </form>
           <div className="mt-4 space-y-2">
             {simulationQuery.data
@@ -135,7 +180,12 @@ function AdminMembers() {
               .map((item: PriceSimulation) => (
                 <div
                   key={item.id}
-                  className="flex items-center gap-3 rounded-xl border border-border px-3 py-2 text-sm"
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl border border-border px-3 py-2 text-sm",
+                    leavingIds.has(item.id)
+                      ? "animate-[spike-out_200ms_ease-in_forwards] pointer-events-none"
+                      : "animate-[spike-in_260ms_ease-out]",
+                  )}
                 >
                   <span className="font-medium">{item.coin_id}</span>
                   <span className="text-muted-foreground">
@@ -163,17 +213,30 @@ function AdminMembers() {
                     size="sm"
                     variant="ghost"
                     className="ml-auto"
-                    onClick={async () => {
-                      try {
-                        await deactivatePriceSimulation(item.id);
-                        void simulationQuery.refetch();
-                      } catch (error: unknown) {
-                        console.error("[v0] deactivate simulation failed", error);
-                        notify.error(
-                          "Could not deactivate simulation",
-                          error instanceof Error ? error.message : undefined,
-                        );
-                      }
+                    disabled={leavingIds.has(item.id)}
+                    onClick={() => {
+                      // Play the exit animation first, then actually remove
+                      // it once the animation's had time to finish.
+                      setLeavingIds((prev) => new Set(prev).add(item.id));
+                      window.setTimeout(() => {
+                        void (async () => {
+                          try {
+                            await deactivatePriceSimulation(item.id);
+                            void simulationQuery.refetch();
+                          } catch (error: unknown) {
+                            console.error("[v0] deactivate simulation failed", error);
+                            notify.error(
+                              "Could not deactivate simulation",
+                              error instanceof Error ? error.message : undefined,
+                            );
+                            setLeavingIds((prev) => {
+                              const next = new Set(prev);
+                              next.delete(item.id);
+                              return next;
+                            });
+                          }
+                        })();
+                      }, 200);
                     }}
                   >
                     Deactivate

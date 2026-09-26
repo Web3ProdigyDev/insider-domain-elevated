@@ -322,3 +322,28 @@
     background: color-mix(in oklab, var(--gold) 28%, transparent);
   }
 }
+
+/* Simple enter/exit for list rows (e.g. admin price simulations).
+   Kept as plain keyframes, used via Tailwind's animate-[...] arbitrary
+   value — no animation library needed for a two-state fade/slide. */
+@keyframes spike-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spike-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}

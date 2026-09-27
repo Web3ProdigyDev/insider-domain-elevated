@@ -73,6 +73,27 @@ function AdminMemberDetail() {
       }
     >
       <div className="flex flex-col gap-8">
+        <section className="flex flex-col gap-5 rounded-3xl border border-border bg-card p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-eyebrow">Member profile</p>
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <h2 className="text-2xl font-medium tracking-tight text-foreground">{name}</h2>
+              <Badge variant={profile.suspended ? "destructive" : "secondary"}>
+                {profile.suspended ? "Suspended" : "Active"}
+              </Badge>
+              <Badge variant="outline">{profile.role}</Badge>
+            </div>
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+              Review identity, access, wallet balances, and recent activity from one place.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-border bg-background/50 px-4 py-3 text-left sm:min-w-44">
+            <p className="text-eyebrow">Member since</p>
+            <p className="mt-1 text-sm text-foreground">
+              {new Date(profile.created_at).toLocaleDateString()}
+            </p>
+          </div>
+        </section>
         <section className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl border border-border bg-card p-5">
             <p className="text-eyebrow">Email</p>
@@ -81,7 +102,10 @@ function AdminMemberDetail() {
             </p>
           </div>
           <div className="rounded-2xl border border-border bg-card p-5">
-            <p className="text-eyebrow">Role</p>
+            <p className="text-eyebrow">Access role</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Controls what this member can access.
+            </p>
             <div className="mt-3 flex items-center gap-2">
               <select
                 aria-label="Member role"
@@ -107,7 +131,7 @@ function AdminMemberDetail() {
                   }
                 }}
               >
-                Save
+                {busy ? "Saving…" : "Save role"}
               </Button>
             </div>
           </div>
@@ -118,7 +142,8 @@ function AdminMemberDetail() {
             </p>
           </div>
           <div className="rounded-2xl border border-border bg-card p-5">
-            <p className="text-eyebrow">Status</p>
+            <p className="text-eyebrow">Account status</p>
+            <p className="mt-1 text-xs text-muted-foreground">Pause or restore member access.</p>
             <Button
               className="mt-3"
               variant="outline"
@@ -149,7 +174,18 @@ function AdminMemberDetail() {
           </div>
         </section>
         <section>
-          <h2 className="text-lg font-medium text-foreground">Wallet balances</h2>
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-eyebrow">Wallet overview</p>
+              <h2 className="mt-1 text-xl font-medium text-foreground">Recorded balances</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Simulated ledger balances currently attached to this member.
+              </p>
+            </div>
+            <Badge variant="outline">
+              {balances.length} asset{balances.length === 1 ? "" : "s"}
+            </Badge>
+          </div>
           {balances.length ? (
             <div className="mt-4 flex flex-col gap-3">
               {balances.map((balance) => (
@@ -172,8 +208,13 @@ function AdminMemberDetail() {
             </div>
           )}
         </section>
-        <section className="rounded-2xl border border-border bg-card p-5">
-          <p className="text-eyebrow">Adjust balance</p>
+        <section className="rounded-3xl border border-border bg-card p-6">
+          <p className="text-eyebrow">Wallet action</p>
+          <h2 className="mt-1 text-xl font-medium text-foreground">Adjust simulated balance</h2>
+          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            Use a positive amount to credit or a negative amount to debit. Every change requires a
+            reason and is recorded in the audit trail.
+          </p>
           <form
             className="mt-4 grid gap-3 sm:grid-cols-4"
             onSubmit={async (event) => {
@@ -221,7 +262,11 @@ function AdminMemberDetail() {
           </form>
         </section>
         <section>
-          <h2 className="text-lg font-medium text-foreground">Transaction history</h2>
+          <p className="text-eyebrow">Audit trail</p>
+          <h2 className="mt-1 text-xl font-medium text-foreground">Transaction history</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Select a transaction type to inspect its recorded metadata.
+          </p>
           {transactions.length ? (
             <div className="mt-4 overflow-x-auto rounded-2xl border border-border">
               <table className="w-full min-w-[640px] text-left text-sm">

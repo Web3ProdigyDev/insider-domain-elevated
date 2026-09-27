@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/common/empty-state";
 import { CoinLogo } from "@/components/common/coin-logo";
 import { SkeletonCard, SkeletonList } from "@/components/common/skeletons";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   adjustMemberBalance,
@@ -85,17 +86,29 @@ function AdminMemberDetail() {
       <div className="flex flex-col gap-8">
         <section className="flex flex-col gap-5 rounded-3xl border border-border bg-card p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-eyebrow">Member profile</p>
-            <div className="mt-2 flex flex-wrap items-center gap-3">
-              <h2 className="text-2xl font-medium tracking-tight text-foreground">{name}</h2>
-              <Badge variant={profile.suspended ? "destructive" : "secondary"}>
-                {profile.suspended ? "Suspended" : "Active"}
-              </Badge>
-              <Badge variant="outline">{profile.role}</Badge>
+            <div className="flex items-center gap-4">
+              <Avatar className="size-16 border border-border shadow-sm">
+                <AvatarImage
+                  src={profile.avatar_url ?? undefined}
+                  alt={`${name} profile picture`}
+                />
+                <AvatarFallback>{name.slice(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-eyebrow">Member profile</p>
+                <div className="mt-2 flex flex-wrap items-center gap-3">
+                  <h2 className="text-2xl font-medium tracking-tight text-foreground">{name}</h2>
+                  <Badge variant={profile.suspended ? "destructive" : "secondary"}>
+                    {profile.suspended ? "Suspended" : "Active"}
+                  </Badge>
+                  <Badge variant="outline">{profile.role}</Badge>
+                </div>
+                <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+                  {profile.email || "No email on file"} · Review identity, access, wallet balances,
+                  and activity.
+                </p>
+              </div>
             </div>
-            <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
-              Review identity, access, wallet balances, and recent activity from one place.
-            </p>
           </div>
           <div className="rounded-2xl border border-border bg-background/50 px-4 py-3 text-left sm:min-w-44">
             <p className="text-eyebrow">Member since</p>

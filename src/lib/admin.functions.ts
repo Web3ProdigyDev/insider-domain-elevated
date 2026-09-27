@@ -17,7 +17,9 @@ export async function listMembers(query?: string) {
   const { supabase } = await requireAdmin();
   let request = supabase
     .from("profiles")
-    .select("id,email,first_name,surname,username,role,suspended,onboarding_completed,created_at")
+    .select(
+      "id,email,first_name,surname,username,avatar_url,role,suspended,onboarding_completed,created_at",
+    )
     .order("created_at", { ascending: false });
   const term = query?.trim();
   if (term)
@@ -152,7 +154,7 @@ export async function getMemberDetail(userId: string) {
     supabase
       .from("profiles")
       .select(
-        "id,email,first_name,surname,username,role,suspended,onboarding_completed,dob,created_at,updated_at",
+        "id,email,first_name,surname,username,avatar_url,role,suspended,onboarding_completed,dob,created_at,updated_at",
       )
       .eq("id", userId)
       .maybeSingle(),

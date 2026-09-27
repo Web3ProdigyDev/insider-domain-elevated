@@ -1,20 +1,25 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, WalletCards } from "lucide-react";
+import { ArrowLeft, Bot, ChartNoAxesCombined, WalletCards } from "lucide-react";
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { EmptyState } from "@/components/common/empty-state";
+import { CoinLogo } from "@/components/common/coin-logo";
 import { SkeletonCard, SkeletonList } from "@/components/common/skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   adjustMemberBalance,
+  awardBotReturns,
+  createMemberSpike,
+  deactivateMemberSpike,
   getMemberDetail,
   setMemberSuspended,
   updateMemberRole,
 } from "@/lib/admin.functions";
 import { useRequireMember } from "@/lib/use-auth";
+import { useMarkets } from "@/lib/use-markets";
 
 export const Route = createFileRoute("/admin/$userId")({ component: AdminMemberDetail });
 
@@ -33,6 +38,11 @@ function AdminMemberDetail() {
   const [reason, setReason] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [expandedTransaction, setExpandedTransaction] = React.useState<string | null>(null);
+  const [spikeCoin, setSpikeCoin] = React.useState("solana");
+  const [spikePercent, setSpikePercent] = React.useState("10");
+  const [returnAmount, setReturnAmount] = React.useState("");
+  const [returnReason, setReturnReason] = React.useState("Bot earnings ready");
+  const { coins } = useMarkets();
   React.useEffect(() => {
     if (detailQuery.data?.profile.role)
       setRole(detailQuery.data.profile.role as "member" | "admin");
@@ -173,6 +183,142 @@ function AdminMemberDetail() {
             <code className="mt-3 block truncate text-xs text-muted-foreground">{profile.id}</code>
           </div>
         </section>
+        <section className="grid gap-4 lg:grid-cols-2">
+          <div className="rounded-3xl border border-gold/25 bg-gold-muted/10 p-6">
+            <div className="flex items-start gap-3">
+              <span className="grid size-10 place-items-center rounded-2xl bg-gold-muted text-gold">
+                <ChartNoAxesCombined />
+              </span>
+              <div>
+                <p className="text-eyebrow">Member market action</p>
+                <h2 className="mt-1 text-xl font-medium text-foreground">Apply a price spike</h2>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  Adds a clearly labelled simulated move for this member and sends them a
+                  notification.
+                </p>
+              </div>
+            </div>
+            <form
+              className="mt-5 flex flex-col gap-3"
+              onSubmit={async (event) => {
+                event.preventDefault();
+                setBusy(true);
+                try {
+                  await createMemberSpike(userId, spikeCoin, Number(spikePercent));
+                  setSpikePercent("10");
+                  void detailQuery.refetch();
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              <select
+                aria-label="Spike asset"
+                value={spikeCoin}
+                onChange={(event) => setSpikeCoin(event.target.value)}
+                className="h-10 rounded-xl border border-border bg-background px-3 text-sm text-foreground"
+              >
+                {coins.slice(0, 60).map((coin) => (
+                  <option key={coin.id} value={coin.id}>
+                    {coin.symbol} · {coin.name}
+                  </option>
+                ))}
+              </select>
+              <div className="flex gap-3">
+                <input
+                  aria-label="Spike percentage"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={spikePercent}
+                  onChange={(event) => setSpikePercent(event.target.value)}
+                  className="h-10 min-w-0 flex-1 rounded-xl border border-border bg-background px-3 text-sm text-foreground"
+                />
+                <span className="-ml-14 flex items-center pr-3 text-sm text-muted-foreground">
+                  %
+                </span>
+                <Button type="submit" disabled={busy}>
+                  Notify & apply
+                </Button>
+              </div>
+            </form>
+            <div className="mt-4 flex flex-col gap-2">
+              {spikes
+                .filter((spike) => spike.active)
+                .map((spike) => (
+                  <div
+                    key={spike.id}
+                    className="flex items-center gap-2 rounded-xl border border-border bg-background/50 px-3 py-2 text-xs"
+                  >
+                    <span className="font-medium text-foreground">{spike.coin_id}</span>
+                    <Badge variant="secondary">+{spike.spike_percent}%</Badge>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="ml-auto"
+                      onClick={async () => {
+                        await deactivateMemberSpike(spike.id);
+                        void detailQuery.refetch();
+                      }}
+                    >
+                      Deactivate
+                    </Button>
+                  </div>
+                ))}
+            </div>
+          </div>
+          <div className="rounded-3xl border border-border bg-card p-6">
+            <div className="flex items-start gap-3">
+              <span className="grid size-10 place-items-center rounded-2xl bg-surface text-gold">
+                <Bot />
+              </span>
+              <div>
+                <p className="text-eyebrow">Bot earnings</p>
+                <h2 className="mt-1 text-xl font-medium text-foreground">Mark returns ready</h2>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  Credits simulated USD earnings and sends “your returns are ready” to the member.
+                </p>
+              </div>
+            </div>
+            <form
+              className="mt-5 flex flex-col gap-3"
+              onSubmit={async (event) => {
+                event.preventDefault();
+                setBusy(true);
+                try {
+                  await awardBotReturns(userId, Number(returnAmount), returnReason);
+                  setReturnAmount("");
+                  void detailQuery.refetch();
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              <input
+                aria-label="Bot return amount"
+                type="number"
+                min="0.01"
+                step="0.01"
+                placeholder="$10,000"
+                value={returnAmount}
+                onChange={(event) => setReturnAmount(event.target.value)}
+                className="h-10 rounded-xl border border-border bg-background px-3 text-sm text-foreground"
+                required
+              />
+              <input
+                aria-label="Bot return reason"
+                value={returnReason}
+                onChange={(event) => setReturnReason(event.target.value)}
+                className="h-10 rounded-xl border border-border bg-background px-3 text-sm text-foreground"
+                required
+              />
+              <Button type="submit" disabled={busy}>
+                Credit & notify
+              </Button>
+            </form>
+          </div>
+        </section>
         <section>
           <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -193,8 +339,33 @@ function AdminMemberDetail() {
                   key={balance.id}
                   className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-4 sm:px-5"
                 >
-                  <span className="text-sm text-foreground">{balance.asset_id}</span>
-                  <span className="numeric text-sm text-foreground">{balance.amount}</span>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <CoinLogo
+                      src={coins.find((coin) => coin.id === balance.asset_id)?.image ?? ""}
+                      symbol={
+                        coins.find((coin) => coin.id === balance.asset_id)?.symbol ??
+                        balance.asset_id
+                      }
+                      size={36}
+                    />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-foreground">
+                        {coins.find((coin) => coin.id === balance.asset_id)?.name ??
+                          balance.asset_id}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {coins.find((coin) => coin.id === balance.asset_id)?.symbol ??
+                          balance.asset_id.toUpperCase()}{" "}
+                        · $
+                        {coins
+                          .find((coin) => coin.id === balance.asset_id)
+                          ?.price?.toLocaleString() ?? "price unavailable"}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="numeric text-sm text-foreground">
+                    {Number(balance.amount).toLocaleString(undefined, { maximumFractionDigits: 6 })}
+                  </span>
                 </div>
               ))}
             </div>

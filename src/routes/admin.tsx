@@ -7,6 +7,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { EmptyState } from "@/components/common/empty-state";
 import { SkeletonList } from "@/components/common/skeletons";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -92,7 +93,8 @@ function AdminMembers() {
     if (!term) return list.slice(0, 30);
     return list
       .filter(
-        (coin) => coin.name.toLowerCase().includes(term) || coin.symbol.toLowerCase().includes(term),
+        (coin) =>
+          coin.name.toLowerCase().includes(term) || coin.symbol.toLowerCase().includes(term),
       )
       .slice(0, 30);
   }, [coins, coinSearch]);
@@ -174,7 +176,11 @@ function AdminMembers() {
                 onClick={() => setCoinPickerOpen((open) => !open)}
                 className="mt-1.5 flex h-10 w-full items-center gap-2 rounded-xl border border-border bg-card px-3 text-sm text-foreground"
               >
-                <CoinLogo src={selectedCoin?.image} symbol={selectedCoin?.symbol ?? "—"} size={20} />
+                <CoinLogo
+                  src={selectedCoin?.image}
+                  symbol={selectedCoin?.symbol ?? "—"}
+                  size={20}
+                />
                 <span className="truncate">{selectedCoin?.symbol ?? simulation.coin_id}</span>
               </button>
               {coinPickerOpen ? (
@@ -200,7 +206,9 @@ function AdminMembers() {
                         >
                           <CoinLogo src={coin.image} symbol={coin.symbol} size={20} />
                           <span className="truncate">{coin.name}</span>
-                          <span className="ml-auto text-xs text-muted-foreground">{coin.symbol}</span>
+                          <span className="ml-auto text-xs text-muted-foreground">
+                            {coin.symbol}
+                          </span>
                         </button>
                       ))
                     ) : (
@@ -246,9 +254,7 @@ function AdminMembers() {
                   <button
                     type="button"
                     className="ml-auto text-xs text-muted-foreground hover:text-foreground"
-                    onClick={() =>
-                      setSimulation((current) => ({ ...current, target_user_id: "" }))
-                    }
+                    onClick={() => setSimulation((current) => ({ ...current, target_user_id: "" }))}
                   >
                     Clear
                   </button>
@@ -280,12 +286,30 @@ function AdminMembers() {
                               setTargetSearch("");
                               setTargetPickerOpen(false);
                             }}
-                            className="block w-full px-3 py-2 text-left text-sm text-foreground hover:bg-surface-raised"
+                            className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm text-foreground hover:bg-surface-raised"
                           >
-                            {[member.first_name, member.surname].filter(Boolean).join(" ") ||
-                              member.username ||
-                              member.email ||
-                              member.id}
+                            <Avatar className="size-8">
+                              <AvatarImage src={member.avatar_url ?? undefined} alt="" />
+                              <AvatarFallback>
+                                {(
+                                  [member.first_name, member.surname].filter(Boolean).join(" ") ||
+                                  "U"
+                                )
+                                  .slice(0, 2)
+                                  .toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="min-w-0">
+                              <span className="block truncate">
+                                {[member.first_name, member.surname].filter(Boolean).join(" ") ||
+                                  member.username ||
+                                  "Unnamed member"}
+                              </span>
+                              <span className="block truncate text-xs text-muted-foreground">
+                                {member.email ||
+                                  (member.username ? `@${member.username}` : member.id)}
+                              </span>
+                            </span>
                           </button>
                         ))
                       ) : (
@@ -512,6 +536,14 @@ function AdminMembers() {
                 params={{ userId: member.id }}
                 className="flex flex-col items-stretch gap-3 rounded-2xl border border-border bg-card px-4 py-4 transition-colors hover:border-border-strong hover:bg-surface-raised sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 sm:px-5"
               >
+                <Avatar className="size-11 border border-border">
+                  <AvatarImage src={member.avatar_url ?? undefined} alt="" />
+                  <AvatarFallback>
+                    {([member.first_name, member.surname].filter(Boolean).join(" ") || "U")
+                      .slice(0, 2)
+                      .toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm text-foreground">
                     {[member.first_name, member.surname].filter(Boolean).join(" ") ||

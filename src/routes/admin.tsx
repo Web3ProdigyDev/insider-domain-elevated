@@ -126,6 +126,16 @@ function AdminMembers() {
     enabled: ready && allowed,
     retry: false,
   });
+  const filteredMembers = React.useMemo(() => {
+    const term = value.trim().toLowerCase();
+    const members = allMembersQuery.data ?? membersQuery.data ?? [];
+    if (!term) return members;
+    return members.filter((member) =>
+      [member.first_name, member.surname, member.username, member.email]
+        .filter(Boolean)
+        .some((field) => field!.toLowerCase().includes(term)),
+    );
+  }, [allMembersQuery.data, membersQuery.data, value]);
   if (!ready || !allowed) return null;
   return (
     <AppShell eyebrow="Admin" title="Members" description="Manage members, access, and invites.">
@@ -527,9 +537,9 @@ function AdminMembers() {
         />
         {membersQuery.isLoading ? (
           <SkeletonList rows={6} />
-        ) : membersQuery.data?.length ? (
+        ) : filteredMembers.length ? (
           <div className="flex flex-col gap-3">
-            {membersQuery.data.map((member) => (
+            {filteredMembers.map((member) => (
               <Link
                 key={member.id}
                 to="/admin/$userId"
@@ -573,8 +583,12 @@ function AdminMembers() {
         ) : (
           <EmptyState
             icon={<Shield />}
-            title="No members match"
-            description="Try a different name, username, or email."
+            title={value.trim() ? "No matching members" : "No members found"}
+            description={
+              value.trim()
+                ? "Try a name, username, or email address."
+                : "Members will appear here after they join."
+            }
           />
         )}
       </div>

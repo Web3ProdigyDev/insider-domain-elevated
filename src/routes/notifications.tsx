@@ -94,6 +94,17 @@ function Notifications() {
       </button>
       {notificationsQuery.isLoading ? (
         <SkeletonList rows={5} />
+      ) : notificationsQuery.isError ? (
+        <EmptyState
+          icon={<Bell />}
+          title="Notifications unavailable"
+          description="We could not load your notices. Check your connection and try again."
+          action={
+            <Button variant="outline" onClick={() => void notificationsQuery.refetch()}>
+              Try again
+            </Button>
+          }
+        />
       ) : notifications.length ? (
         <div className="space-y-3">
           {notifications.map((n) => (

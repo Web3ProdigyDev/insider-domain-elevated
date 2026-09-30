@@ -27,8 +27,24 @@ export async function listMembers(query?: string) {
       `username.ilike.%${term.replace(/[%,]/g, "")}%,first_name.ilike.%${term.replace(/[%,]/g, "")}%,surname.ilike.%${term.replace(/[%,]/g, "")}%,email.ilike.%${term.replace(/[%,]/g, "")}%`,
     );
   const { data, error } = await request;
-  if (error) throw error;
-  return data ?? [];
+  if (!error) return data ?? [];
+  // Keep member search usable while an older Supabase schema is being migrated.
+  if (error.message.includes("avatar_url")) {
+    let fallbackRequest = supabase
+      .from("profiles")
+      .select("id,email,first_name,surname,username,role,suspended,onboarding_completed,created_at")
+      .order("created_at", { ascending: false });
+    if (term) {
+      const safeTerm = term.replace(/[%,]/g, "");
+      fallbackRequest = fallbackRequest.or(
+        `username.ilike.%${safeTerm}%,first_name.ilike.%${safeTerm}%,surname.ilike.%${safeTerm}%,email.ilike.%${safeTerm}%`,
+      );
+    }
+    const { data: fallbackData, error: fallbackError } = await fallbackRequest;
+    if (fallbackError) throw fallbackError;
+    return (fallbackData ?? []).map((member) => ({ ...member, avatar_url: null }));
+  }
+  throw error;
 }
 
 export async function listInviteCodes() {

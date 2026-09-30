@@ -128,14 +128,14 @@ function AdminMembers() {
   });
   const filteredMembers = React.useMemo(() => {
     const term = value.trim().toLowerCase();
-    const members = allMembersQuery.data ?? membersQuery.data ?? [];
+    const members = membersQuery.data ?? [];
     if (!term) return members;
     return members.filter((member) =>
       [member.first_name, member.surname, member.username, member.email]
         .filter(Boolean)
         .some((field) => field!.toLowerCase().includes(term)),
     );
-  }, [allMembersQuery.data, membersQuery.data, value]);
+  }, [membersQuery.data, value]);
   if (!ready || !allowed) return null;
   return (
     <AppShell eyebrow="Admin" title="Members" description="Manage members, access, and invites.">
@@ -537,6 +537,21 @@ function AdminMembers() {
         />
         {membersQuery.isLoading ? (
           <SkeletonList rows={6} />
+        ) : membersQuery.isError ? (
+          <EmptyState
+            icon={<Shield />}
+            title="Members could not load"
+            description={
+              membersQuery.error instanceof Error
+                ? membersQuery.error.message
+                : "Check the admin profile permissions and Supabase connection."
+            }
+            action={
+              <Button variant="outline" onClick={() => void membersQuery.refetch()}>
+                Try again
+              </Button>
+            }
+          />
         ) : filteredMembers.length ? (
           <div className="flex flex-col gap-3">
             {filteredMembers.map((member) => (
